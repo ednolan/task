@@ -41,23 +41,23 @@ int main() {
         co_return;
     }());
     std::cout << "scheduler affine:\n";
-    ex::sync_wait([](auto& pool) -> ex::lazy<void> {
+    ex::sync_wait([](auto& pl) -> ex::lazy<void> {
         std::cout << "cor1:" << fmt_id << "\n";
-        co_await (ex::schedule(pool.get_scheduler()) | ex::then([] { std::cout << "then:" << fmt_id << "\n"; }));
+        co_await (ex::schedule(pl.get_scheduler()) | ex::then([] { std::cout << "then:" << fmt_id << "\n"; }));
         std::cout << "cor2:" << fmt_id << "\n";
     }(pool));
 
     std::cout << "not scheduler affine:\n";
-    ex::sync_wait([](auto& pool) -> ex::lazy<void, non_affine> {
+    ex::sync_wait([](auto& pl) -> ex::lazy<void, non_affine> {
         std::cout << "cor1:" << fmt_id << "\n";
-        co_await (ex::schedule(pool.get_scheduler()) | ex::then([] { std::cout << "then:" << fmt_id << "\n"; }));
+        co_await (ex::schedule(pl.get_scheduler()) | ex::then([] { std::cout << "then:" << fmt_id << "\n"; }));
         std::cout << "cor2:" << fmt_id << "\n";
     }(pool));
 
     std::cout << "use inline_scheduler:\n";
-    ex::sync_wait(ex::starts_on(ex::inline_scheduler{}, [](auto& pool) -> ex::lazy<void> {
+    ex::sync_wait(ex::starts_on(ex::inline_scheduler{}, [](auto& pl) -> ex::lazy<void> {
         std::cout << "cor1:" << fmt_id << "\n";
-        co_await (ex::schedule(pool.get_scheduler()) | ex::then([] { std::cout << "then:" << fmt_id << "\n"; }));
+        co_await (ex::schedule(pl.get_scheduler()) | ex::then([] { std::cout << "then:" << fmt_id << "\n"; }));
         std::cout << "cor2:" << fmt_id << "\n";
     }(pool)));
 }

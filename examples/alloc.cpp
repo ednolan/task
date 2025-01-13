@@ -84,10 +84,10 @@ int main() {
     std::cout << "ex::lazy<void> with alloc done\n\n";
 
     std::cout << "running ex::lazy<void, alloc_aware> extracting alloc\n";
-    ex::sync_wait([](auto&&, [[maybe_unused]] auto* resource) -> ex::lazy<void, alloc_aware> {
+    ex::sync_wait([](auto&&, [[maybe_unused]] auto* res) -> ex::lazy<void, alloc_aware> {
         auto alloc = co_await ex::read_env(ex::get_allocator);
         static_assert(std::same_as<std::pmr::polymorphic_allocator<std::byte>, decltype(alloc)>);
-        assert(alloc == std::pmr::polymorphic_allocator<std::byte>(resource));
+        assert(alloc == std::pmr::polymorphic_allocator<std::byte>(res));
     }(std::allocator_arg, &resource));
     std::cout << "ex::lazy<void, alloc_aware> extracting alloc done\n\n";
 }

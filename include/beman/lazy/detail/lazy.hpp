@@ -21,11 +21,11 @@
 // ----------------------------------------------------------------------------
 
 namespace beman::lazy::detail {
-template <std::size_t Start, typename Fun, typename V, std::size_t... I>
-void sub_visit_helper(Fun& fun, V& v, std::index_sequence<I...>) {
-    using thunk_t = void (*)(Fun&, V&);
-    static constexpr thunk_t thunks[]{(+[](Fun& fun, V& v) { fun(std::get<Start + I>(v)); })...};
-    thunks[v.index() - Start](fun, v);
+template <std::size_t Start, typename Fun, typename Var, std::size_t... I>
+void sub_visit_helper(Fun& fun, Var& var, std::index_sequence<I...>) {
+    using thunk_t = void (*)(Fun&, Var&);
+    static constexpr thunk_t thunks[]{(+[](Fun& f, Var& v) { f(std::get<Start + I>(v)); })...};
+    thunks[var.index() - Start](fun, var);
 }
 
 template <std::size_t Start, typename... T>

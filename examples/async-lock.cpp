@@ -47,12 +47,12 @@ struct request {
         using operation_state_concept = ex::operation_state_t;
         Receiver receiver;
         int      value;
-        queue&   q;
+        queue&   que;
 
         template <typename R>
-        state(R&& r, int value, queue& q) : receiver(std::forward<R>(r)), value(value), q(q) {}
+        state(R&& r, int val, queue& q) : receiver(std::forward<R>(r)), value(val), que(q) {}
 
-        void start() & noexcept { this->q.push(this, value); }
+        void start() & noexcept { this->que.push(this, value); }
         void complete(int result) { ex::set_value(std::move(this->receiver), result); }
     };
 
@@ -81,11 +81,11 @@ int main() {
     });
 
     ex::sync_wait(ex::detail::write_env(
-        [](queue& q) -> ex::lazy<void> {
+        [](queue& que) -> ex::lazy<void> {
             std::cout << std::this_thread::get_id() << " start\n" << std::flush;
-            auto result = co_await request{17, q};
+            auto result = co_await request{17, que};
             std::cout << std::this_thread::get_id() << " result=" << result << "\n" << std::flush;
-            stop(q);
+            stop(que);
         }(q),
         ex::detail::make_env(ex::get_scheduler, ex::inline_scheduler{})));
     process.join();
