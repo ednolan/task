@@ -11,8 +11,7 @@
 
 namespace ex = beman::execution26;
 
-int main()
-{
-    ex::sync_wait([]()->ex::lazy<void>{ co_await ex::just(); }());
-    ex::sync_wait([]()->ex::lazy<void>{ co_await std::suspend_never(); }());
+int main() {
+    ex::sync_wait([]() -> ex::lazy<void> { co_await ex::just(); }());
+    ex::sync_wait([]() -> ex::lazy<void> { co_await std::suspend_never(); }());
 }

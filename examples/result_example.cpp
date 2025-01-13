@@ -10,8 +10,8 @@ namespace ex = beman::execution26;
 // ----------------------------------------------------------------------------
 
 int main() {
-    ex::sync_wait([]->ex::lazy<> {
-        int result = co_await []->ex::lazy<int> { co_return 42; }();
+    ex::sync_wait([] -> ex::lazy<> {
+        int result = co_await [] -> ex::lazy<int> { co_return 42; }();
         assert(result == 42);
     }());
 }

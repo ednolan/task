@@ -14,19 +14,17 @@ void* operator new(std::size_t size) {
     std::cout << "global new(" << size << ")->" << pointer << "\n";
     return pointer;
 }
-void  operator delete(void* pointer) noexcept {
+void operator delete(void* pointer) noexcept {
     std::cout << "global delete(" << pointer << ")\n";
     return std::free(pointer);
 }
-void  operator delete(void* pointer, std::size_t size) noexcept {
+void operator delete(void* pointer, std::size_t size) noexcept {
     std::cout << "global delete(" << pointer << ", " << size << ")\n";
     return std::free(pointer);
 }
 
 template <std::size_t Size>
-class fixed_resource
-    : public std::pmr::memory_resource
-{
+class fixed_resource : public std::pmr::memory_resource {
     std::byte  buffer[Size];
     std::byte* free{this->buffer};
 
@@ -36,17 +34,15 @@ class fixed_resource
             this->free += size;
             std::cout << "resource alloc(" << size << ")->" << ptr << "\n";
             return ptr;
-        }
-        else {
+        } else {
             return nullptr;
         }
     }
     void do_deallocate(void* ptr, std::size_t size, std::size_t) override {
-        std::cout << "resource dealloc(" << size << "+" << sizeof(std::pmr::polymorphic_allocator<std::byte>) << ")->" << ptr << "\n";
+        std::cout << "resource dealloc(" << size << "+" << sizeof(std::pmr::polymorphic_allocator<std::byte>) << ")->"
+                  << ptr << "\n";
     }
-    bool do_is_equal(std::pmr::memory_resource const& other) const noexcept override {
-        return &other == this;
-    }
+    bool do_is_equal(const std::pmr::memory_resource& other) const noexcept override { return &other == this; }
 };
 
 struct alloc_aware {
@@ -67,21 +63,21 @@ int main() {
 
     fixed_resource<2048> resource;
     std::cout << "running ex::lazy<void, alloc_aware> with alloc\n";
-    ex::sync_wait([](auto&&...)-> ex::lazy<void, alloc_aware> {
+    ex::sync_wait([](auto&&...) -> ex::lazy<void, alloc_aware> {
         co_await ex::just(0);
         co_await ex::just(0);
     }(std::allocator_arg, &resource));
     std::cout << "ex::lazy<void, alloc_aware> with alloc done\n\n";
 
     std::cout << "running ex::lazy<void> with alloc\n";
-    ex::sync_wait([](auto&&...)-> ex::lazy<void> {
+    ex::sync_wait([](auto&&...) -> ex::lazy<void> {
         co_await ex::just(0);
         co_await ex::just(0);
     }(std::allocator_arg, &resource));
     std::cout << "ex::lazy<void> with alloc done\n\n";
 
     std::cout << "running ex::lazy<void, alloc_aware> extracting alloc\n";
-    ex::sync_wait([](auto&&, auto* resource)-> ex::lazy<void, alloc_aware> {
+    ex::sync_wait([](auto&&, auto* resource) -> ex::lazy<void, alloc_aware> {
         auto alloc = co_await ex::read_env(ex::get_allocator);
         static_assert(std::same_as<std::pmr::polymorphic_allocator<std::byte>, decltype(alloc)>);
         assert(alloc == std::pmr::polymorphic_allocator<std::byte>(resource));

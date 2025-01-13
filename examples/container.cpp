@@ -13,6 +13,6 @@ namespace ex = beman::execution26;
 
 int main() {
     std::vector<ex::lazy<>> cont;
-    cont.emplace_back([]->ex::lazy<> { co_return; }());
-    cont.push_back([]->ex::lazy<> { co_return; }());
+    cont.emplace_back([] -> ex::lazy<> { co_return; }());
+    cont.push_back([] -> ex::lazy<> { co_return; }());
 }

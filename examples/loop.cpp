@@ -7,16 +7,14 @@
 
 namespace ex = beman::execution26;
 
-ex::lazy<void> loop()
-{
+ex::lazy<void> loop() {
     for (int i{}; i < 1000000; ++i)
         co_await ex::just(i);
 }
 
-int main()
-{
+int main() {
     ex::sync_wait(
-        //ex::detail::write_env(
+        // ex::detail::write_env(
         [] -> ex::lazy<void> {
             for (int i{}; i < 1000000; ++i)
                 co_await ex::just(i);
