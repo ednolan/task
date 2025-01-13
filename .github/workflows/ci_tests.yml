@@ -183,8 +183,6 @@ jobs:
             version: 14
           - class: GNU
             version: 13
-          - class: GNU
-            version: 12
           - class: LLVM
             version: 20
           - class: LLVM
