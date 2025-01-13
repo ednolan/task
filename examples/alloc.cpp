@@ -9,6 +9,12 @@
 
 namespace ex = beman::execution26;
 
+#if defined(__has_feature)
+#if __has_feature(thread_sanitizer)
+#define TSAN_ENABLED
+#endif
+#endif
+#if !defined(TSAN_ENABLED)
 void* operator new(std::size_t size) {
     void* pointer(std::malloc(size));
     std::cout << "global new(" << size << ")->" << pointer << "\n";
@@ -22,6 +28,7 @@ void operator delete(void* pointer, std::size_t size) noexcept {
     std::cout << "global delete(" << pointer << ", " << size << ")\n";
     return std::free(pointer);
 }
+#endif
 
 template <std::size_t Size>
 class fixed_resource : public std::pmr::memory_resource {

@@ -15,7 +15,7 @@ ex::lazy<void> loop() {
 int main() {
     ex::sync_wait(
         // ex::detail::write_env(
-        [] -> ex::lazy<void> {
+        []() -> ex::lazy<void> {
             for (int i{}; i < 1000000; ++i)
                 co_await ex::just(i);
         }()

@@ -1142,7 +1142,7 @@ because loops don't really execute like loops. For example, a
 coroutine like this can easily result in a stack overflow:
 
     ex::sync_wait(ex::write_env(
-        [] -> ex::lazy<void> {
+        []() -> ex::lazy<void> {
             for (int i{}; i < 1000000; ++i)
                 co_await ex::just(i);
         }(),

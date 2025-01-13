@@ -37,13 +37,13 @@ struct context {
 
 int main() {
     ex::sync_wait(ex::detail::write_env(
-        [] -> ex::lazy<void, simple_context> {
+        []() -> ex::lazy<void, simple_context> {
             auto value(co_await ex::read_env(get_value));
             std::cout << "value=" << value << "\n";
         }(),
         ex::detail::make_env(get_value, 42)));
     ex::sync_wait(ex::detail::write_env(
-        [] -> ex::lazy<void, context> {
+        []() -> ex::lazy<void, context> {
             auto value(co_await ex::read_env(get_value));
             std::cout << "value=" << value << "\n";
         }(),

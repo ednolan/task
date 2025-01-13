@@ -9,7 +9,7 @@ namespace ex = beman::execution26;
 namespace ly = beman::lazy;
 
 int main() {
-    return std::get<0>(*ex::sync_wait([] -> ex::lazy<int> {
+    return std::get<0>(*ex::sync_wait([]() -> ex::lazy<int> {
         std::cout << "Hello, world!\n";
         co_return co_await ex::just(0);
     }()));

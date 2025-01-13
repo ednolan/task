@@ -65,7 +65,7 @@ struct request {
     }
 };
 
-void stop(queue& q) { ex::sync_wait(request(0, q)); }
+void stop(queue& q) { ex::sync_wait(request{0, q}); }
 
 int main() {
     queue q{};
@@ -83,7 +83,7 @@ int main() {
     ex::sync_wait(ex::detail::write_env(
         [](queue& q) -> ex::lazy<void> {
             std::cout << std::this_thread::get_id() << " start\n" << std::flush;
-            auto result = co_await request(17, q);
+            auto result = co_await request{17, q};
             std::cout << std::this_thread::get_id() << " result=" << result << "\n" << std::flush;
             stop(q);
         }(q),
