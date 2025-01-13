@@ -11,11 +11,14 @@ namespace ex = beman::execution26;
 // ----------------------------------------------------------------------------
 
 int main() {
+    [[maybe_unused]]
     auto o = ex::sync_wait([]() -> ex::lazy<> {
         co_await ex::just(); // void
         std::cout << "after co_await ex::just()\n";
+        [[maybe_unused]]
         auto v = co_await ex::just(42); // int
         assert(v == 42);
+        [[maybe_unused]]
         auto [i, b, c] = co_await ex::just(17, true, 'c'); // tuple<int, bool, char>
         assert(i == 17 && b == true && c == 'c');
         try {

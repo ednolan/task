@@ -10,9 +10,9 @@
 namespace ex = beman::execution26;
 
 #if defined(__has_feature)
-#if __has_feature(thread_sanitizer)
-#define TSAN_ENABLED
-#endif
+#  if __has_feature(thread_sanitizer)
+#    define TSAN_ENABLED
+#  endif
 #endif
 #if !defined(TSAN_ENABLED)
 void* operator new(std::size_t size) {
@@ -84,7 +84,7 @@ int main() {
     std::cout << "ex::lazy<void> with alloc done\n\n";
 
     std::cout << "running ex::lazy<void, alloc_aware> extracting alloc\n";
-    ex::sync_wait([](auto&&, auto* resource) -> ex::lazy<void, alloc_aware> {
+    ex::sync_wait([](auto&&, [[maybe_unused]] auto* resource) -> ex::lazy<void, alloc_aware> {
         auto alloc = co_await ex::read_env(ex::get_allocator);
         static_assert(std::same_as<std::pmr::polymorphic_allocator<std::byte>, decltype(alloc)>);
         assert(alloc == std::pmr::polymorphic_allocator<std::byte>(resource));
