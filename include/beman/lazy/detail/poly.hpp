@@ -29,7 +29,7 @@ namespace beman::lazy::detail
         poly(poly&& other) { other.pointer()->move(this->buf.data()); }
         poly(poly const& other) { other.pointer()->clone(this->buf.data()); }
         ~poly() { this->pointer()->~Base(); }
-        bool operator== (poly const& other) const { return other.pointer()->equals(this); }
+        bool operator== (poly const& other) const { return other.pointer()->equals(this->pointer()); }
         Base* operator->() { return this->pointer(); }
     };
 }

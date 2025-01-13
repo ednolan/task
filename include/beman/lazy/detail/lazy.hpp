@@ -67,6 +67,27 @@ namespace beman::lazy::detail
     {
     };
 
+    template <typename R>
+    struct lazy_completion { using type = ::beman::execution26::set_value_t(R); };
+    template <>
+    struct lazy_completion<void> { using type = ::beman::execution26::set_value_t(); };
+
+    template <typename R>
+    struct lazy_promise_base {
+        using result_t = std::variant<std::monostate, R, std::exception_ptr, std::error_code>;
+        result_t result;
+        void return_value(R&& value) { this->result.template emplace<R>(std::forward<R>(value)); }
+        template <typename E>
+        void return_value(::beman::lazy::detail::with_error<E> with) { this->result.template emplace<E>(with.error); }
+    };
+    template <>
+    struct lazy_promise_base<void> {
+        struct void_t {};
+        using result_t = std::variant<std::monostate, void_t, std::exception_ptr, std::error_code>;
+        result_t result;
+        void return_void() { this->result.template emplace<void_t>(void_t{}); }
+    };
+
     template <typename T = void, typename C = default_context>
     struct lazy {
         using allocator_type   = ::beman::lazy::detail::allocator_of_t<C>;
@@ -74,37 +95,16 @@ namespace beman::lazy::detail
         using stop_source_type = ::beman::lazy::detail::stop_source_of_t<C>;
         using stop_token_type  = decltype(std::declval<stop_source_type>().get_token());
 
-        template <typename R>
-        struct completion { using type = ::beman::execution26::set_value_t(R); };
-        template <>
-        struct completion<void> { using type = ::beman::execution26::set_value_t(); };
-
         using sender_concept = ::beman::execution26::sender_t;
         using completion_signatures = ::beman::execution26::completion_signatures<
-            typename completion<T>::type,
+            typename lazy_completion<T>::type,
             ::beman::execution26::set_error_t(std::exception_ptr),
             ::beman::execution26::set_error_t(std::error_code),
             ::beman::execution26::set_stopped_t()
         >;
 
-        struct void_t {};
-        template <typename R>
-        struct promise_base {
-            using result_t = std::variant<std::monostate, T, std::exception_ptr, std::error_code>;
-            result_t result;
-            void return_value(T&& value) { this->result.template emplace<T>(std::forward<T>(value)); }
-            template <typename E>
-            void return_value(::beman::lazy::detail::with_error<E> with) { this->result.template emplace<E>(with.error); }
-        };
-        template <>
-        struct promise_base<void> {
-            using result_t = std::variant<std::monostate, void_t, std::exception_ptr, std::error_code>;
-            result_t result;
-            void return_void() { this->result.template emplace<void_t>(void_t{}); }
-        };
-
         struct state_base {
-            virtual void complete(promise_base<std::remove_cvref_t<T>>::result_t&) = 0;
+            virtual void complete(lazy_promise_base<std::remove_cvref_t<T>>::result_t&) = 0;
             virtual stop_token_type get_stop_token() = 0;
             virtual C& get_context() = 0;
         protected:
@@ -112,7 +112,7 @@ namespace beman::lazy::detail
         };
 
         struct promise_type
-            : promise_base<std::remove_cvref_t<T>>
+            : lazy_promise_base<std::remove_cvref_t<T>>
         {
             template <typename... A>
             void* operator new(std::size_t size, A const&... a) {
@@ -253,7 +253,7 @@ namespace beman::lazy::detail
                 handle.promise().state = this;
                 handle.resume();
             }
-            void complete(promise_base<std::remove_cvref_t<T>>::result_t& result) override {
+            void complete(lazy_promise_base<std::remove_cvref_t<T>>::result_t& result) override {
                 switch (result.index()) {
                 case 0: // set_stopped
                     this->reset_handle();
