@@ -10,9 +10,9 @@
 namespace ex = beman::execution26;
 
 #if defined(__has_feature)
-#  if __has_feature(thread_sanitizer)
-#    define TSAN_ENABLED
-#  endif
+#if __has_feature(thread_sanitizer)
+#define TSAN_ENABLED
+#endif
 #endif
 #if !defined(TSAN_ENABLED)
 void* operator new(std::size_t size) {

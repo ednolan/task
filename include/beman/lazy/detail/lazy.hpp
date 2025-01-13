@@ -71,11 +71,13 @@ struct lazy_completion<void> {
 
 template <typename R>
 struct lazy_promise_base {
-    using type = std::remove_cvref_t<R>;
+    using type     = std::remove_cvref_t<R>;
     using result_t = std::variant<std::monostate, type, std::exception_ptr, std::error_code>;
     result_t result;
     template <typename T>
-    void return_value(T&& value) { this->result.template emplace<type>(std::forward<T>(value)); }
+    void return_value(T&& value) {
+        this->result.template emplace<type>(std::forward<T>(value));
+    }
     template <typename E>
     void return_value(::beman::lazy::detail::with_error<E> with) {
         this->result.template emplace<E>(with.error);

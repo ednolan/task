@@ -498,7 +498,7 @@ a result, the default completion signatures for `lazy<T>` are
     ex::completion_signatures<
         ex::set_value_t(T),  // or ex::set_value_t() if T == void
         ex::set_error_t(std::exception_ptr),
-        ex:set_stopped()
+        ex:set_stopped_t()
     >;
 
 Support for [reporting an error without exception](#error-reporting)
