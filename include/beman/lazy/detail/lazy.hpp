@@ -14,6 +14,10 @@
 #include <optional>
 #include <type_traits>
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wmismatched-new-delete"
+#endif
+
 // ----------------------------------------------------------------------------
 
 namespace beman::lazy::detail {
@@ -120,15 +124,7 @@ struct lazy {
             return ::beman::lazy::detail::coroutine_allocate<C>(size, a...);
         }
         void operator delete(void* ptr, std::size_t size) {
-#if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmismatched-new-delete"
-#pragma GCC diagnostic ignored "-Werror=mismatched-new-delete"
-#endif
             return ::beman::lazy::detail::coroutine_deallocate<C>(ptr, size);
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
         }
 
         template <typename... A>
