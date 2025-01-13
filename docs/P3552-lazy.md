@@ -39,7 +39,7 @@ Just to get an idea what this proposal is about: here is a simple
         }()));
     }
 
-# The Name
+## The Name
 
 Just to get it out of the way: the class (template) used to implement
 a coroutine task needs to have a name. In previous discussion [SG1
@@ -51,7 +51,7 @@ various other details of the interface.  Thus, the text is written
 in terms of `lazy`. The name is easily changed (prior to standarisation)
 if that is desired.
 
-# Prior Work
+## Prior Work
 
 This proposal isn't the first to propose a coroutine type. Prior proposals
 didn't see any recent (post introduction of sender/receiver) update although
@@ -61,7 +61,7 @@ model in active use. This section provides an overview of this prior work
 and where relevant of corresponding discussions. This section is primarily
 for motivating requirements and describing some points in the design space.
 
-## [P1056](https://wg21.link/P1056): Add lazy coroutine (coroutine task) type
+### [P1056](https://wg21.link/P1056): Add lazy coroutine (coroutine task) type
 
 The paper describes a `task`/`lazy` type (in
 [P1056r0](https://wg21.link/P1056r0) the name was `task`; the primary
@@ -104,7 +104,7 @@ are details on how the coroutine is implemented.
 - Votes against deal with associated executors and a request to have
   strong language about transfer between threads.
 
-## [P2506](https://wg21.link/P2506): std::lazy: a coroutine for deferred execution
+### [P2506](https://wg21.link/P2506): std::lazy: a coroutine for deferred execution
 
 This paper is effectively restating what [P1056](https://wg21.link/P1056)
 said with the primary change being more complete proposed wording.
@@ -116,7 +116,7 @@ interface into account.
 Although there were mails seemingly scheduling a discussion in LEWG
 we didn't manage to actually locate any discussion notes.
 
-## [cppcoro](https://github.com/lewissbaker/cppcoro)
+### [cppcoro](https://github.com/lewissbaker/cppcoro)
 
 This library contains multiple coroutine types, algorithms, and
 some facilities for asynchronous work. For the purpose of this
@@ -162,7 +162,7 @@ sender/receiver world. Likewise, throwing of results can be avoid
 by suitably rewriting the result of the `set_error` channel avoiding
 the need for an operation akin to `when_ready()`.
 
-## [libunifex](https://github.com/facebookexperimental/libunifex)
+### [libunifex](https://github.com/facebookexperimental/libunifex)
 
 `unifex` is an earlier implementation of the sender/receiver
 ideas. Compared to `std::execution` it is lacking some of the
@@ -256,7 +256,7 @@ isn't always inline, the issue only arises when `co_await`ing many
 senders with `blocking_kind::always_inline` or when the scheduler
 resumes inline.
 
-## [stdexec](https://github.com/NVIDIA/stdexec)
+### [stdexec](https://github.com/NVIDIA/stdexec)
 
 The
 [`exec::task`](https://github.com/NVIDIA/stdexec/blob/main/include/exec/task.hpp)
@@ -283,7 +283,7 @@ which is connected to the task.
 Like the unifex task `exec::task<T, C>` doesn't provide any allocator
 support. When creating a task there are two allocations.
 
-# Objectives
+## Objectives
 
 Also see [sender/receiver issue 241](https://github.com/cplusplus/sender-receiver/issues/241).
 
@@ -325,7 +325,7 @@ no particular order):
     changing contexts is probably OK because it is done deliberately,
     e.g., using `continues_on`, and the way to express things is
     new with fewer attached expectations.
-    
+
     To bring these two views
     together a coroutine task should be scheduler affine by default,
     i.e., it should normally resume on the same scheduler. There
@@ -404,14 +404,14 @@ for most uses. It may also be reasonable to provide some variations
 as different names. A future revision of the standard or third party
 libraries can also provide additional variations.
 
-# Design
+## Design
 
 This section discusses various design options for achieving the
 listed objectives. Most of the designs are independent of each other
 and can be left out if the consensus is that it shouldn't be used
 for whatever reason.
 
-## Template Declaration for `lazy`
+### Template Declaration for `lazy`
 
 Coroutines can use `co_return` to produce a value. The value returned can
 reasonably provide the argument for the `set_value_t` completion
@@ -440,14 +440,14 @@ parameters become unwieldy, it makes sense to combine these into a
 [defaulted] context parameter. The aspects which benefit from
 customization are at least:
 
- - [Customizing the environment](#environment-support) for child
+- [Customizing the environment](#environment-support) for child
     operations. The context itself can actually become part of
     the environment.
- - Disable [scheduler affinity](#scheduler-affinity) and/or configure
+- Disable [scheduler affinity](#scheduler-affinity) and/or configure
     the strategy for obtaining the coroutine's scheduler.
- - Configure [allocator awareness](#allocator-support).
- - Indicate that the coroutine should be [noexcept](#avoiding-set_error_texception_ptr).
- - Define [additional error types](#support-error-reporting-without-exception).
+- Configure [allocator awareness](#allocator-support).
+- Indicate that the coroutine should be [noexcept](#error-reporting).
+- Define [additional error types](#error-reporting).
 
 The default context should be used such that any empty type provides
 the default behavior instead of requiring a lot of boilerplate just
@@ -470,7 +470,7 @@ they are used in a container, e.g., to process data using a range
 of coroutines, they are likely to use the same result type and
 context types for configurations.
 
-## `lazy` Completion Signatures
+### `lazy` Completion Signatures
 
 The discussion above established that `lazy<T, C>` can have a
 successful completion using `set_value_t(T)`. The coroutine completes
@@ -504,7 +504,7 @@ a result, the default completion signatures for `lazy<T>` are
 Support for [reporting an error without exception](#error-reporting)
 may modify the completion signatures.
 
-## `lazy` constructors and assignments
+### `lazy` constructors and assignments
 
 Coroutines are created via a factory function which returns the
 coroutine type and whose body uses one of the `co_*` function, e.g.
@@ -531,7 +531,7 @@ assignments either don't make sense or enable dangerous practices:
     of `lazy` the coroutine handle is transferred to an operation
     state and the original coroutine object doesn't have any
     reference to the object anymore.
-4. If there is no assignment, a default constructed object doesn't make
+3. If there is no assignment, a default constructed object doesn't make
     much sense, i.e., `lazy` also doesn't have a default constructor.
 
 Based on experience with [Folly](https://github.com/facebook/folly)
@@ -557,7 +557,7 @@ Technically there isn't a problem adding a default constructor, move
 assignment, and a `swap()` function. Based on experience with similar
 components it seems `lazy` is better off not having them.
 
-## Result Type For `co_await`
+### Result Type For `co_await`
 
 When `co_await`ing a sender `sndr` in a coroutine, `sndr` needs to
 be transformed to an awaitable. The existing approach is to use
@@ -653,7 +653,7 @@ into an `std::expected` instead. However, there should probably be
 some transformation algorithms like `into_optional`, `into_expected`,
 etc.  similar to `into_variant`.
 
-## Scheduler Affinity
+### Scheduler Affinity
 
 Coroutines look very similar to synchronous code with a few
 `co`-keywords sprinkled over the code. When reading such code the
@@ -662,16 +662,16 @@ despite some `co_await` expressions using senders which may explicitly
 change the scheduler. There are various issues when using `co_await`
 naïvely:
 
-* Users may expect that work continues on the same context where it
+- Users may expect that work continues on the same context where it
     was started. If the coroutine simply resumes when the `co_await`ed
     senders calls a completion function code may execute some lengthy
     operation on a context which is expected to keep a UI responsive
     or which is meant to deal with I/O.
-* Conversely, running a loop `co_await`ing some work may be seen as
+- Conversely, running a loop `co_await`ing some work may be seen as
     unproblematic but may actually easily cause a stack overflow if
     `co_await`ed work immediately completes (also
     [see below](#avoiding-stack-overflow)).
-* When `co_await`ing some work completes on a different context and
+- When `co_await`ing some work completes on a different context and
     later a blocking call is made from the coroutine which also
     ends up `co_await`ing some work from the same resource there
     can be a dead lock.
@@ -734,9 +734,9 @@ There are a few immediate issues with the basic idea:
     actually changed and the scheduling operation should be avoided.
 5. It should be possible to explicitly change the scheduler used by
     a coroutine from within this coroutine.
-    
+
 All of these issues can be addressed although there are different
-choices in some of these cases. 
+choices in some of these cases.
 
 In many cases the receiver can provide access to a scheduler via
 the environment query. An example where no scheduler is available
@@ -814,7 +814,7 @@ scheduler the call stack is unwound. Without that it may be necessary
 to inject scheduling just for the purpose of avoiding stack overflow
 when too many operations complete inline.
 
-## Allocator Support
+### Allocator Support
 
 When using coroutines at least the coroutine frame may end up being
 allocated on the heap: the [HALO](https://wg21.link/P0981) optimizations
@@ -833,7 +833,7 @@ the corresponding allocator if present. For example:
     ex::lazy<int, allocator_aware_context> fun(int value, A&&...) {
         co_return value;
     }
-    
+
     int main() {
         // Use the coroutine without passing an allocator:
         ex::sync_wait(fun(17));
@@ -885,7 +885,7 @@ the allocator can be obtained from there:
         use(alloc);
     }(allocator_arg, &resource));
 
-## Environment Support
+### Environment Support
 
 When `co_await`ing child operations these may want to access an
 environment. Ideally, the coroutine would expose the environment
@@ -963,7 +963,7 @@ For example:
         );
     }
 
-## Support For Requesting Cancellation/Stopped
+### Support For Requesting Cancellation/Stopped
 
 When a coroutine task executes the actual work it may listen to
 a stop token to recognize that it got cancelled. Once it recognizes
@@ -977,7 +977,7 @@ The sender `just_stopped()` completes with `set_stopped()` causing
 the coroutine to be cancelled. Any other sender completing with
 `set_stopped()` can also be used.
 
-## Error Reporting
+### Error Reporting
 
 The sender/receiver approach to error reporting is for operations
 to complete with a call to `set_error(rcvr, err)` for some receiver
@@ -1064,7 +1064,7 @@ can be exited:
     with an argument. Flowing off the end of a coroutine is equivalent
     to explicitly using `co_return;` instead of flowing off. It
     would be possible to turn the use of
-    
+
         co_return with_error{err};
 
     into a `set_error(std::move(rcvr), err)` completion.
@@ -1085,7 +1085,7 @@ can be exited:
     and error `err` obtained via the awaitable `a`. Thus, using
 
         co_await with_error{err};
-    
+
     could complete with `set_error(std::move(rcvr), err)`.
 
     Using the same notation for awaiting outstanding operations and
@@ -1100,7 +1100,7 @@ can be exited:
     and the operation can complete accordingly. Thus, using
 
         co_yield with_error{err};
-    
+
     could complete with `set_error(std::move(rcvr), err)`. Using
     `co_yield` for the purpose of returning from a coroutine with
     a specific result seems more expected than using `co_await`.
@@ -1135,7 +1135,7 @@ completing with the error from `exp.error()`.  Using this approach
 produces a fairly compact approach to propagating the error retaining
 the type and without using exceptions.
 
-## Avoiding Stack Overflow
+### Avoiding Stack Overflow
 
 It is easy to use a coroutine to accidentally create a stack overflow
 because loops don't really execute like loops. For example, a
@@ -1148,7 +1148,7 @@ coroutine like this can easily result in a stack overflow:
         }(),
         ex::make_env(ex::get_scheduler, ex::inline_scheduler{})
     ));
-    
+
 The reason this innocent looking code creates a stack overflow is
 that the use of `co_await` results in some function calls to suspend
 the coroutine and then further function calls to resume the coroutine
@@ -1176,7 +1176,7 @@ reaches its own scheduling and picks up the next entity to execute.
 When using `sync_wait(sndr)` the `run_loop`'s scheduler is used and
 it may very well just resume the just suspended coroutine: when
 there is scheduling happening as part of scheduler affinity it
-doesn't mean that work gets scheduled on a different thread! 
+doesn't mean that work gets scheduled on a different thread!
 
 The problem with stack overflows does remain when the work resumes
 immediately despite using scheduler affinity. That may be the case
@@ -1200,7 +1200,7 @@ using an inline scheduler the user will need to be very careful to
 not overflow the stack or cause any of the various other problems
 with executing immediately.
 
-## Asynchronous Clean-Up
+### Asynchronous Clean-Up
 
 Asynchronous clean-up of objects is an important facility. Both
 [`unifex`](https://github.com/facebookexperimental/libunifex) and
@@ -1216,7 +1216,7 @@ There is similar work ongoing in the context of
 not plan to support asynchronous clean-up as part of the `lazy`
 implementation.  Instead, it can be composed based on other facilities.
 
-# Caveats
+## Caveats
 
 The use of coroutines introduces some issues which are entirely
 independent of how specific coroutines are defined. Some of these
@@ -1229,7 +1229,7 @@ In particular:
     introduce problems when resources which are meant to be held temporarily
     are held when suspending. For example, holding a lock to a mutex
     while suspending a coroutine can result in a different thread
-    trying to release the lock when the coroutine is resumed 
+    trying to release the lock when the coroutine is resumed
     (scheduler affinity will move the resumed coroutine
     to the same scheduler but not to the same thread).
 2. Destroying a coroutine is only safe when it is suspended. For
@@ -1258,7 +1258,7 @@ to discuss them. Discussion of these issues should be delegated
 to suitable proposals wanting to improve this situation in some
 form.
 
-# Questions
+## Questions
 
 This section lists questions based on the design discussion
 above. Each one has a recommendation and a vote is only needed
@@ -1286,7 +1286,7 @@ if there opinions deviating from the recommendation.
 - Clean-up: should asynchronous clean-up be supported? Recommendation:
     no.
 
-# Implementation
+## Implementation
 
 An implementation of `lazy` as proposed in this document is available
 from [`beman::lazy`](https://github.com/bemanproject/lazy). This
@@ -1307,18 +1307,19 @@ The first one
 isn't based on sender/receiver. Usage experience from all three
 have influenced the design of `lazy`.
 
-# Acknowledgements
+## Acknowledgements
 
 We would like to thank Ian Petersen, Alexey Spiridonov, and Lee
 Howes for comments on drafts of this proposal and general guidance.
 
-# Proposed Wording
+## Proposed Wording
 
 The intent is to have all relevant wording in place before the
 Hagenberg meeting.
 
 Based on the discussion the wording would get
 Entities to describe:
+
 - `inline_scheduler`
 - `any_scheduler`
 - `lazy`
