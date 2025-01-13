@@ -1,23 +1,24 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-add_library(beman.exemplar STATIC)
-add_library(beman::exemplar ALIAS beman.exemplar)
+add_library(beman.lazy STATIC)
+add_library(beman::lazy ALIAS beman.lazy)
 
-target_sources(beman.exemplar PRIVATE identity.cpp)
+target_sources(beman.lazy PRIVATE lazy.cpp)
 
 target_sources(
-    beman.exemplar
+    beman.lazy
     PUBLIC
         FILE_SET HEADERS
         BASE_DIRS ${PROJECT_SOURCE_DIR}/include
-        FILES ${PROJECT_SOURCE_DIR}/include/beman/exemplar/identity.hpp
+        FILES ${PROJECT_SOURCE_DIR}/include/beman/lazy/lazy.hpp
 )
 
-set_target_properties(beman.exemplar PROPERTIES VERIFY_INTERFACE_HEADER_SETS ON)
+set_target_properties(beman.lazy PROPERTIES VERIFY_INTERFACE_HEADER_SETS ON)
+target_link_libraries(beman.lazy PUBLIC beman::execution26)
 
 install(
-    TARGETS beman.exemplar
-    EXPORT beman.exemplar
+    TARGETS beman.lazy
+    EXPORT beman.lazy
     DESTINATION
     $<$<CONFIG:Debug>:debug/>${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION $<$<CONFIG:Debug>:debug/>${CMAKE_INSTALL_BINDIR}

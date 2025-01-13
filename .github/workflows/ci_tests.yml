@@ -119,8 +119,8 @@ jobs:
           # Portable commands only
           cmake --build build --config Release --verbose
           cmake --build build --config Release --target all_verify_interface_header_sets
-          cmake --install build --config Release --prefix /opt/beman.exemplar
-          ls -R /opt/beman.exemplar
+          cmake --install build --config Release --prefix /opt/beman.lazy
+          ls -R /opt/beman.lazy
       - name: Test Release
         run: ctest --test-dir build --build-config Release
       - name: Build Debug
@@ -128,8 +128,8 @@ jobs:
           # Portable commands only
           cmake --build build --config Debug --verbose
           cmake --build build --config Debug --target all_verify_interface_header_sets
-          cmake --install build --config Debug --prefix /opt/beman.exemplar
-          ls -R /opt/beman.exemplar
+          cmake --install build --config Debug --prefix /opt/beman.lazy
+          ls -R /opt/beman.lazy
       - name: Test Debug
         run: ctest --test-dir build --build-config Debug
 
@@ -139,9 +139,9 @@ jobs:
       matrix:
         args:
           - name: "Disable build testing"
-            arg: "-DBEMAN_EXEMPLAR_BUILD_TESTS=OFF"
+            arg: "-DBEMAN_LAZY_BUILD_TESTS=OFF"
           - name: "Disable example building"
-            arg: "-DBEMAN_EXEMPLAR_BUILD_EXAMPLES=OFF"
+            arg: "-DBEMAN_LAZY_BUILD_EXAMPLES=OFF"
     name: "CMake: ${{ matrix.args.name }}"
     steps:
       - uses: actions/checkout@v4
@@ -164,15 +164,15 @@ jobs:
           # Portable commands only
           cmake --build build --config Release --verbose
           cmake --build build --config Release --target all_verify_interface_header_sets
-          cmake --install build --config Release --prefix /opt/beman.exemplar
-          ls -R /opt/beman.exemplar
+          cmake --install build --config Release --prefix /opt/beman.lazy
+          ls -R /opt/beman.lazy
       - name: Build Debug
         run: |
           # Portable commands only
           cmake --build build --config Debug --verbose
           cmake --build build --config Debug --target all_verify_interface_header_sets
-          cmake --install build --config Debug --prefix /opt/beman.exemplar
-          ls -R /opt/beman.exemplar
+          cmake --install build --config Debug --prefix /opt/beman.lazy
+          ls -R /opt/beman.lazy
 
   compiler-test:
     runs-on: ubuntu-24.04
@@ -240,8 +240,8 @@ jobs:
         run: |
           cmake --build build --config Debug --verbose
           cmake --build build --config Debug --target all_verify_interface_header_sets
-          cmake --install build --config Debug --prefix /opt/beman.exemplar
-          find /opt/beman.exemplar -type f
+          cmake --install build --config Debug --prefix /opt/beman.lazy
+          find /opt/beman.lazy -type f
       - name: Test Debug
         run: ctest --test-dir build --build-config Debug
 
