@@ -53,14 +53,13 @@ struct alloc_aware {
     using allocator_type = std::pmr::polymorphic_allocator<std::byte>;
 };
 
-int main()
-{
+int main() {
     std::cout << "running just\n";
     ex::sync_wait(ex::just(0));
     std::cout << "just done\n\n";
 
     std::cout << "running ex::lazy<void, alloc_aware>\n";
-    ex::sync_wait([]()->ex::lazy<void, alloc_aware> {
+    ex::sync_wait([]() -> ex::lazy<void, alloc_aware> {
         co_await ex::just(0);
         co_await ex::just(0);
     }());

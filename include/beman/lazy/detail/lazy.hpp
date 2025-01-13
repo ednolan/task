@@ -280,7 +280,7 @@ namespace beman::lazy::detail
             }
             stop_token_type get_stop_token() override {
                 if (this->source.stop_possible() && not this->stop_callback) {
-                    this->stop_callback.emplace(::beman::execution26::get_stop_token(::beman::execution26::get_env(this->receiver)), stop_link(this->source));
+                    this->stop_callback.emplace(::beman::execution26::get_stop_token(::beman::execution26::get_env(this->receiver)), stop_link{this->source});
                 }
                 return this->source.get_token();
             }

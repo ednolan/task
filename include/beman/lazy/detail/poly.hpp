@@ -4,6 +4,7 @@
 #ifndef INCLUDED_BEMAN_LAZY_DETAIL_POLY
 #define INCLUDED_BEMAN_LAZY_DETAIL_POLY
 
+#include <array>
 #include <concepts>
 #include <new>
 #include <cstddef>

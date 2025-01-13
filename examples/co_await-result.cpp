@@ -11,7 +11,7 @@ namespace ex = beman::execution26;
 // ----------------------------------------------------------------------------
 
 int main() {
-    auto o = ex::sync_wait([]->ex::lazy<> {
+    auto o = ex::sync_wait([]() -> ex::lazy<> {
         co_await ex::just();                               // void
         std::cout << "after co_await ex::just()\n";
         auto v = co_await ex::just(42);                    // int

@@ -68,12 +68,12 @@ struct request {
     };
 
     int    value;
-    queue& queue;
+    queue& que;
 
     template <typename Receiver>
     auto connect(Receiver&& receiver) {
         return state<std::remove_cvref_t<Receiver>>(
-            std::forward<Receiver>(receiver), this->value, this->queue
+            std::forward<Receiver>(receiver), this->value, this->que
         );
     }
 };
