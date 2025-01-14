@@ -1,24 +1,25 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-set(ALL_EXAMPLES identity_direct_usage)
-
-# Example `identity_as_default_projection` need ranges support:
-include(CheckCXXSymbolExists)
-check_cxx_symbol_exists(__cpp_lib_ranges "ranges" HAS_RANGES)
-
-if(HAS_RANGES)
-    list(APPEND ALL_EXAMPLES identity_as_default_projection)
-else()
-    message(
-        WARNING
-        "Missing range support! Skip: identity_as_default_projection"
-    )
-endif()
+set(ALL_EXAMPLES
+    affinity
+    co_await-result
+    friendly
+    loop
+    stop
+    alloc
+    container
+    hello
+    query
+    async-lock
+    error
+    into_optional
+    result_example
+)
 
 message("Examples to be built: ${ALL_EXAMPLES}")
 
 foreach(example ${ALL_EXAMPLES})
-    add_executable(beman.exemplar.examples.${example})
-    target_sources(beman.exemplar.examples.${example} PRIVATE ${example}.cpp)
-    target_link_libraries(beman.exemplar.examples.${example} beman::exemplar)
+    add_executable(beman.lazy.examples.${example})
+    target_sources(beman.lazy.examples.${example} PRIVATE ${example}.cpp)
+    target_link_libraries(beman.lazy.examples.${example} beman::lazy)
 endforeach()
