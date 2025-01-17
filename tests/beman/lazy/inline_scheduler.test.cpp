@@ -14,14 +14,14 @@ namespace ly = beman::lazy;
 // ----------------------------------------------------------------------------
 
 namespace {
-    struct receiver {
-        using receiver_concept = ex::receiver_t;
-        int &value;
+struct receiver {
+    using receiver_concept = ex::receiver_t;
+    int& value;
 
-        void set_value(int v) && noexcept { this->value = v; }
-    };
-    static_assert(ex::receiver<receiver>);
-}
+    void set_value(int v) && noexcept { this->value = v; }
+};
+static_assert(ex::receiver<receiver>);
+} // namespace
 
 int main() {
     ly::detail::inline_scheduler sched;
@@ -33,12 +33,8 @@ int main() {
     auto env{ex::get_env(sched_sender)};
     assert(sched == ex::get_completion_scheduler<ex::set_value_t>(env));
 
-    int value{};
-    auto state{
-        ex::connect(std::move(sched_sender)
-        | ex::then([]() noexcept { return 17; })
-        , receiver(value))
-    };
+    int  value{};
+    auto state{ex::connect(std::move(sched_sender) | ex::then([]() noexcept { return 17; }), receiver(value))};
     static_assert(ex::operation_state<decltype(state)>);
 
     assert(value == 0);
