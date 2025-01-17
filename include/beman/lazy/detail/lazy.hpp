@@ -110,9 +110,9 @@ struct lazy {
                                                     ::beman::execution26::set_stopped_t()>;
 
     struct state_base {
-        virtual void            complete(lazy_promise_base<std::remove_cvref_t<T>>::result_t&) = 0;
-        virtual stop_token_type get_stop_token()                                               = 0;
-        virtual C&              get_context()                                                  = 0;
+        virtual void            complete(typename lazy_promise_base<std::remove_cvref_t<T>>::result_t&) = 0;
+        virtual stop_token_type get_stop_token()                                                        = 0;
+        virtual C&              get_context()                                                           = 0;
 
       protected:
         virtual ~state_base() = default;
@@ -251,7 +251,7 @@ struct lazy {
             handle.promise().state = this;
             handle.resume();
         }
-        void complete(lazy_promise_base<std::remove_cvref_t<T>>::result_t& result) override {
+        void complete(typename lazy_promise_base<std::remove_cvref_t<T>>::result_t& result) override {
             switch (result.index()) {
             case 0: // set_stopped
                 this->reset_handle();
