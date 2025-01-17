@@ -5,7 +5,7 @@ BUILDDIR = build
 default: test
 
 compile: config
-	cmake --build $(BUILDDIR)
+	cmake --build $(BUILDDIR) -j
 
 format:
 	git clang-format main
