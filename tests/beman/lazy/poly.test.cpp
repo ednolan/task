@@ -164,8 +164,8 @@ void test_poly_ctor() {
 template <bool Expect, typename Base>
 void test_poly_move_exists() {
     static_assert(Expect == requires(ex::detail::poly<Base> p) { ex::detail::poly<Base>(std::move(p)); });
-    static_assert(Expect == requires(ex::detail::poly<Base> p) {
-        { p = std::move(p) } -> std::same_as<ex::detail::poly<Base>&>;
+    static_assert(Expect == requires(ex::detail::poly<Base> p, ex::detail::poly<Base> q) {
+        { q = std::move(p) } -> std::same_as<ex::detail::poly<Base>&>;
     });
 }
 template <typename Base>
