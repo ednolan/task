@@ -14,13 +14,35 @@
 
 namespace beman::lazy::detail {
 
+/*!
+ * \brief Type-erasing scheduler
+ * \headerfile beman/lazy/lazy.hpp <beman/lazy/lazy.hpp>
+ *
+ * The class `any_scheduler` is used to type-erase any scheduler class.
+ * Any error produced by the underlying scheduler except `std::error_code` is turned into
+ * an `std::exception_ptr`. `std::error_code` is forwarded as is. The `any_scheduler`
+ * forwards stop requests reported by the stop token obtained from the `connect`ed
+ * receiver to the sender used by the underlying scheduler.
+ *
+ * Completion signatures:
+ *
+ * - `ex::set_value_t()`
+ * - `ex::set_error_t(std::error_code)`
+ * - `ex::set_error_t(std::exception_ptr)`
+ * - `ex::set_stopped()`
+ *
+ * Usage:
+ *
+ *     any_scheduler sched(other_scheduler);
+ *     auto sender{ex::schedule(sched) | some_sender};
+ */
 class any_scheduler {
     struct state_base {
-        virtual ~state_base()                           = default;
-        virtual void complete_value()                   = 0;
+        virtual ~state_base()                                                                 = default;
+        virtual void                                     complete_value()                     = 0;
         virtual void                                     complete_error(::std::error_code)    = 0;
         virtual void                                     complete_error(::std::exception_ptr) = 0;
-        virtual void complete_stopped()                 = 0;
+        virtual void                                     complete_stopped()                   = 0;
         virtual ::beman::execution26::inplace_stop_token get_stop_token()                     = 0;
     };
 
@@ -78,8 +100,8 @@ class any_scheduler {
             decltype(::beman::execution26::get_stop_token(::beman::execution26::get_env(std::declval<Receiver>())));
         using callback_t = ::beman::execution26::stop_callback_for_t<token_t, stopper>;
 
-        std::remove_cvref_t<Receiver> receiver;
-        inner_state                   s;
+        std::remove_cvref_t<Receiver>             receiver;
+        inner_state                               s;
         ::beman::execution26::inplace_stop_source source;
         ::std::optional<callback_t>               callback;
 
