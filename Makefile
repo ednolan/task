@@ -2,16 +2,17 @@
 
 BUILDDIR = build
 
-default: test
+default: compile
 
 compile: config
-	cmake --build $(BUILDDIR) -j
+	#cmake --build $(BUILDDIR) -j
+	cmake --workflow --preset=appleclang-debug --fresh
 
 format:
 	git clang-format main
 
 config:
-	cmake -DCMAKE_BUILD_TYPE=Debug -B $(BUILDDIR)
+	#CXXFLAGS=-fsanitize=thread cmake -DCMAKE_BUILD_TYPE=Debug -B $(BUILDDIR)
 
 test: compile
 	cd $(BUILDDIR); ctest
