@@ -96,10 +96,10 @@ class any_scheduler {
 
       private:
         struct base {
-            virtual ~base()                          = default;
-            virtual base*       move(void*)          = 0;
-            virtual base*       clone(void*) const   = 0;
-            virtual inner_state connect(state_base*) = 0;
+            virtual ~base()                                        = default;
+            virtual base*         move(void*)                      = 0;
+            virtual base*         clone(void*) const               = 0;
+            virtual inner_state   connect(state_base*)             = 0;
             virtual any_scheduler get_completion_scheduler() const = 0;
         };
         template <::beman::execution26::scheduler Scheduler>
@@ -109,9 +109,9 @@ class any_scheduler {
 
             template <::beman::execution26::scheduler S>
             concrete(S&& s) : sender(::beman::execution26::schedule(std::forward<S>(s))) {}
-            base*       move(void* buffer) override { return new (buffer) concrete(std::move(*this)); }
-            base*       clone(void* buffer) const override { return new (buffer) concrete(*this); }
-            inner_state connect(state_base* b) override { return inner_state(::std::move(sender), b); }
+            base*         move(void* buffer) override { return new (buffer) concrete(std::move(*this)); }
+            base*         clone(void* buffer) const override { return new (buffer) concrete(*this); }
+            inner_state   connect(state_base* b) override { return inner_state(::std::move(sender), b); }
             any_scheduler get_completion_scheduler() const override {
                 return any_scheduler(::beman::execution26::get_completion_scheduler<::beman::execution26::set_value_t>(
                     ::beman::execution26::get_env(this->sender)));
@@ -171,7 +171,7 @@ class any_scheduler {
     explicit any_scheduler(S&& s) : scheduler(static_cast<concrete<std::decay_t<S>>*>(nullptr), std::forward<S>(s)) {}
 
     sender schedule() { return this->scheduler->schedule(); }
-    bool operator==(const any_scheduler&) const = default;
+    bool   operator==(const any_scheduler&) const = default;
 };
 static_assert(::beman::execution26::scheduler<any_scheduler>);
 

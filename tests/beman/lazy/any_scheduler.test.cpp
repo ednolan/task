@@ -4,7 +4,7 @@
 #include <beman/lazy/detail/any_scheduler.hpp>
 #include <beman/lazy/detail/inline_scheduler.hpp>
 #include <beman/execution26/execution.hpp>
-#include <iostream>
+#include <atomic>
 #include <thread>
 #include <condition_variable>
 #include <mutex>
@@ -39,8 +39,6 @@ struct thread_context {
         if (rc) {
             this->work = rc->next;
         }
-        std::cout << "get_work(rc=" << rc << " work=" << this->work << " done=" << std::boolalpha << this->done
-                  << ")\n";
         return rc;
     }
     void enqueue(base* w) {
@@ -54,10 +52,8 @@ struct thread_context {
     thread_context()
         : thread([this] {
               while (auto w{this->get_work()}) {
-                  std::cout << "calling complete\n" << std::flush;
                   w->complete();
               }
-              std::cout << "loop done\n" << std::flush;
           }) {}
     ~thread_context() {
         this->stop();
@@ -78,10 +74,7 @@ struct thread_context {
             template <typename R>
             state(auto c, R&& r) : ctxt(c), receiver(std::forward<R>(r)) {}
             void start() & noexcept { this->ctxt->enqueue(this); }
-            void complete() override {
-                ex::set_value(std::move(this->receiver));
-                std::cout << "completing\n";
-            }
+            void complete() override { ex::set_value(std::move(this->receiver)); }
         };
         struct env {
             thread_context* ctxt;
@@ -152,8 +145,8 @@ int main() {
     assert(move == sched2);
     assert(move != sched1);
 
-    std::thread::id id1{};
-    std::thread::id id2{};
+    std::atomic<std::thread::id> id1{};
+    std::atomic<std::thread::id> id2{};
     ex::sync_wait(ex::schedule(sched1) | ex::then([&id1]() { id1 = std::this_thread::get_id(); }));
     ex::sync_wait(ex::schedule(sched2) | ex::then([&id2]() { id2 = std::this_thread::get_id(); }));
     assert(id1 != id2);
