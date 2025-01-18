@@ -32,7 +32,7 @@ FetchContent_Declare(
     execution26
     # for local development, use SOURCE_DIR <path-to>/execution26
     GIT_REPOSITORY https://github.com/bemanproject/execution26
-    GIT_TAG b52f28c
+    GIT_TAG a7ee8c8
 )
 FetchContent_MakeAvailable(execution26)
 
