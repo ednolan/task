@@ -88,6 +88,16 @@ jobs:
               description: "Windows MSVC"
             cmake_args:
               description: "TSan"
+            # Linux has a TSan bug: FATAL: ThreadSanitizer: unexpected memory mapping
+          - platform:
+              description: "Ubuntu GCC"
+            cmake_args:
+              description: "TSan"
+            # Linux has a TSan bug: FATAL: ThreadSanitizer: unexpected memory mapping
+          - platform:
+              description: "Ubuntu LLVM"
+            cmake_args:
+              description: "TSan"
 
     name: "Unit: ${{ matrix.platform.description }} ${{ matrix.cpp_version }} ${{ matrix.cmake_args.description }}"
     runs-on: ${{ matrix.platform.os }}
@@ -209,7 +219,6 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y $CC
             sudo apt-get install -y $CXX
-            sudo sysctl vm.mmap_rnd_bits=28
 
             $CC --version
             $CXX --version
