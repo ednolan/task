@@ -120,7 +120,7 @@ class any_scheduler {
             if constexpr (::std::same_as<token_t, ::beman::execution26::inplace_stop_token>) {
                 return ::beman::execution26::get_stop_token(::beman::execution26::get_env(this->receiver));
             } else {
-                if constexpr (not::std::same_as<token_t, ::beman::execution26::never_stop_token>) {
+                if constexpr (not ::std::same_as<token_t, ::beman::execution26::never_stop_token>) {
                     if (not this->callback) {
                         this->callback.emplace(
                             ::beman::execution26::get_stop_token(::beman::execution26::get_env(this->receiver)),
