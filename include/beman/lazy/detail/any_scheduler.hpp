@@ -78,21 +78,23 @@ class any_scheduler {
     class sender;
     class env {
         friend class sender;
-    private:
-        sender const* sndr;
-        env(sender const* s): sndr(s) {}
 
-    public:
-        any_scheduler query(
-            const ::beman::execution26::get_completion_scheduler_t<::beman::execution26::set_value_t>&) const noexcept {
-                return this->sndr->inner_sender->get_completion_scheduler();
-            }
+      private:
+        const sender* sndr;
+        env(const sender* s) : sndr(s) {}
+
+      public:
+        any_scheduler query(const ::beman::execution26::get_completion_scheduler_t<::beman::execution26::set_value_t>&)
+            const noexcept {
+            return this->sndr->inner_sender->get_completion_scheduler();
+        }
     };
 
     // sender implementation
     class sender {
         friend class env;
-    private:
+
+      private:
         struct base {
             virtual ~base()                          = default;
             virtual base*       move(void*)          = 0;
@@ -111,16 +113,13 @@ class any_scheduler {
             base*       clone(void* buffer) const override { return new (buffer) concrete(*this); }
             inner_state connect(state_base* b) override { return inner_state(::std::move(sender), b); }
             any_scheduler get_completion_scheduler() const override {
-                return any_scheduler(
-                    ::beman::execution26::get_completion_scheduler<::beman::execution26::set_value_t>(
-                        ::beman::execution26::get_env(this->sender)
-                    )
-                );
+                return any_scheduler(::beman::execution26::get_completion_scheduler<::beman::execution26::set_value_t>(
+                    ::beman::execution26::get_env(this->sender)));
             }
         };
         poly<base, 4 * sizeof(void*)> inner_sender;
 
-    public:
+      public:
         using sender_concept = ::beman::execution26::sender_t;
         using completion_signatures =
             ::beman::execution26::completion_signatures<::beman::execution26::set_value_t(),
@@ -137,9 +136,7 @@ class any_scheduler {
             return state<R>(std::forward<R>(r), this->inner_sender);
         }
 
-        env get_env() const noexcept {
-            return env(this);
-        }
+        env get_env() const noexcept { return env(this); }
     };
 
     // scheduler implementation
@@ -166,7 +163,7 @@ class any_scheduler {
 
     poly<base, 4 * sizeof(void*)> scheduler;
 
-public:
+  public:
     using scheduler_concept = ::beman::execution26::scheduler_t;
 
     template <typename S>

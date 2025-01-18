@@ -18,7 +18,7 @@ struct scheduler_of<Context> {
 };
 template <typename Context>
 using scheduler_of_t = typename scheduler_of<Context>::type;
-}
+} // namespace beman::lazy::detail
 
 // ----------------------------------------------------------------------------
 

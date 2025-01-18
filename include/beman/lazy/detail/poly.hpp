@@ -69,7 +69,7 @@ class alignas(sizeof(double)) poly {
         return other.pointer()->equals(this->pointer());
     }
     Base* operator->() { return this->pointer(); }
-    Base const* operator->() const { return this->pointer(); }
+    const Base* operator->() const { return this->pointer(); }
 };
 } // namespace beman::lazy::detail
 
