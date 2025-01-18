@@ -6,7 +6,7 @@ default: compile
 
 compile: config
 	#cmake --build $(BUILDDIR) -j
-	cmake --workflow --preset=gcc-debug --fresh
+	cmake --workflow --preset=appleclang-debug
 
 format:
 	git clang-format main
