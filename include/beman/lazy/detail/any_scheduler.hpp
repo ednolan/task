@@ -95,12 +95,18 @@ class any_scheduler {
         }
         void complete_stopped() override { ::beman::execution26::set_stopped(std::move(this->receiver)); }
         ::beman::execution26::inplace_stop_token get_stop_token() override {
-            if (not this->callback) {
-                this->callback.emplace(
-                    ::beman::execution26::get_stop_token(::beman::execution26::get_env(this->receiver)),
-                    stopper{this});
+            if constexpr (::std::same_as<token_t, ::beman::execution26::inplace_stop_token>) {
+                return ::beman::execution26::get_stop_token(::beman::execution26::get_env(this->receiver));
+            } else {
+                if constexpr (not::std::same_as<token_t, ::beman::execution26::never_stop_token>) {
+                    if (not this->callback) {
+                        this->callback.emplace(
+                            ::beman::execution26::get_stop_token(::beman::execution26::get_env(this->receiver)),
+                            stopper{this});
+                    }
+                }
+                return this->source.get_token();
             }
-            return this->source.get_token();
         }
     };
 
