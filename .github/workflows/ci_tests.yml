@@ -209,6 +209,7 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y $CC
             sudo apt-get install -y $CXX
+            sudo sysctl vm.mmap_rnd_bits=28
 
             $CC --version
             $CXX --version
