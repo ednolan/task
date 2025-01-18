@@ -26,11 +26,11 @@ struct thread_context {
         virtual void complete() = 0;
     };
 
-    std::thread             thread;
     std::mutex              mutex;
     std::condition_variable condition;
     bool                    done{false};
     base*                   work{};
+    std::thread             thread;
 
     base* get_work() {
         std::unique_lock cerberus(this->mutex);
