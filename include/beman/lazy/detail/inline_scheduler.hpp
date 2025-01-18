@@ -11,6 +11,21 @@
 // ----------------------------------------------------------------------------
 
 namespace beman::lazy::detail {
+/*!
+ * \brief Scheduler completing immmediately when started on the same thread
+ * \headerfile beman/lazy/lazy.hpp <beman/lazy/lazy.hpp>
+ *
+ * The class `inline_scheduler` is used to prevent any actual schedulering.
+ * It does have a scheduler interface but it completes synchronously on
+ * the thread on which it gets `start`ed before returning from `start`.
+ * The implication is that any blocking working gets executed on the
+ * calling thread. Also, if there is lot of synchronous work repeatedly
+ * getting scheduled using `inline_scheduler` it is possible to get a
+ * stack overflow.
+ *
+ * In general, any use of `inline_scheduler` should receive a lot of
+ * attention as it is fairly easy to create subtle bugs using this scheduler.
+ */
 struct inline_scheduler {
     struct env {
         inline_scheduler
