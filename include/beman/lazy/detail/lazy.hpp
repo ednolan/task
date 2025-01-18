@@ -7,6 +7,7 @@
 #include <beman/execution26/execution.hpp>
 #include <beman/lazy/detail/allocator.hpp>
 #include <beman/lazy/detail/any_scheduler.hpp>
+#include <beman/lazy/detail/scheduler_of.hpp>
 #include <beman/lazy/detail/stop_source.hpp>
 #include <beman/lazy/detail/inline_scheduler.hpp>
 #include <concepts>

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-list(APPEND lazy_tests inline_scheduler lazy poly)
+list(APPEND lazy_tests any_scheduler inline_scheduler lazy poly)
 
 foreach(test ${lazy_tests})
     add_executable(beman.lazy.tests.${test})

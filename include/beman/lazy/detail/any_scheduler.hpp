@@ -13,7 +13,7 @@
 
 namespace beman::lazy::detail {
 
-struct any_scheduler {
+class any_scheduler {
     // TODO: add support for forwarding stop_tokens to the type-erased sender
     // TODO: other errors than std::exception_ptr should be supported
     struct state_base {
@@ -75,18 +75,30 @@ struct any_scheduler {
         void complete_stopped() override { ::beman::execution26::set_stopped(std::move(this->receiver)); }
     };
 
-    struct env {
+    class sender;
+    class env {
+        friend class sender;
+    private:
+        sender const* sndr;
+        env(sender const* s): sndr(s) {}
+
+    public:
         any_scheduler query(
-            const ::beman::execution26::get_completion_scheduler_t<::beman::execution26::set_value_t>&) const noexcept;
+            const ::beman::execution26::get_completion_scheduler_t<::beman::execution26::set_value_t>&) const noexcept {
+                return this->sndr->inner_sender->get_completion_scheduler();
+            }
     };
 
     // sender implementation
-    struct sender {
+    class sender {
+        friend class env;
+    private:
         struct base {
             virtual ~base()                          = default;
             virtual base*       move(void*)          = 0;
             virtual base*       clone(void*) const   = 0;
             virtual inner_state connect(state_base*) = 0;
+            virtual any_scheduler get_completion_scheduler() const = 0;
         };
         template <::beman::execution26::scheduler Scheduler>
         struct concrete : base {
@@ -98,14 +110,22 @@ struct any_scheduler {
             base*       move(void* buffer) override { return new (buffer) concrete(std::move(*this)); }
             base*       clone(void* buffer) const override { return new (buffer) concrete(*this); }
             inner_state connect(state_base* b) override { return inner_state(::std::move(sender), b); }
+            any_scheduler get_completion_scheduler() const override {
+                return any_scheduler(
+                    ::beman::execution26::get_completion_scheduler<::beman::execution26::set_value_t>(
+                        ::beman::execution26::get_env(this->sender)
+                    )
+                );
+            }
         };
+        poly<base, 4 * sizeof(void*)> inner_sender;
 
+    public:
         using sender_concept = ::beman::execution26::sender_t;
         using completion_signatures =
             ::beman::execution26::completion_signatures<::beman::execution26::set_value_t(),
                                                         ::beman::execution26::set_error_t(std::exception_ptr),
                                                         ::beman::execution26::set_stopped_t()>;
-        poly<base, 4 * sizeof(void*)> inner_sender;
 
         template <::beman::execution26::scheduler S>
         explicit sender(S&& s) : inner_sender(static_cast<concrete<S>*>(nullptr), std::forward<S>(s)) {}
@@ -117,7 +137,9 @@ struct any_scheduler {
             return state<R>(std::forward<R>(r), this->inner_sender);
         }
 
-        env get_env() const noexcept { return {}; }
+        env get_env() const noexcept {
+            return env(this);
+        }
     };
 
     // scheduler implementation
@@ -144,30 +166,18 @@ struct any_scheduler {
 
     poly<base, 4 * sizeof(void*)> scheduler;
 
+public:
     using scheduler_concept = ::beman::execution26::scheduler_t;
 
     template <typename S>
         requires(not std::same_as<any_scheduler, std::remove_cvref_t<S>>)
     explicit any_scheduler(S&& s) : scheduler(static_cast<concrete<std::decay_t<S>>*>(nullptr), std::forward<S>(s)) {}
-    any_scheduler(any_scheduler&& other)      = default;
-    any_scheduler(const any_scheduler& other) = default;
-    sender schedule() { return this->scheduler->schedule(); }
 
+    sender schedule() { return this->scheduler->schedule(); }
     bool operator==(const any_scheduler&) const = default;
 };
 static_assert(::beman::execution26::scheduler<any_scheduler>);
 
-template <typename>
-struct scheduler_of {
-    using type = ::beman::lazy::detail::any_scheduler;
-};
-template <typename Context>
-    requires requires { typename Context::scheduler_type; }
-struct scheduler_of<Context> {
-    using type = typename Context::scheduler_type;
-};
-template <typename Context>
-using scheduler_of_t = typename scheduler_of<Context>::type;
 } // namespace beman::lazy::detail
 
 // ----------------------------------------------------------------------------
