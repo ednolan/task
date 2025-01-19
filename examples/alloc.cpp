@@ -56,6 +56,20 @@ struct alloc_aware {
     using allocator_type = std::pmr::polymorphic_allocator<std::byte>;
 };
 
+struct test_base {
+    template <typename... Args>
+    void* operator new(std::size_t size, Args&&...) {
+        void* ptr{::operator new(size)};
+        std::cout << "custom alloc(" << size << ") -> " << ptr << "\n";
+        return ptr;
+    }
+    void operator delete(void* ptr, std::size_t size) {
+        std::cout << "custom dealloc(" << ptr << ", " << size << ")\n";
+        ::operator delete(ptr, size);
+    }
+};
+struct test : test_base {};
+
 int main() {
     std::cout << "running just\n";
     ex::sync_wait(ex::just(0));
@@ -69,25 +83,33 @@ int main() {
     std::cout << "ex::lazy<void, alloc_aware> done\n\n";
 
     fixed_resource<2048> resource;
-    std::cout << "running ex::lazy<void, alloc_aware> with alloc\n";
-    ex::sync_wait([](auto&&...) -> ex::lazy<void, alloc_aware> {
-        co_await ex::just(0);
-        co_await ex::just(0);
-    }(std::allocator_arg, &resource));
-    std::cout << "ex::lazy<void, alloc_aware> with alloc done\n\n";
+    if constexpr (true) {
+        std::cout << "running ex::lazy<void, alloc_aware> with alloc\n";
+        ex::sync_wait([](auto&&...) -> ex::lazy<void, alloc_aware> {
+            co_await ex::just(0);
+            co_await ex::just(0);
+        }(std::allocator_arg, &resource));
+        std::cout << "ex::lazy<void, alloc_aware> with alloc done\n\n";
+    }
 
-    // std::cout << "running ex::lazy<void> with alloc\n";
-    // ex::sync_wait([](auto&&...) -> ex::lazy<void> {
-    //     co_await ex::just(0);
-    //     co_await ex::just(0);
-    // }(std::allocator_arg, &resource));
-    // std::cout << "ex::lazy<void> with alloc done\n\n";
+    if constexpr (false) {
+        std::cout << "running ex::lazy<void> with alloc\n";
+        ex::sync_wait([](auto&&...) -> ex::lazy<void> {
+            co_await ex::just(0);
+            co_await ex::just(0);
+        }(std::allocator_arg, &resource));
+        std::cout << "ex::lazy<void> with alloc done\n\n";
+    }
 
-    std::cout << "running ex::lazy<void, alloc_aware> extracting alloc\n";
-    ex::sync_wait([](auto&&, [[maybe_unused]] auto* res) -> ex::lazy<void, alloc_aware> {
-        auto alloc = co_await ex::read_env(ex::get_allocator);
-        static_assert(std::same_as<std::pmr::polymorphic_allocator<std::byte>, decltype(alloc)>);
-        assert(alloc == std::pmr::polymorphic_allocator<std::byte>(res));
-    }(std::allocator_arg, &resource));
-    std::cout << "ex::lazy<void, alloc_aware> extracting alloc done\n\n";
+    if constexpr (false) {
+        std::cout << "running ex::lazy<void, alloc_aware> extracting alloc\n";
+        ex::sync_wait([](auto&&, [[maybe_unused]] auto* res) -> ex::lazy<void, alloc_aware> {
+            auto alloc = co_await ex::read_env(ex::get_allocator);
+            static_assert(std::same_as<std::pmr::polymorphic_allocator<std::byte>, decltype(alloc)>);
+            assert(alloc == std::pmr::polymorphic_allocator<std::byte>(res));
+        }(std::allocator_arg, &resource));
+        std::cout << "ex::lazy<void, alloc_aware> extracting alloc done\n\n";
+    }
+
+    delete new test{};
 }
