@@ -4,6 +4,7 @@
 #ifndef INCLUDED_BEMAN_LAZY_DETAIL_ALLOCATOR
 #define INCLUDED_BEMAN_LAZY_DETAIL_ALLOCATOR
 
+#include <beman/lazy/detail/allocator_of.hpp>
 #include <memory>
 #include <memory_resource>
 #include <new>
@@ -12,17 +13,6 @@
 // ----------------------------------------------------------------------------
 
 namespace beman::lazy::detail {
-template <typename>
-struct allocator_of {
-    using type = std::allocator<std::byte>;
-};
-template <typename Context>
-    requires requires { typename Context::allocator_type; }
-struct allocator_of<Context> {
-    using type = typename Context::allocator_type;
-};
-template <typename Context>
-using allocator_of_t = typename allocator_of<Context>::type;
 
 template <typename Allocator>
 Allocator find_allocator() {
