@@ -13,16 +13,16 @@
 // ----------------------------------------------------------------------------
 
 namespace {
-    template <typename Expect, typename... Args>
-    void test_find(Expect expect, Args... args) {
-        auto alloc{beman::lazy::detail::find_allocator<Expect>(std::forward<Args>(args)...)};
-        static_assert(std::same_as<Expect, decltype(alloc)>);
-        assert(expect == alloc);
-    }
+template <typename Expect, typename... Args>
+void test_find(Expect expect, Args... args) {
+    auto alloc{beman::lazy::detail::find_allocator<Expect>(std::forward<Args>(args)...)};
+    static_assert(std::same_as<Expect, decltype(alloc)>);
+    assert(expect == alloc);
 }
+} // namespace
 
 int main() {
-    using std_alloc = std::allocator<char>;
+    using std_alloc  = std::allocator<char>;
     using poly_alloc = std::pmr::polymorphic_allocator<char>;
 
     test_find(std_alloc{});
@@ -37,8 +37,10 @@ int main() {
     test_find(poly_alloc{});
     test_find(poly_alloc{}, std::allocator_arg, poly_alloc{}, 0, 1);
     test_find(poly_alloc{}, std::allocator_arg, std::pmr::new_delete_resource(), 0, 1);
-    test_find(poly_alloc{std::pmr::null_memory_resource()}, std::allocator_arg, std::pmr::null_memory_resource(), 0, 1);
+    test_find(
+        poly_alloc{std::pmr::null_memory_resource()}, std::allocator_arg, std::pmr::null_memory_resource(), 0, 1);
     test_find(poly_alloc{}, 0, std::allocator_arg, poly_alloc{}, 0, 1);
     test_find(poly_alloc{}, 0, std::allocator_arg, std::pmr::new_delete_resource(), 0, 1);
-    test_find(poly_alloc{std::pmr::null_memory_resource()}, 0, std::allocator_arg, std::pmr::null_memory_resource(), 0, 1);
+    test_find(
+        poly_alloc{std::pmr::null_memory_resource()}, 0, std::allocator_arg, std::pmr::null_memory_resource(), 0, 1);
 }

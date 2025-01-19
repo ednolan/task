@@ -24,14 +24,14 @@ template <typename Context>
 struct allocator_of<Context> {
     using type = typename Context::allocator_type;
     static_assert(
-        requires(type& a, std::size_t s, std::byte* ptr){
+        requires(type& a, std::size_t s, std::byte* ptr) {
             { a.allocate(s) } -> std::same_as<std::byte*>;
             a.deallocate(ptr, s);
         }, "The allocator_type needs to be an allocator of std::byte");
 };
 template <typename Context>
 using allocator_of_t = typename allocator_of<Context>::type;
-}
+} // namespace beman::lazy::detail
 
 // ----------------------------------------------------------------------------
 
