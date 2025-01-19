@@ -3,6 +3,7 @@
 list(
     APPEND
     lazy_tests
+    allocator_of
     any_scheduler
     inline_scheduler
     lazy

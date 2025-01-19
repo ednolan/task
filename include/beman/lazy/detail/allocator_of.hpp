@@ -10,6 +10,11 @@
 // ----------------------------------------------------------------------------
 
 namespace beman::lazy::detail {
+/*!
+ * \brief Utility to get an allocator type from a context
+ * \headerfile beman/lazy/lazy.hpp <beman/lazy/lazy.hpp>
+ * \internal
+ */
 template <typename>
 struct allocator_of {
     using type = std::allocator<std::byte>;
@@ -22,7 +27,7 @@ struct allocator_of<Context> {
         requires(type& a, std::size_t s, std::byte* ptr){
             { a.allocate(s) } -> std::same_as<std::byte*>;
             a.deallocate(ptr, s);
-        });
+        }, "The allocator_type needs to be an allocator of std::byte");
 };
 template <typename Context>
 using allocator_of_t = typename allocator_of<Context>::type;
