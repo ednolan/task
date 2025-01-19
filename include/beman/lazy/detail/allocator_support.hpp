@@ -35,7 +35,10 @@ namespace beman::lazy::detail {
 template <typename Allocator, typename Derived>
 struct allocator_support {
     std::array<std::byte, sizeof(Allocator)> buffer;
-    allocator_support() {}
+    template <typename... Args>
+    allocator_support(const Args&... args) {
+        new (this->buffer.data()) Allocator(::beman::lazy::detail::find_allocator<Allocator>(args...));
+    }
 
     template <typename... A>
     void* operator new(std::size_t size, A&&... a) {

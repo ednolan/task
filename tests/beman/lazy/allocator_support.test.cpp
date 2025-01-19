@@ -35,7 +35,11 @@ struct some_data {
 };
 
 template <typename Allocator>
-struct allocator_aware : some_data, beman::lazy::detail::allocator_support<Allocator, allocator_aware<Allocator>> {};
+struct allocator_aware : some_data, beman::lazy::detail::allocator_support<Allocator, allocator_aware<Allocator>> {
+    template <typename... Args>
+    allocator_aware(Args&&... args)
+        : some_data(), beman::lazy::detail::allocator_support<Allocator, allocator_aware<Allocator>>(args...) {}
+};
 } // namespace
 
 int main() {
@@ -45,7 +49,8 @@ int main() {
 
     test_resource resource{};
     assert(resource.outstanding == 0u);
-    auto ptr{new (std::allocator_arg, &resource) allocator_aware<std::pmr::polymorphic_allocator<std::byte>>{}};
+    auto ptr{new (std::allocator_arg, &resource)
+                 allocator_aware<std::pmr::polymorphic_allocator<std::byte>>(std::allocator_arg, &resource)};
     assert(resource.outstanding != 0u);
     delete ptr;
     assert(resource.outstanding == 0u);
