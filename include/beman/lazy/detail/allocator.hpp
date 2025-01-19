@@ -5,6 +5,7 @@
 #define INCLUDED_BEMAN_LAZY_DETAIL_ALLOCATOR
 
 #include <beman/lazy/detail/allocator_of.hpp>
+#include <beman/lazy/detail/find_allocator.hpp>
 #include <memory>
 #include <memory_resource>
 #include <new>
@@ -13,20 +14,6 @@
 // ----------------------------------------------------------------------------
 
 namespace beman::lazy::detail {
-
-template <typename Allocator>
-Allocator find_allocator() {
-    return Allocator();
-}
-template <typename Allocator, typename Alloc, typename... A>
-    requires requires(const Alloc& alloc) { Allocator(alloc); }
-Allocator find_allocator(const std::allocator_arg_t&, const Alloc& alloc, const A&...) {
-    return Allocator(alloc);
-}
-template <typename Allocator, typename A0, typename... A>
-Allocator find_allocator(A0 const&, const A&... a) {
-    return ::beman::lazy::detail::find_allocator<Allocator>(a...);
-}
 
 template <typename C, typename... A>
 void* coroutine_allocate(std::size_t size, const A&... a) {

@@ -76,12 +76,12 @@ int main() {
     }(std::allocator_arg, &resource));
     std::cout << "ex::lazy<void, alloc_aware> with alloc done\n\n";
 
-    std::cout << "running ex::lazy<void> with alloc\n";
-    ex::sync_wait([](auto&&...) -> ex::lazy<void> {
-        co_await ex::just(0);
-        co_await ex::just(0);
-    }(std::allocator_arg, &resource));
-    std::cout << "ex::lazy<void> with alloc done\n\n";
+    //std::cout << "running ex::lazy<void> with alloc\n";
+    //ex::sync_wait([](auto&&...) -> ex::lazy<void> {
+    //    co_await ex::just(0);
+    //    co_await ex::just(0);
+    //}(std::allocator_arg, &resource));
+    //std::cout << "ex::lazy<void> with alloc done\n\n";
 
     std::cout << "running ex::lazy<void, alloc_aware> extracting alloc\n";
     ex::sync_wait([](auto&&, [[maybe_unused]] auto* res) -> ex::lazy<void, alloc_aware> {

@@ -5,6 +5,7 @@ list(
     lazy_tests
     allocator_of
     any_scheduler
+    find_allocator
     inline_scheduler
     lazy
     poly
