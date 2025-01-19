@@ -31,7 +31,6 @@ struct thread_context {
         virtual void complete() = 0;
     };
 
-    std::latch              stop_done{1u};
     std::mutex              mutex;
     std::condition_variable condition;
     bool                    done{false};
@@ -60,7 +59,6 @@ struct thread_context {
               while (auto w{this->get_work()}) {
                   w->complete();
               }
-              this->stop_done.count_down();
           }) {}
     ~thread_context() {
         this->stop();
@@ -145,7 +143,6 @@ struct thread_context {
             this->done = true;
         }
         this->condition.notify_one();
-        this->stop_done.wait();
     }
 };
 
