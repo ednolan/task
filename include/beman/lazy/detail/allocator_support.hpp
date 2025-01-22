@@ -32,31 +32,30 @@ namespace beman::lazy::detail {
  * object! So, the current strategy is to embed space for the allocator
  * into the object and pull it out from there.
  */
-template <typename Allocator, typename Derived>
-struct alignas(Allocator) allocator_support {
-    std::array<std::byte, sizeof(Allocator)> buffer;
-    template <typename... Args>
-    allocator_support(const Args&... args) {
-        new (this->buffer.data()) Allocator(::beman::lazy::detail::find_allocator<Allocator>(args...));
+template <typename Allocator>
+struct allocator_support {
+    using allocator_traits = std::allocator_traits<Allocator>;
+
+    static std::size_t offset(std::size_t size) {
+        return (size + alignof(Allocator) - 1u) & ~(alignof(Allocator) - 1u);
+    }
+    static Allocator* get_allocator(void* ptr, std::size_t size) {
+        ptr = static_cast<std::byte*>(ptr) + offset(size);
+        return static_cast<Allocator*>(ptr);
     }
 
     template <typename... A>
     void* operator new(std::size_t size, A&&... a) {
-        using traits = std::allocator_traits<Allocator>;
-        Allocator                              alloc{::beman::lazy::detail::find_allocator<Allocator>(a...)};
-        void*                                  ptr{traits::allocate(alloc, size)};
-        allocator_support<Allocator, Derived>* support{static_cast<Derived*>(ptr)};
-        new (support->buffer.data()) Allocator(alloc);
+        Allocator alloc{::beman::lazy::detail::find_allocator<Allocator>(a...)};
+        void*     ptr{allocator_traits::allocate(alloc, offset(size) + sizeof(Allocator))};
+        new (get_allocator(ptr, size)) Allocator(alloc);
         return ptr;
     }
     void operator delete(void* ptr, std::size_t size) {
-        using traits = std::allocator_traits<Allocator>;
-        allocator_support<Allocator, Derived>* support{static_cast<Derived*>(ptr)};
-        void*                                  vptr{support->buffer.data()};
-        auto*                                  aptr{static_cast<Allocator*>(vptr)};
-        Allocator                              alloc(*aptr);
+        Allocator* aptr{get_allocator(ptr, size)};
+        Allocator  alloc{*aptr};
         aptr->~Allocator();
-        traits::deallocate(alloc, static_cast<std::byte*>(ptr), size);
+        allocator_traits::deallocate(alloc, static_cast<std::byte*>(ptr), offset(size) + sizeof(Allocator));
     }
 };
 } // namespace beman::lazy::detail

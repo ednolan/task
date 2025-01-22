@@ -121,7 +121,7 @@ struct lazy {
     };
 
     struct promise_type : lazy_promise_base<std::remove_cvref_t<T>>,
-                          ::beman::lazy::detail::allocator_support<allocator_type, promise_type> {
+                          ::beman::lazy::detail::allocator_support<allocator_type> {
 
         template <typename... A>
         promise_type(const A&... a) : allocator(::beman::lazy::detail::find_allocator<allocator_type>(a...)) {}
