@@ -1,3 +1,5 @@
+#-dk: note to self: PATH=/opt/llvm-19.1.6/bin:$PATH LDFLAGS=-fuse-ld=lld
+
 .PHONY: config test default compile clean
 
 BUILDDIR = build

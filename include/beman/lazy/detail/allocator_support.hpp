@@ -33,7 +33,7 @@ namespace beman::lazy::detail {
  * into the object and pull it out from there.
  */
 template <typename Allocator, typename Derived>
-struct allocator_support {
+struct alignas(Allocator) allocator_support {
     std::array<std::byte, sizeof(Allocator)> buffer;
     template <typename... Args>
     allocator_support(const Args&... args) {
