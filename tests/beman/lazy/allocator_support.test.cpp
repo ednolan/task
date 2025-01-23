@@ -21,7 +21,11 @@ struct test_resource : std::pmr::memory_resource {
         return ::operator new(size);
     }
     virtual void do_deallocate(void* ptr, std::size_t size, std::size_t align) override {
-        ::operator delete(ptr, size);
+        if constexpr (requires{ ::operator delete(ptr, size); })
+            ::operator delete(ptr, size);
+        else
+            ::operator delete(ptr);
+
         this->outstanding -= size;
     }
     bool do_is_equal(const memory_resource& other) const noexcept override {
@@ -36,8 +40,7 @@ struct some_data {
 
 template <typename Allocator>
 struct allocator_aware : some_data, beman::lazy::detail::allocator_support<Allocator> {
-    template <typename... Args>
-    allocator_aware(Args&&... args) : some_data() {}
+    allocator_aware() : some_data() {}
 };
 } // namespace
 
@@ -49,7 +52,7 @@ int main() {
     test_resource resource{};
     assert(resource.outstanding == 0u);
     auto ptr{new (std::allocator_arg, &resource)
-                 allocator_aware<std::pmr::polymorphic_allocator<std::byte>>(std::allocator_arg, &resource)};
+                 allocator_aware<std::pmr::polymorphic_allocator<std::byte>>()};
     assert(resource.outstanding != 0u);
     delete ptr;
     assert(resource.outstanding == 0u);
