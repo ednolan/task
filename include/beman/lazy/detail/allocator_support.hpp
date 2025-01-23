@@ -9,6 +9,7 @@
 #include <memory>
 #include <new>
 #include <cstddef>
+#include <cassert>
 
 // ----------------------------------------------------------------------------
 
@@ -41,7 +42,7 @@ struct allocator_support {
     }
     static Allocator* get_allocator(void* ptr, std::size_t size) {
         ptr = static_cast<std::byte*>(ptr) + offset(size);
-        return static_cast<Allocator*>(ptr);
+        return ::std::launder(reinterpret_cast<Allocator*>(ptr));
     }
 
     template <typename... A>
@@ -55,6 +56,7 @@ struct allocator_support {
         Allocator* aptr{get_allocator(ptr, size)};
         Allocator  alloc{*aptr};
         aptr->~Allocator();
+        // alloc.deallocate(static_cast<std::byte*>(ptr), offset(size) + sizeof(Allocator));
         allocator_traits::deallocate(alloc, static_cast<std::byte*>(ptr), offset(size) + sizeof(Allocator));
     }
 };

@@ -3,11 +3,19 @@
 .PHONY: config test default compile clean
 
 BUILDDIR = build
+PRESET  = gcc-debug
+UNAME = $(shell uname -s)
+ifeq ($(UNAME),Darwin)
+    PRESET  = appleclang-debug
+endif
 
 default: compile
 
 compile:
-	cmake --workflow --preset=appleclang-debug
+	cmake --workflow --preset=$(PRESET)
+
+list:
+	cmake --workflow --list-presets
 
 format:
 	git clang-format
