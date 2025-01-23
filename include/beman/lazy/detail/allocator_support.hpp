@@ -48,7 +48,8 @@ struct allocator_support {
     template <typename... A>
     static void* operator new(std::size_t size, A&&... a) {
         if constexpr (::std::same_as<Allocator, ::std::allocator<::std::byte>>) {
-            return ::operator new(size);
+            Allocator alloc{};
+            return allocator_traits::allocate(alloc, size);
 
         } else {
             Allocator alloc{::beman::lazy::detail::find_allocator<Allocator>(a...)};
@@ -63,7 +64,8 @@ struct allocator_support {
     }
     static void operator delete(void* ptr, std::size_t size) {
         if constexpr (::std::same_as<Allocator, ::std::allocator<::std::byte>>) {
-            ::operator delete(ptr, size);
+            Allocator alloc{};
+            allocator_traits::deallocate(alloc, static_cast<std::byte*>(ptr), size);
         } else {
             Allocator* aptr{allocator_support::get_allocator(ptr, size)};
             Allocator  alloc{*aptr};
