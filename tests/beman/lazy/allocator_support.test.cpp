@@ -20,11 +20,8 @@ struct test_resource : std::pmr::memory_resource {
         this->outstanding += size;
         return ::operator new(size);
     }
-    virtual void do_deallocate(void* ptr, std::size_t size, std::size_t align) override {
-        if constexpr (requires{ ::operator delete(ptr, size); })
-            ::operator delete(ptr, size);
-        else
-            ::operator delete(ptr);
+    virtual void do_deallocate(void* ptr, std::size_t size, std::size_t) override {
+        ::operator delete(ptr);
 
         this->outstanding -= size;
     }

@@ -10,7 +10,7 @@ compile:
 	cmake --workflow --preset=appleclang-debug
 
 format:
-	git clang-format 
+	git clang-format
 
 test: compile
 	cd $(BUILDDIR); ctest
