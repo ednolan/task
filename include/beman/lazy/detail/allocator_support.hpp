@@ -46,18 +46,22 @@ struct allocator_support {
     }
 
     template <typename... A>
-    void* operator new(std::size_t size, A&&... a) {
+    static void* operator new(std::size_t size, A&&... a) {
         Allocator alloc{::beman::lazy::detail::find_allocator<Allocator>(a...)};
-        void*     ptr{allocator_traits::allocate(alloc, offset(size) + sizeof(Allocator))};
-        new (get_allocator(ptr, size)) Allocator(alloc);
+        void*     ptr{allocator_traits::allocate(alloc, allocator_support::offset(size) + sizeof(Allocator))};
+        new (allocator_support::get_allocator(ptr, size)) Allocator(alloc);
         return ptr;
     }
-    void operator delete(void* ptr, std::size_t size) {
-        Allocator* aptr{get_allocator(ptr, size)};
+    template <typename... A>
+    static void operator delete(void* ptr, std::size_t size, A&&...) {
+        allocator_support::operator delete(ptr, size);
+    }
+    static void operator delete(void* ptr, std::size_t size) {
+        Allocator* aptr{allocator_support::get_allocator(ptr, size)};
         Allocator  alloc{*aptr};
         aptr->~Allocator();
-        // alloc.deallocate(static_cast<std::byte*>(ptr), offset(size) + sizeof(Allocator));
-        allocator_traits::deallocate(alloc, static_cast<std::byte*>(ptr), offset(size) + sizeof(Allocator));
+        allocator_traits::deallocate(
+            alloc, static_cast<std::byte*>(ptr), allocator_support::offset(size) + sizeof(Allocator));
     }
 };
 } // namespace beman::lazy::detail

@@ -51,6 +51,6 @@ int main() {
     assert(resource.outstanding != 0u);
     ptr->~type();
     assert(resource.outstanding != 0u);
-    type::operator delete(ptr, sizeof(type));
+    type::operator delete(ptr, sizeof(type), std::allocator_arg, &resource);
     assert(resource.outstanding == 0u);
 }
