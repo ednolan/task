@@ -3,7 +3,10 @@
 list(
     APPEND
     lazy_tests
+    allocator_of
+    allocator_support
     any_scheduler
+    find_allocator
     inline_scheduler
     lazy
     poly

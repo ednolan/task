@@ -6,6 +6,7 @@
 #include <exception>
 #include <queue>
 #include <mutex>
+#include <string>
 #include <condition_variable>
 #include <beman/execution26/execution.hpp>
 #include <beman/lazy/lazy.hpp>
@@ -67,7 +68,7 @@ struct request {
 
 void stop(queue& q) { ex::sync_wait(request{0, q}); }
 
-int main() {
+int main(int ac, char* av[]) {
     queue q{};
 
     std::thread process([&q] {
@@ -80,14 +81,18 @@ int main() {
         }
     });
 
-    ex::sync_wait(ex::detail::write_env(
-        [](queue& que) -> ex::lazy<void> {
-            std::cout << std::this_thread::get_id() << " start\n" << std::flush;
-            auto result = co_await request{17, que};
-            std::cout << std::this_thread::get_id() << " result=" << result << "\n" << std::flush;
-            stop(que);
-        }(q),
-        ex::detail::make_env(ex::get_scheduler, ex::inline_scheduler{})));
+    auto work{[](queue& que) -> ex::lazy<void> {
+        std::cout << std::this_thread::get_id() << " start\n" << std::flush;
+        auto result = co_await request{17, que};
+        std::cout << std::this_thread::get_id() << " result=" << result << "\n" << std::flush;
+        stop(que);
+    }};
+
+    if (1 < ac && av[1] == std::string_view("run-it")) {
+        ex::sync_wait(ex::detail::write_env(work(q), ex::detail::make_env(ex::get_scheduler, ex::inline_scheduler{})));
+    } else {
+        ex::sync_wait(work(q));
+    }
     process.join();
     std::cout << "done\n";
 }

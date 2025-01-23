@@ -22,4 +22,8 @@ foreach(example ${ALL_EXAMPLES})
     add_executable(beman.lazy.examples.${example})
     target_sources(beman.lazy.examples.${example} PRIVATE ${example}.cpp)
     target_link_libraries(beman.lazy.examples.${example} beman::lazy)
+    add_test(
+        NAME beman.lazy.examples.${example}
+        COMMAND $<TARGET_FILE:beman.lazy.examples.${example}>
+    )
 endforeach()

@@ -4,11 +4,12 @@
 #ifndef INCLUDED_INCLUDE_BEMAN_LAZY_LAZY
 #define INCLUDED_INCLUDE_BEMAN_LAZY_LAZY
 
-#include <beman/lazy/detail/allocator.hpp>
+#include <beman/lazy/detail/allocator_of.hpp>
 #include <beman/lazy/detail/any_scheduler.hpp>
 #include <beman/lazy/detail/inline_scheduler.hpp>
 #include <beman/lazy/detail/into_optional.hpp>
 #include <beman/lazy/detail/lazy.hpp>
+#include <beman/lazy/detail/scheduler_of.hpp>
 #include <beman/lazy/detail/stop_source.hpp>
 
 // ----------------------------------------------------------------------------

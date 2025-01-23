@@ -5,7 +5,8 @@
 #define INCLUDED_BEMAN_LAZY_DETAIL_LAZY
 
 #include <beman/execution26/execution.hpp>
-#include <beman/lazy/detail/allocator.hpp>
+#include <beman/lazy/detail/allocator_of.hpp>
+#include <beman/lazy/detail/allocator_support.hpp>
 #include <beman/lazy/detail/any_scheduler.hpp>
 #include <beman/lazy/detail/scheduler_of.hpp>
 #include <beman/lazy/detail/stop_source.hpp>
@@ -119,14 +120,8 @@ struct lazy {
         virtual ~state_base() = default;
     };
 
-    struct promise_type : lazy_promise_base<std::remove_cvref_t<T>> {
-        template <typename... A>
-        void* operator new(std::size_t size, const A&... a) {
-            return ::beman::lazy::detail::coroutine_allocate<C>(size, a...);
-        }
-        void operator delete(void* ptr, std::size_t size) {
-            return ::beman::lazy::detail::coroutine_deallocate<C>(ptr, size);
-        }
+    struct promise_type : lazy_promise_base<std::remove_cvref_t<T>>,
+                          ::beman::lazy::detail::allocator_support<allocator_type> {
 
         template <typename... A>
         promise_type(const A&... a) : allocator(::beman::lazy::detail::find_allocator<allocator_type>(a...)) {}
