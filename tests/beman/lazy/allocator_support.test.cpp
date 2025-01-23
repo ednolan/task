@@ -42,15 +42,15 @@ struct allocator_aware : some_data, beman::lazy::detail::allocator_support<Alloc
 } // namespace
 
 int main() {
-    delete new allocator_aware<std::pmr::polymorphic_allocator<std::byte>>{};
-    delete new (std::allocator_arg, std::pmr::polymorphic_allocator<std::byte>{})
-        allocator_aware<std::pmr::polymorphic_allocator<std::byte>>{};
+    using type = allocator_aware<std::pmr::polymorphic_allocator<std::byte>>;
+    std::unique_ptr<type>(new type{});
 
     test_resource resource{};
     assert(resource.outstanding == 0u);
-    auto ptr{new (std::allocator_arg, &resource)
-                 allocator_aware<std::pmr::polymorphic_allocator<std::byte>>()};
+    type* ptr{new (std::allocator_arg, &resource) type{}};
     assert(resource.outstanding != 0u);
-    delete ptr;
+    ptr->~type();
+    assert(resource.outstanding != 0u);
+    type::operator delete(ptr, sizeof(type));
     assert(resource.outstanding == 0u);
 }
