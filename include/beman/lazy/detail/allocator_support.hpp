@@ -6,10 +6,10 @@
 
 #include <beman/lazy/detail/find_allocator.hpp>
 #include <array>
+#include <concepts>
+#include <cstddef>
 #include <memory>
 #include <new>
-#include <cstddef>
-#include <cassert>
 
 // ----------------------------------------------------------------------------
 
@@ -47,21 +47,30 @@ struct allocator_support {
 
     template <typename... A>
     static void* operator new(std::size_t size, A&&... a) {
-        Allocator alloc{::beman::lazy::detail::find_allocator<Allocator>(a...)};
-        void*     ptr{allocator_traits::allocate(alloc, allocator_support::offset(size) + sizeof(Allocator))};
-        new (allocator_support::get_allocator(ptr, size)) Allocator(alloc);
-        return ptr;
+        if constexpr (::std::same_as<Allocator, ::std::allocator<::std::byte>>) {
+            return ::operator new(size);
+
+        } else {
+            Allocator alloc{::beman::lazy::detail::find_allocator<Allocator>(a...)};
+            void*     ptr{allocator_traits::allocate(alloc, allocator_support::offset(size) + sizeof(Allocator))};
+            new (allocator_support::get_allocator(ptr, size)) Allocator(alloc);
+            return ptr;
+        }
     }
     template <typename... A>
     static void operator delete(void* ptr, std::size_t size, A&&...) {
         allocator_support::operator delete(ptr, size);
     }
     static void operator delete(void* ptr, std::size_t size) {
-        Allocator* aptr{allocator_support::get_allocator(ptr, size)};
-        Allocator  alloc{*aptr};
-        aptr->~Allocator();
-        allocator_traits::deallocate(
-            alloc, static_cast<std::byte*>(ptr), allocator_support::offset(size) + sizeof(Allocator));
+        if constexpr (::std::same_as<Allocator, ::std::allocator<::std::byte>>) {
+            ::operator delete(ptr, size);
+        } else {
+            Allocator* aptr{allocator_support::get_allocator(ptr, size)};
+            Allocator  alloc{*aptr};
+            aptr->~Allocator();
+            allocator_traits::deallocate(
+                alloc, static_cast<std::byte*>(ptr), allocator_support::offset(size) + sizeof(Allocator));
+        }
     }
 };
 } // namespace beman::lazy::detail
