@@ -17,8 +17,8 @@ int main(int ac, char* av[]) {
     auto count = ac < 1 && av[1] == std::string_view("run-it") ? 1000000 : 1000;
     ex::sync_wait(
         // ex::detail::write_env(
-        [](auto count) -> ex::lazy<void> {
-            for (int i{}; i < count; ++i)
+        [](auto cnt) -> ex::lazy<void> {
+            for (int i{}; i < cnt; ++i)
                 co_await ex::just(i);
         }(count)
         //, ex::detail::make_env(ex::get_scheduler, ex::inline_scheduler{}))
