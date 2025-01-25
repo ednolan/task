@@ -107,9 +107,9 @@ struct lazy {
     using sender_concept = ::beman::execution::sender_t;
     using completion_signatures =
         ::beman::execution::completion_signatures<typename lazy_completion<T>::type,
-                                                    ::beman::execution::set_error_t(std::exception_ptr),
-                                                    ::beman::execution::set_error_t(std::error_code),
-                                                    ::beman::execution::set_stopped_t()>;
+                                                  ::beman::execution::set_error_t(std::exception_ptr),
+                                                  ::beman::execution::set_error_t(std::error_code),
+                                                  ::beman::execution::set_stopped_t()>;
 
     struct state_base {
         virtual void            complete(typename lazy_promise_base<std::remove_cvref_t<T>>::result_t&) = 0;

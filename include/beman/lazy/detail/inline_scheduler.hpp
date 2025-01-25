@@ -29,8 +29,7 @@ namespace beman::lazy::detail {
 struct inline_scheduler {
     struct env {
         inline_scheduler
-        query(const ::beman::execution::get_completion_scheduler_t<::beman::execution::set_value_t>&)
-            const noexcept {
+        query(const ::beman::execution::get_completion_scheduler_t<::beman::execution::set_value_t>&) const noexcept {
             return {};
         }
     };

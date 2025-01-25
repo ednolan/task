@@ -23,8 +23,7 @@ template <typename Context>
     requires requires { typename Context::scheduler_type; }
 struct scheduler_of<Context> {
     using type = typename Context::scheduler_type;
-    static_assert(::beman::execution::scheduler<type>,
-                  "The type alias scheduler_type needs to refer to a scheduler");
+    static_assert(::beman::execution::scheduler<type>, "The type alias scheduler_type needs to refer to a scheduler");
 };
 template <typename Context>
 using scheduler_of_t = typename scheduler_of<Context>::type;

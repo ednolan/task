@@ -18,7 +18,7 @@ list:
 	cmake --workflow --list-presets
 
 format:
-	git clang-format
+	git clang-format main
 
 test: compile
 	cd $(BUILDDIR); ctest

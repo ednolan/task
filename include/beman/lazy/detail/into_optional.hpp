@@ -56,9 +56,9 @@ inline constexpr struct into_optional_t : beman::execution::sender_adaptor_closu
         template <typename... E, typename... S>
         constexpr auto make_signatures(auto&& env, type_list<E...>, type_list<S...>) const {
             return ::beman::execution::completion_signatures<::beman::execution::set_value_t(
-                                                                   decltype(this->get_type(env))),
-                                                               ::beman::execution::set_error_t(E)...,
-                                                               S...>();
+                                                                 decltype(this->get_type(env))),
+                                                             ::beman::execution::set_error_t(E)...,
+                                                             S...>();
         }
         template <typename Env>
         auto get_completion_signatures(Env&& env) const {
