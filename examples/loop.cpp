@@ -3,10 +3,10 @@
 
 #include <iostream>
 #include <string>
-#include <beman/execution26/execution.hpp>
+#include <beman/execution/execution.hpp>
 #include <beman/lazy/lazy.hpp>
 
-namespace ex = beman::execution26;
+namespace ex = beman::execution;
 
 ex::lazy<void> loop() {
     for (int i{}; i < 1000000; ++i)

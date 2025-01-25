@@ -29,12 +29,12 @@ include(FetchContent)
 include(GNUInstallDirs)
 
 FetchContent_Declare(
-    execution26
-    # for local development, use SOURCE_DIR <path-to>/execution26
-    GIT_REPOSITORY https://github.com/bemanproject/execution26
-    GIT_TAG a7ee8c8
+    execution
+    # for local development, use SOURCE_DIR <path-to>/execution
+    GIT_REPOSITORY https://github.com/bemanproject/execution
+    GIT_TAG e9c3032
 )
-FetchContent_MakeAvailable(execution26)
+FetchContent_MakeAvailable(execution)
 
 add_subdirectory(src/beman/lazy)
 

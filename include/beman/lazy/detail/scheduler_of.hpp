@@ -5,7 +5,7 @@
 #define INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_SCHEDULER_OF
 
 #include <beman/lazy/detail/any_scheduler.hpp>
-#include <beman/execution26/execution.hpp>
+#include <beman/execution/execution.hpp>
 
 // ----------------------------------------------------------------------------
 
@@ -23,7 +23,7 @@ template <typename Context>
     requires requires { typename Context::scheduler_type; }
 struct scheduler_of<Context> {
     using type = typename Context::scheduler_type;
-    static_assert(::beman::execution26::scheduler<type>,
+    static_assert(::beman::execution::scheduler<type>,
                   "The type alias scheduler_type needs to refer to a scheduler");
 };
 template <typename Context>

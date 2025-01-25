@@ -6,17 +6,17 @@
 
 #include <optional>
 #include <tuple>
-#include <beman/execution26/execution.hpp>
+#include <beman/execution/execution.hpp>
 
 // ----------------------------------------------------------------------------
 
 namespace beman::lazy::detail {
 
-inline constexpr struct into_optional_t : beman::execution26::sender_adaptor_closure<into_optional_t> {
-    template <::beman::execution26::sender Upstream>
+inline constexpr struct into_optional_t : beman::execution::sender_adaptor_closure<into_optional_t> {
+    template <::beman::execution::sender Upstream>
     struct sender {
         using upstream_t     = std::remove_cvref_t<Upstream>;
-        using sender_concept = ::beman::execution26::sender_t;
+        using sender_concept = ::beman::execution::sender_t;
         upstream_t upstream;
 
         template <typename...>
@@ -50,32 +50,32 @@ inline constexpr struct into_optional_t : beman::execution26::sender_adaptor_clo
         template <typename Env>
         auto get_type(Env&&) const {
             return find_type(
-                ::beman::execution26::value_types_of_t<Upstream, std::remove_cvref_t<Env>, type_list, type_list>());
+                ::beman::execution::value_types_of_t<Upstream, std::remove_cvref_t<Env>, type_list, type_list>());
         }
 
         template <typename... E, typename... S>
         constexpr auto make_signatures(auto&& env, type_list<E...>, type_list<S...>) const {
-            return ::beman::execution26::completion_signatures<::beman::execution26::set_value_t(
+            return ::beman::execution::completion_signatures<::beman::execution::set_value_t(
                                                                    decltype(this->get_type(env))),
-                                                               ::beman::execution26::set_error_t(E)...,
+                                                               ::beman::execution::set_error_t(E)...,
                                                                S...>();
         }
         template <typename Env>
         auto get_completion_signatures(Env&& env) const {
             return make_signatures(
                 env,
-                ::beman::execution26::error_types_of_t<Upstream, std::remove_cvref_t<Env>, type_list>{},
-                std::conditional_t<::beman::execution26::sends_stopped<Upstream, std::remove_cvref_t<Env>>,
-                                   type_list<::beman::execution26::set_stopped_t()>,
+                ::beman::execution::error_types_of_t<Upstream, std::remove_cvref_t<Env>, type_list>{},
+                std::conditional_t<::beman::execution::sends_stopped<Upstream, std::remove_cvref_t<Env>>,
+                                   type_list<::beman::execution::set_stopped_t()>,
                                    type_list<>>{});
         }
 
         template <typename Receiver>
         auto connect(Receiver&& receiver) && {
-            return ::beman::execution26::connect(
-                ::beman::execution26::then(
+            return ::beman::execution::connect(
+                ::beman::execution::then(
                     std::move(this->upstream),
-                    []<typename... A>(A&&... a) -> decltype(get_type(::beman::execution26::get_env(receiver))) {
+                    []<typename... A>(A&&... a) -> decltype(get_type(::beman::execution::get_env(receiver))) {
                         if constexpr (sizeof...(A) == 0u)
                             return {};
                         else

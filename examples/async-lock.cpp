@@ -8,10 +8,10 @@
 #include <mutex>
 #include <string>
 #include <condition_variable>
-#include <beman/execution26/execution.hpp>
+#include <beman/execution/execution.hpp>
 #include <beman/lazy/lazy.hpp>
 
-namespace ex = beman::execution26;
+namespace ex = beman::execution;
 
 struct queue {
     struct notify {

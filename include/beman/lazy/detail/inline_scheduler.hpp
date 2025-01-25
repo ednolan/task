@@ -4,7 +4,7 @@
 #ifndef INCLUDED_BEMAN_LAZY_DETAIL_INLINE_SCHEDULER
 #define INCLUDED_BEMAN_LAZY_DETAIL_INLINE_SCHEDULER
 
-#include <beman/execution26/execution.hpp>
+#include <beman/execution/execution.hpp>
 #include <utility>
 #include <type_traits>
 
@@ -29,39 +29,39 @@ namespace beman::lazy::detail {
 struct inline_scheduler {
     struct env {
         inline_scheduler
-        query(const ::beman::execution26::get_completion_scheduler_t<::beman::execution26::set_value_t>&)
+        query(const ::beman::execution::get_completion_scheduler_t<::beman::execution::set_value_t>&)
             const noexcept {
             return {};
         }
     };
-    template <::beman::execution26::receiver Receiver>
+    template <::beman::execution::receiver Receiver>
     struct state {
-        using operation_state_concept = ::beman::execution26::operation_state_t;
+        using operation_state_concept = ::beman::execution::operation_state_t;
         std::remove_cvref_t<Receiver> receiver;
-        void                          start() & noexcept { ::beman::execution26::set_value(std::move(receiver)); }
+        void                          start() & noexcept { ::beman::execution::set_value(std::move(receiver)); }
     };
     struct sender {
-        using sender_concept        = ::beman::execution26::sender_t;
-        using completion_signatures = ::beman::execution26::completion_signatures<::beman::execution26::set_value_t()>;
+        using sender_concept        = ::beman::execution::sender_t;
+        using completion_signatures = ::beman::execution::completion_signatures<::beman::execution::set_value_t()>;
 
         env get_env() const noexcept { return {}; }
-        template <::beman::execution26::receiver Receiver>
+        template <::beman::execution::receiver Receiver>
         state<Receiver> connect(Receiver&& receiver) {
             return {std::forward<Receiver>(receiver)};
         }
     };
-    static_assert(::beman::execution26::sender<sender>);
+    static_assert(::beman::execution::sender<sender>);
 
-    using scheduler_concept = ::beman::execution26::scheduler_t;
+    using scheduler_concept = ::beman::execution::scheduler_t;
     inline_scheduler()      = default;
     template <typename Scheduler>
     explicit inline_scheduler(Scheduler&&) {
-        static_assert(::beman::execution26::scheduler<Scheduler>);
+        static_assert(::beman::execution::scheduler<Scheduler>);
     }
     sender schedule() noexcept { return {}; }
     bool   operator==(const inline_scheduler&) const = default;
 };
-static_assert(::beman::execution26::scheduler<inline_scheduler>);
+static_assert(::beman::execution::scheduler<inline_scheduler>);
 } // namespace beman::lazy::detail
 
 // ----------------------------------------------------------------------------

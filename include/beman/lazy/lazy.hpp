@@ -33,7 +33,7 @@ template <typename T = void, typename Context = ::beman::lazy::default_context>
 using lazy = ::beman::lazy::detail::lazy<T, Context>;
 } // namespace beman::lazy
 
-namespace beman::execution26 {
+namespace beman::execution {
 template <typename Context>
 using allocator_of_t = ::beman::lazy::detail::allocator_of_t<Context>;
 template <typename Context>
@@ -50,7 +50,7 @@ using ::beman::lazy::detail::default_context;
 using ::beman::lazy::detail::with_error;
 template <typename T = void, typename Context = ::beman::lazy::default_context>
 using lazy = ::beman::lazy::detail::lazy<T, Context>;
-} // namespace beman::execution26
+} // namespace beman::execution
 
 // ----------------------------------------------------------------------------
 

@@ -14,7 +14,7 @@ target_sources(
 )
 
 set_target_properties(beman.lazy PROPERTIES VERIFY_INTERFACE_HEADER_SETS ON)
-target_link_libraries(beman.lazy PUBLIC beman::execution26)
+target_link_libraries(beman.lazy PUBLIC beman::execution)
 
 install(
     TARGETS beman.lazy
