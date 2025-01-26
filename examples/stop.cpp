@@ -22,9 +22,9 @@ int main() {
 
     struct context {
         struct xstop_source_type { // remove the x to disable the stop token
-            static constexpr bool                                 stop_possible() { return false; }
-            static constexpr void                                 request_stop() {}
-            static constexpr beman::execution::never_stop_token   get_token() { return {}; }
+            static constexpr bool                               stop_possible() { return false; }
+            static constexpr void                               request_stop() {}
+            static constexpr beman::execution::never_stop_token get_token() { return {}; }
         };
     };
 

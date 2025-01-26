@@ -38,12 +38,12 @@ namespace beman::lazy::detail {
  */
 class any_scheduler {
     struct state_base {
-        virtual ~state_base()                                                                 = default;
-        virtual void                                     complete_value()                     = 0;
-        virtual void                                     complete_error(::std::error_code)    = 0;
-        virtual void                                     complete_error(::std::exception_ptr) = 0;
-        virtual void                                     complete_stopped()                   = 0;
-        virtual ::beman::execution::inplace_stop_token   get_stop_token()                     = 0;
+        virtual ~state_base()                                                               = default;
+        virtual void                                   complete_value()                     = 0;
+        virtual void                                   complete_error(::std::error_code)    = 0;
+        virtual void                                   complete_error(::std::exception_ptr) = 0;
+        virtual void                                   complete_stopped()                   = 0;
+        virtual ::beman::execution::inplace_stop_token get_stop_token()                     = 0;
     };
 
     struct inner_state {
@@ -100,10 +100,10 @@ class any_scheduler {
             decltype(::beman::execution::get_stop_token(::beman::execution::get_env(std::declval<Receiver>())));
         using callback_t = ::beman::execution::stop_callback_for_t<token_t, stopper>;
 
-        std::remove_cvref_t<Receiver>             receiver;
-        inner_state                               s;
-        ::beman::execution::inplace_stop_source   source;
-        ::std::optional<callback_t>               callback;
+        std::remove_cvref_t<Receiver>           receiver;
+        inner_state                             s;
+        ::beman::execution::inplace_stop_source source;
+        ::std::optional<callback_t>             callback;
 
         template <::beman::execution::receiver R, typename PS>
         state(R&& r, PS& ps) : receiver(std::forward<R>(r)), s(ps->connect(this)) {}
@@ -118,7 +118,7 @@ class any_scheduler {
             if constexpr (::std::same_as<token_t, ::beman::execution::inplace_stop_token>) {
                 return ::beman::execution::get_stop_token(::beman::execution::get_env(this->receiver));
             } else {
-                if constexpr (not::std::same_as<token_t, ::beman::execution::never_stop_token>) {
+                if constexpr (not ::std::same_as<token_t, ::beman::execution::never_stop_token>) {
                     if (not this->callback) {
                         this->callback.emplace(
                             ::beman::execution::get_stop_token(::beman::execution::get_env(this->receiver)),

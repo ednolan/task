@@ -4,7 +4,7 @@
 
 This page has links to some resources related to this repository:
 
-* Lewis Baker's [Asymmetric Transfer blog](https://lewissbaker.github.io/) 
+* Lewis Baker's [Asymmetric Transfer blog](https://lewissbaker.github.io/)
 * Dietmar Kühl's
     [co_await All The Things](https://youtu.be/Npiw4cYElng?si=J0EYX6IgBf_u-e6z)
     from [ACCU 2023](https://accu.org/conf-previous/2023/sessions/) implementing
