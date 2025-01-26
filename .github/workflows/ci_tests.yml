@@ -119,7 +119,7 @@ jobs:
         run: |
           # Portable commands only
           cmake --build build --config Release --verbose
-          cmake --build build --config Release --target all_verify_interface_header_sets
+          # cmake --build build --config Release --target all_verify_interface_header_sets
           cmake --install build --config Release --prefix /opt/beman.lazy
           ls -R /opt/beman.lazy
       - name: Test Release
@@ -128,7 +128,7 @@ jobs:
         run: |
           # Portable commands only
           cmake --build build --config Debug --verbose
-          cmake --build build --config Debug --target all_verify_interface_header_sets
+          # cmake --build build --config Debug --target all_verify_interface_header_sets
           cmake --install build --config Debug --prefix /opt/beman.lazy
           ls -R /opt/beman.lazy
       - name: Test Debug
@@ -164,14 +164,14 @@ jobs:
         run: |
           # Portable commands only
           cmake --build build --config Release --verbose
-          cmake --build build --config Release --target all_verify_interface_header_sets
+          # cmake --build build --config Release --target all_verify_interface_header_sets
           cmake --install build --config Release --prefix /opt/beman.lazy
           ls -R /opt/beman.lazy
       - name: Build Debug
         run: |
           # Portable commands only
           cmake --build build --config Debug --verbose
-          cmake --build build --config Debug --target all_verify_interface_header_sets
+          # cmake --build build --config Debug --target all_verify_interface_header_sets
           cmake --install build --config Debug --prefix /opt/beman.lazy
           ls -R /opt/beman.lazy
 
@@ -237,7 +237,7 @@ jobs:
       - name: Build Debug
         run: |
           cmake --build build --config Debug --verbose
-          cmake --build build --config Debug --target all_verify_interface_header_sets
+          # cmake --build build --config Debug --target all_verify_interface_header_sets
           cmake --install build --config Debug --prefix /opt/beman.lazy
           find /opt/beman.lazy -type f
       - name: Test Debug

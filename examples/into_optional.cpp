@@ -5,10 +5,10 @@
 #include <optional>
 #include <tuple>
 #include <system_error>
-#include <beman/execution26/execution.hpp>
+#include <beman/execution/execution.hpp>
 #include <beman/lazy/lazy.hpp>
 
-namespace ex = beman::execution26;
+namespace ex = beman::execution;
 
 template <typename... S>
 struct multi_sender {

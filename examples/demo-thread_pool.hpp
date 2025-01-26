@@ -6,15 +6,15 @@
 
 // ----------------------------------------------------------------------------
 
-#include <beman/execution26/execution.hpp>
+#include <beman/execution/execution.hpp>
 #include <condition_variable>
 #include <exception>
 #include <mutex>
 #include <thread>
 
 namespace demo {
-namespace ex = beman::execution26;
-namespace ex = beman::execution26;
+namespace ex = beman::execution;
+namespace ex = beman::execution;
 struct thread_pool {
 
     struct node {

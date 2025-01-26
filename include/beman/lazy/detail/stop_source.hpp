@@ -4,14 +4,14 @@
 #ifndef INCLUDED_BEMAN_LAZY_DETAIL_STOP_SOURCE
 #define INCLUDED_BEMAN_LAZY_DETAIL_STOP_SOURCE
 
-#include <beman/execution26/stop_token.hpp>
+#include <beman/execution/stop_token.hpp>
 
 // ----------------------------------------------------------------------------
 
 namespace beman::lazy::detail {
 template <typename>
 struct stop_source_of {
-    using type = ::beman::execution26::inplace_stop_source;
+    using type = ::beman::execution::inplace_stop_source;
 };
 template <typename Context>
     requires requires { typename Context::stop_source_type; }

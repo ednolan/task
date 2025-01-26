@@ -3,10 +3,10 @@
 
 #include <iostream>
 #include <system_error>
-#include <beman/execution26/execution.hpp>
+#include <beman/execution/execution.hpp>
 #include <beman/lazy/lazy.hpp>
 
-namespace ex = beman::execution26;
+namespace ex = beman::execution;
 
 ex::lazy<int> fun(int i) {
     using on_exit = std::unique_ptr<const char, decltype([](auto msg) { std::cout << msg; })>;

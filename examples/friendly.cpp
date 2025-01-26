@@ -6,10 +6,10 @@
 #include <coroutine>
 #include <exception>
 #include <system_error>
-#include <beman/execution26/execution.hpp>
+#include <beman/execution/execution.hpp>
 #include <beman/lazy/lazy.hpp>
 
-namespace ex = beman::execution26;
+namespace ex = beman::execution;
 
 int main() {
     ex::sync_wait([]() -> ex::lazy<void> { co_await ex::just(); }());

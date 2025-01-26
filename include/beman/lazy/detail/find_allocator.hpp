@@ -30,7 +30,7 @@ Allocator find_allocator(const std::allocator_arg_t&) {
 template <typename Allocator, typename Alloc, typename... A>
 Allocator find_allocator(const std::allocator_arg_t&, const Alloc& alloc, const A&...) {
     static_assert(
-        requires(const Alloc& alloc) { Allocator(alloc); },
+        requires(const Alloc& a) { Allocator(a); },
         "The allocator needs to be constructible from the argument following std::allocator");
     return Allocator(alloc);
 }

@@ -1,8 +1,8 @@
 // examples/stop.cpp                                                   -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include <beman/execution26/execution.hpp>
-#include <beman/execution26/stop_token.hpp>
+#include <beman/execution/execution.hpp>
+#include <beman/execution/stop_token.hpp>
 #include <beman/lazy/lazy.hpp>
 #include <iostream>
 #include <chrono>
@@ -10,7 +10,7 @@
 #include <cassert>
 #include <cinttypes>
 
-namespace ex = beman::execution26;
+namespace ex = beman::execution;
 
 int main() {
     ex::stop_source source;
@@ -22,9 +22,9 @@ int main() {
 
     struct context {
         struct xstop_source_type { // remove the x to disable the stop token
-            static constexpr bool                                 stop_possible() { return false; }
-            static constexpr void                                 request_stop() {}
-            static constexpr beman::execution26::never_stop_token get_token() { return {}; }
+            static constexpr bool                               stop_possible() { return false; }
+            static constexpr void                               request_stop() {}
+            static constexpr beman::execution::never_stop_token get_token() { return {}; }
         };
     };
 

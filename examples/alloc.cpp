@@ -4,10 +4,10 @@
 #include <iostream>
 #include <cassert>
 #include <cstdlib>
-#include <beman/execution26/execution.hpp>
+#include <beman/execution/execution.hpp>
 #include <beman/lazy/lazy.hpp>
 
-namespace ex = beman::execution26;
+namespace ex = beman::execution;
 
 #if defined(__has_feature)
 #if __has_feature(thread_sanitizer)

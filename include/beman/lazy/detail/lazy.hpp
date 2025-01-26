@@ -4,7 +4,7 @@
 #ifndef INCLUDED_BEMAN_LAZY_DETAIL_LAZY
 #define INCLUDED_BEMAN_LAZY_DETAIL_LAZY
 
-#include <beman/execution26/execution.hpp>
+#include <beman/execution/execution.hpp>
 #include <beman/lazy/detail/allocator_of.hpp>
 #include <beman/lazy/detail/allocator_support.hpp>
 #include <beman/lazy/detail/any_scheduler.hpp>
@@ -38,7 +38,7 @@ void sub_visit(auto&& fun, std::variant<T...>& v) {
 }
 
 template <typename Awaiter>
-concept awaiter = ::beman::execution26::sender<Awaiter> && requires(Awaiter&& awaiter) {
+concept awaiter = ::beman::execution::sender<Awaiter> && requires(Awaiter&& awaiter) {
     { awaiter.await_ready() } -> std::same_as<bool>;
     awaiter.disabled(); // remove this to get an awaiter unfriendly coroutine
 };
@@ -68,11 +68,11 @@ struct default_context {};
 
 template <typename R>
 struct lazy_completion {
-    using type = ::beman::execution26::set_value_t(R);
+    using type = ::beman::execution::set_value_t(R);
 };
 template <>
 struct lazy_completion<void> {
-    using type = ::beman::execution26::set_value_t();
+    using type = ::beman::execution::set_value_t();
 };
 
 template <typename R>
@@ -104,12 +104,12 @@ struct lazy {
     using stop_source_type = ::beman::lazy::detail::stop_source_of_t<C>;
     using stop_token_type  = decltype(std::declval<stop_source_type>().get_token());
 
-    using sender_concept = ::beman::execution26::sender_t;
+    using sender_concept = ::beman::execution::sender_t;
     using completion_signatures =
-        ::beman::execution26::completion_signatures<typename lazy_completion<T>::type,
-                                                    ::beman::execution26::set_error_t(std::exception_ptr),
-                                                    ::beman::execution26::set_error_t(std::error_code),
-                                                    ::beman::execution26::set_stopped_t()>;
+        ::beman::execution::completion_signatures<typename lazy_completion<T>::type,
+                                                  ::beman::execution::set_error_t(std::exception_ptr),
+                                                  ::beman::execution::set_error_t(std::error_code),
+                                                  ::beman::execution::set_stopped_t()>;
 
     struct state_base {
         virtual void            complete(typename lazy_promise_base<std::remove_cvref_t<T>>::result_t&) = 0;
@@ -142,13 +142,13 @@ struct lazy {
         auto await_transform(with_error<E> with) noexcept {
             return std::move(with);
         }
-        template <::beman::execution26::sender Sender>
+        template <::beman::execution::sender Sender>
         auto await_transform(Sender&& sender) noexcept {
             if constexpr (std::same_as<::beman::lazy::detail::inline_scheduler, scheduler_type>)
-                return ::beman::execution26::as_awaitable(std::forward<Sender>(sender), *this);
+                return ::beman::execution::as_awaitable(std::forward<Sender>(sender), *this);
             else
-                return ::beman::execution26::as_awaitable(
-                    ::beman::execution26::continues_on(std::forward<Sender>(sender), *(this->scheduler)), *this);
+                return ::beman::execution::as_awaitable(
+                    ::beman::execution::continues_on(std::forward<Sender>(sender), *(this->scheduler)), *this);
         }
         template <::beman::lazy::detail::awaiter Awaiter>
         auto await_transform(Awaiter&&) noexcept = delete;
@@ -171,9 +171,9 @@ struct lazy {
         struct env {
             const promise_type* promise;
 
-            scheduler_type  query(::beman::execution26::get_scheduler_t) const noexcept { return *promise->scheduler; }
-            allocator_type  query(::beman::execution26::get_allocator_t) const noexcept { return promise->allocator; }
-            stop_token_type query(::beman::execution26::get_stop_token_t) const noexcept {
+            scheduler_type  query(::beman::execution::get_scheduler_t) const noexcept { return *promise->scheduler; }
+            allocator_type  query(::beman::execution::get_allocator_t) const noexcept { return promise->allocator; }
+            stop_token_type query(::beman::execution::get_stop_token_t) const noexcept {
                 return promise->state->get_stop_token();
             }
             template <typename Q, typename... A>
@@ -194,42 +194,42 @@ struct lazy {
         state_rep(R&& r) : receiver(std::forward<R>(r)), context() {}
     };
     template <typename Receiver>
-        requires requires { C(::beman::execution26::get_env(std::declval<std::remove_cvref_t<Receiver>&>())); } &&
+        requires requires { C(::beman::execution::get_env(std::declval<std::remove_cvref_t<Receiver>&>())); } &&
                  (not requires(const Receiver& receiver) {
-                     typename C::template env_type<decltype(::beman::execution26::get_env(receiver))>;
+                     typename C::template env_type<decltype(::beman::execution::get_env(receiver))>;
                  })
     struct state_rep<Receiver> {
         std::remove_cvref_t<Receiver> receiver;
         C                             context;
         template <typename R>
-        state_rep(R&& r) : receiver(std::forward<R>(r)), context(::beman::execution26::get_env(this->receiver)) {}
+        state_rep(R&& r) : receiver(std::forward<R>(r)), context(::beman::execution::get_env(this->receiver)) {}
     };
     template <typename Receiver>
         requires requires(const Receiver& receiver) {
-            typename C::template env_type<decltype(::beman::execution26::get_env(receiver))>;
+            typename C::template env_type<decltype(::beman::execution::get_env(receiver))>;
         }
     struct state_rep<Receiver> {
-        using upstream_env = decltype(::beman::execution26::get_env(std::declval<std::remove_cvref_t<Receiver>&>()));
+        using upstream_env = decltype(::beman::execution::get_env(std::declval<std::remove_cvref_t<Receiver>&>()));
         std::remove_cvref_t<Receiver>               receiver;
         typename C::template env_type<upstream_env> own_env;
         C                                           context;
         template <typename R>
         state_rep(R&& r)
             : receiver(std::forward<R>(r)),
-              own_env(::beman::execution26::get_env(this->receiver)),
+              own_env(::beman::execution::get_env(this->receiver)),
               context(this->own_env) {}
     };
 
     template <typename Receiver>
     struct state : state_base, state_rep<Receiver> {
-        using operation_state_concept = ::beman::execution26::operation_state_t;
+        using operation_state_concept = ::beman::execution::operation_state_t;
         using stop_token_t =
-            decltype(::beman::execution26::get_stop_token(::beman::execution26::get_env(std::declval<Receiver>())));
+            decltype(::beman::execution::get_stop_token(::beman::execution::get_env(std::declval<Receiver>())));
         struct stop_link {
             stop_source_type& source;
             void              operator()() const noexcept { source.request_stop(); }
         };
-        using stop_callback_t = ::beman::execution26::stop_callback_for_t<stop_token_t, stop_link>;
+        using stop_callback_t = ::beman::execution::stop_callback_for_t<stop_token_t, stop_link>;
         template <typename R, typename H>
         state(R&& r, H h) : state_rep<Receiver>(std::forward<R>(r)), handle(std::move(h)) {}
         ~state() {
@@ -243,7 +243,7 @@ struct lazy {
 
         void start() & noexcept {
             handle.promise().scheduler.emplace(
-                ::beman::execution26::get_scheduler(::beman::execution26::get_env(this->receiver)));
+                ::beman::execution::get_scheduler(::beman::execution::get_env(this->receiver)));
             handle.promise().state = this;
             handle.resume();
         }
@@ -251,23 +251,23 @@ struct lazy {
             switch (result.index()) {
             case 0: // set_stopped
                 this->reset_handle();
-                ::beman::execution26::set_stopped(std::move(this->receiver));
+                ::beman::execution::set_stopped(std::move(this->receiver));
                 break;
             case 1: // set_value
                 if constexpr (std::same_as<void, T>) {
                     reset_handle();
-                    ::beman::execution26::set_value(std::move(this->receiver));
+                    ::beman::execution::set_value(std::move(this->receiver));
                 } else {
                     auto r(std::move(std::get<1>(result)));
                     this->reset_handle();
-                    ::beman::execution26::set_value(std::move(this->receiver), std::move(r));
+                    ::beman::execution::set_value(std::move(this->receiver), std::move(r));
                 }
                 break;
             default:
                 sub_visit<2>(
                     [this](auto&& r) {
                         this->reset_handle();
-                        ::beman::execution26::set_error(std::move(this->receiver), std::move(r));
+                        ::beman::execution::set_error(std::move(this->receiver), std::move(r));
                     },
                     result);
                 break;
@@ -276,7 +276,7 @@ struct lazy {
         stop_token_type get_stop_token() override {
             if (this->source.stop_possible() && not this->stop_callback) {
                 this->stop_callback.emplace(
-                    ::beman::execution26::get_stop_token(::beman::execution26::get_env(this->receiver)),
+                    ::beman::execution::get_stop_token(::beman::execution::get_env(this->receiver)),
                     stop_link{this->source});
             }
             return this->source.get_token();

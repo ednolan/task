@@ -3,8 +3,8 @@
 
 #include <beman/lazy/detail/any_scheduler.hpp>
 #include <beman/lazy/detail/inline_scheduler.hpp>
-#include <beman/execution26/execution.hpp>
-#include <beman/execution26/stop_token.hpp>
+#include <beman/execution/execution.hpp>
+#include <beman/execution/stop_token.hpp>
 #include <atomic>
 #include <latch>
 #include <exception>
@@ -17,7 +17,7 @@
 #endif
 #include <cassert>
 
-namespace ex = beman::execution26;
+namespace ex = beman::execution;
 namespace ly = beman::lazy;
 
 // ----------------------------------------------------------------------------

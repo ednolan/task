@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/lazy/lazy.hpp>
-#include <beman/execution26/execution.hpp>
+#include <beman/execution/execution.hpp>
 #include <iostream>
 #include <vector>
 #include <cassert>
 
-namespace ex = beman::execution26;
+namespace ex = beman::execution;
 
 // ----------------------------------------------------------------------------
 

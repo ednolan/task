@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/lazy/detail/inline_scheduler.hpp>
-#include <beman/execution26/execution.hpp>
+#include <beman/execution/execution.hpp>
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
 #include <cassert>
 
-namespace ex = beman::execution26;
+namespace ex = beman::execution;
 namespace ly = beman::lazy;
 
 // ----------------------------------------------------------------------------

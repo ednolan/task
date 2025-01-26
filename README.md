@@ -6,7 +6,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 ![Continuous Integration Tests](https://github.com/bemanproject/lazy/actions/workflows/ci_tests.yml/badge.svg)
 
-`beman::execution26::lazy<T, Context>` is a class template which
+`beman::execution::lazy<T, Context>` is a class template which
 is used as the the type of coroutine tasks. The corresponding objects
 are senders.  The first template argument (`T`) defines the result
 type which becomes a `set_value_t(T)` completion signatures. The
@@ -23,10 +23,10 @@ world`:
 
 ```cpp
 #include <beman/lazy/lazy.hpp>
-#include <beman/execution26/execution.hpp>
+#include <beman/execution/execution.hpp>
 #include <iostream>
 
-namespace ex = beman::execution26;
+namespace ex = beman::execution;
 namespace ly = beman::lazy;
 
 int main() {
@@ -39,12 +39,19 @@ int main() {
 
 Full runnable examples can be found in `examples/` (e.g., [`./examples/hello.cpp`](./examples/hello.cpp)).
 
+## Help Welcome
+
+There are plenty of things which need to be done. See the
+[contributions page](https://github.com/bemanproject/lazy/blob/main/docs/contributing.md)
+for some ideas how to contribute. The [resources page](https://github.com/bemanproject/lazy/blob/main/docs/resources.md)
+contains some links for general information about coroutines.
+
 ## Building beman.lazy
 
 ### Dependencies
 
 This project depends on
-[`beman::execution26`](https://bemanproject/execution26) (which
+[`beman::execution`](https://bemanproject/execution) (which
 will be automatically obtained using `cmake`'s `FetchContent*`).
 
 Build-time dependencies:
