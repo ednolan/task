@@ -39,7 +39,7 @@ int main() {
 
 Full runnable examples can be found in `examples/` (e.g., [`./examples/hello.cpp`](./examples/hello.cpp)).
 
-## Help Welcome!
+## Help Welcome
 
 There are plenty of things which need to be done. See the
 [contributions page](https://github.com/bemanproject/lazy/blob/main/docs/contributing.md)
