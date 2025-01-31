@@ -125,8 +125,8 @@ struct lazy {
     struct promise_type : lazy_promise_base<std::remove_cvref_t<T>>,
                           ::beman::lazy::detail::allocator_support<allocator_type> {
         void complete() { this->state->complete(this->result); }
-        void start(auto&& env, state_base* s) {
-            this->scheduler.emplace(::beman::execution::get_scheduler(env));
+        void start(auto&& e, state_base* s) {
+            this->scheduler.emplace(::beman::execution::get_scheduler(e));
             this->state = s;
             std::coroutine_handle<promise_type>::from_promise(*this).resume();
         }
@@ -235,8 +235,8 @@ struct lazy {
         state(R&& r, H h) : state_rep<Receiver>(std::forward<R>(r)), handle(std::move(h)) {}
 
         ::beman::lazy::detail::handle<promise_type> handle;
-        stop_source_type                    source;
-        std::optional<stop_callback_t>      stop_callback;
+        stop_source_type                            source;
+        std::optional<stop_callback_t>              stop_callback;
 
         void start() & noexcept { this->handle.start(::beman::execution::get_env(this->receiver), this); }
         void complete(typename lazy_promise_base<std::remove_cvref_t<T>>::result_t& result) override {

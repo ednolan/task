@@ -31,8 +31,9 @@ include(GNUInstallDirs)
 FetchContent_Declare(
     execution
     # for local development, use SOURCE_DIR <path-to>/execution
-    GIT_REPOSITORY https://github.com/bemanproject/execution
-    GIT_TAG e9c3032
+    #GIT_REPOSITORY https://github.com/bemanproject/execution
+    #GIT_TAG e9c3032
+    SOURCE_DIR /opt/src/execution
 )
 FetchContent_MakeAvailable(execution)
 

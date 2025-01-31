@@ -16,7 +16,8 @@ struct tester {
 
     struct promise_type {
         bool& destroyed;
-        promise_type(bool& d, auto&&...) : destroyed(d) {}
+        promise_type(bool& d, const auto&...) : destroyed(d) {}
+        promise_type(auto&&, bool& d, const auto&...) : destroyed(d) {}
         ~promise_type() { destroyed = true; }
 
         std::suspend_always initial_suspend() { return {}; }
