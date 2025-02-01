@@ -3,6 +3,12 @@
 list(
     APPEND
     lazy_tests
+    sub_visit
+    result_type
+    promise_base
+    completion
+    handle
+    final_awaiter
     allocator_of
     allocator_support
     any_scheduler
