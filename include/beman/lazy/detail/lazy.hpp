@@ -8,11 +8,14 @@
 #include <beman/lazy/detail/allocator_of.hpp>
 #include <beman/lazy/detail/allocator_support.hpp>
 #include <beman/lazy/detail/any_scheduler.hpp>
+#include <beman/lazy/detail/completion.hpp>
 #include <beman/lazy/detail/scheduler_of.hpp>
 #include <beman/lazy/detail/stop_source.hpp>
+#include <beman/lazy/detail/promise_base.hpp>
 #include <beman/lazy/detail/inline_scheduler.hpp>
 #include <beman/lazy/detail/final_awaiter.hpp>
 #include <beman/lazy/detail/handle.hpp>
+#include <beman/lazy/detail/sub_visit.hpp>
 #include <concepts>
 #include <coroutine>
 #include <optional>
@@ -25,19 +28,6 @@
 // ----------------------------------------------------------------------------
 
 namespace beman::lazy::detail {
-template <std::size_t Start, typename Fun, typename Var, std::size_t... I>
-void sub_visit_helper(Fun& fun, Var& var, std::index_sequence<I...>) {
-    using thunk_t = void (*)(Fun&, Var&);
-    static constexpr thunk_t thunks[]{(+[](Fun& f, Var& v) { f(std::get<Start + I>(v)); })...};
-    thunks[var.index() - Start](fun, var);
-}
-
-template <std::size_t Start, typename... T>
-void sub_visit(auto&& fun, std::variant<T...>& v) {
-    if (v.index() < Start)
-        return;
-    sub_visit_helper<Start>(fun, v, std::make_index_sequence<sizeof...(T) - Start>{});
-}
 
 template <typename Awaiter>
 concept awaiter = ::beman::execution::sender<Awaiter> && requires(Awaiter&& awaiter) {
@@ -68,37 +58,6 @@ with_error(E&&) -> with_error<std::remove_cvref_t<E>>;
 
 struct default_context {};
 
-template <typename R>
-struct lazy_completion {
-    using type = ::beman::execution::set_value_t(R);
-};
-template <>
-struct lazy_completion<void> {
-    using type = ::beman::execution::set_value_t();
-};
-
-template <typename R>
-struct lazy_promise_base {
-    using type     = std::remove_cvref_t<R>;
-    using result_t = std::variant<std::monostate, type, std::exception_ptr, std::error_code>;
-    result_t result;
-    template <typename T>
-    void return_value(T&& value) {
-        this->result.template emplace<type>(std::forward<T>(value));
-    }
-    template <typename E>
-    void return_value(::beman::lazy::detail::with_error<E> with) {
-        this->result.template emplace<E>(with.error);
-    }
-};
-template <>
-struct lazy_promise_base<void> {
-    struct void_t {};
-    using result_t = std::variant<std::monostate, void_t, std::exception_ptr, std::error_code>;
-    result_t result;
-    void     return_void() { this->result.template emplace<void_t>(void_t{}); }
-};
-
 template <typename T = void, typename C = default_context>
 struct lazy {
     using allocator_type   = ::beman::lazy::detail::allocator_of_t<C>;
@@ -108,13 +67,13 @@ struct lazy {
 
     using sender_concept = ::beman::execution::sender_t;
     using completion_signatures =
-        ::beman::execution::completion_signatures<typename lazy_completion<T>::type,
+        ::beman::execution::completion_signatures<beman::lazy::detail::completion_t<T>,
                                                   ::beman::execution::set_error_t(std::exception_ptr),
                                                   ::beman::execution::set_error_t(std::error_code),
                                                   ::beman::execution::set_stopped_t()>;
 
     struct state_base {
-        virtual void            complete(typename lazy_promise_base<std::remove_cvref_t<T>>::result_t&) = 0;
+        virtual void            complete()                                                              = 0;
         virtual stop_token_type get_stop_token()                                                        = 0;
         virtual C&              get_context()                                                           = 0;
 
@@ -122,9 +81,13 @@ struct lazy {
         virtual ~state_base() = default;
     };
 
-    struct promise_type : lazy_promise_base<std::remove_cvref_t<T>>,
+    struct promise_type : ::beman::lazy::detail::promise_base<::beman::lazy::detail::stoppable::yes,
+                                                              ::std::remove_cvref_t<T>,
+                                                              ::std::exception_ptr,
+                                                              ::std::error_code //-dk:TODO determine erors correctly
+                                                              >,
                           ::beman::lazy::detail::allocator_support<allocator_type> {
-        void complete() { this->state->complete(this->result); }
+        void notify_complete() { this->state->complete(); }
         void start(auto&& e, state_base* s) {
             this->scheduler.emplace(::beman::execution::get_scheduler(e));
             this->state = s;
@@ -136,8 +99,8 @@ struct lazy {
 
         std::suspend_always initial_suspend() noexcept { return {}; }
         final_awaiter       final_suspend() noexcept { return {}; }
-        void unhandled_exception() { this->result.template emplace<std::exception_ptr>(std::current_exception()); }
-        auto get_return_object() { return lazy(::beman::lazy::detail::handle<promise_type>(this)); }
+        void                unhandled_exception() { this->set_error(std::current_exception()); }
+        auto                get_return_object() { return lazy(::beman::lazy::detail::handle<promise_type>(this)); }
 
         template <typename E>
         auto await_transform(with_error<E> with) noexcept {
@@ -165,7 +128,7 @@ struct lazy {
         state_base*                          state{};
 
         std::coroutine_handle<> unhandled_stopped() {
-            this->state->complete(this->result);
+            this->state->complete();
             return std::noop_coroutine();
         }
 
@@ -238,33 +201,8 @@ struct lazy {
         stop_source_type                            source;
         std::optional<stop_callback_t>              stop_callback;
 
-        void start() & noexcept { this->handle.start(::beman::execution::get_env(this->receiver), this); }
-        void complete(typename lazy_promise_base<std::remove_cvref_t<T>>::result_t& result) override {
-            switch (result.index()) {
-            case 0: // set_stopped
-                this->handle.reset();
-                ::beman::execution::set_stopped(std::move(this->receiver));
-                break;
-            case 1: // set_value
-                if constexpr (std::same_as<void, T>) {
-                    handle.reset();
-                    ::beman::execution::set_value(std::move(this->receiver));
-                } else {
-                    auto r(std::move(std::get<1>(result)));
-                    this->handle.reset();
-                    ::beman::execution::set_value(std::move(this->receiver), std::move(r));
-                }
-                break;
-            default:
-                sub_visit<2>(
-                    [this](auto&& r) {
-                        this->handle.reset();
-                        ::beman::execution::set_error(std::move(this->receiver), std::move(r));
-                    },
-                    result);
-                break;
-            }
-        }
+        void            start() & noexcept { this->handle.start(::beman::execution::get_env(this->receiver), this); }
+        void            complete() override { this->handle.complete(::std::move(this->receiver)); }
         stop_token_type get_stop_token() override {
             if (this->source.stop_possible() && not this->stop_callback) {
                 this->stop_callback.emplace(

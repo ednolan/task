@@ -4,6 +4,7 @@
 #ifndef INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_HANDLE
 #define INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_HANDLE
 
+#include <beman/execution/execution.hpp>
 #include <coroutine>
 #include <memory>
 #include <utility>
@@ -27,6 +28,10 @@ class handle {
     template <typename... A>
     void start(A&&... a) noexcept {
         this->h->start(::std::forward<A>(a)...);
+    }
+    template <::beman::execution::receiver Receiver>
+    void complete(Receiver&& receiver) {
+        this->h->complete(::std::forward<Receiver>(receiver));
     }
 };
 

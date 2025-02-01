@@ -25,7 +25,7 @@ struct tester {
         void                               unhandled_exception() {}
         tester                             get_return_object() { return {handle<promise_type>(this)}; }
         void                               return_void() {}
-        void                               complete() { called = true; }
+        void                               notify_complete() { called = true; }
     };
 
     handle<promise_type> h;

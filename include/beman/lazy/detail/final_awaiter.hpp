@@ -14,7 +14,7 @@ struct final_awaiter {
     static constexpr bool await_ready() noexcept { return false; }
     template <typename Promise>
     static void await_suspend(std::coroutine_handle<Promise> handle) noexcept {
-        handle.promise().complete();
+        handle.promise().notify_complete();
     }
     static constexpr void await_resume() noexcept {}
 };
