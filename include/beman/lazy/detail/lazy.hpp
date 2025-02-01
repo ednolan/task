@@ -73,9 +73,9 @@ struct lazy {
                                                   ::beman::execution::set_stopped_t()>;
 
     struct state_base {
-        virtual void            complete()                                                              = 0;
-        virtual stop_token_type get_stop_token()                                                        = 0;
-        virtual C&              get_context()                                                           = 0;
+        virtual void            complete()       = 0;
+        virtual stop_token_type get_stop_token() = 0;
+        virtual C&              get_context()    = 0;
 
       protected:
         virtual ~state_base() = default;
