@@ -3,6 +3,10 @@
 list(
     APPEND
     lazy_tests
+    promise_type
+    error_types_of
+    state_base
+    with_error
     sub_visit
     result_type
     promise_base

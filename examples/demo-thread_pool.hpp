@@ -14,7 +14,6 @@
 
 namespace demo {
 namespace ex = beman::execution;
-namespace ex = beman::execution;
 struct thread_pool {
 
     struct node {

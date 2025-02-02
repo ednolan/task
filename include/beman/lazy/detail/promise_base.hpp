@@ -19,8 +19,13 @@ namespace beman::lazy::detail {
  * \headerfile beman/lazy/lazy.hpp <beman/lazy/lazy.hpp>
  * \internal
  */
+template <::beman::lazy::detail::stoppable Stop, typename Value, typename ErrorCompletions>
+class promise_base;
+
 template <::beman::lazy::detail::stoppable Stop, typename Value, typename... Error>
-class promise_base : public ::beman::lazy::detail::result_type<Stop, Value, Error...> {
+    requires(not ::std::same_as<Value, void>)
+class promise_base<Stop, Value, ::beman::execution::completion_signatures<::beman::execution::set_error_t(Error)...>>
+    : public ::beman::lazy::detail::result_type<Stop, Value, Error...> {
   public:
     /*
      * \brief Set the value result.
@@ -33,7 +38,8 @@ class promise_base : public ::beman::lazy::detail::result_type<Stop, Value, Erro
 };
 
 template <typename ::beman::lazy::detail::stoppable Stop, typename... Error>
-class promise_base<Stop, void, Error...> : public ::beman::lazy::detail::result_type<Stop, void_type, Error...> {
+class promise_base<Stop, void, ::beman::execution::completion_signatures<::beman::execution::set_error_t(Error)...>>
+    : public ::beman::lazy::detail::result_type<Stop, void_type, Error...> {
   public:
     /*
      * \brief Set the value result although without any value.
