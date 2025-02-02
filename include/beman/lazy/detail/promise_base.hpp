@@ -23,7 +23,7 @@ template <::beman::lazy::detail::stoppable Stop, typename Value, typename ErrorC
 class promise_base;
 
 template <::beman::lazy::detail::stoppable Stop, typename Value, typename... Error>
-    requires(not::std::same_as<Value, void>)
+    requires(not ::std::same_as<Value, void>)
 class promise_base<Stop, Value, ::beman::execution::completion_signatures<::beman::execution::set_error_t(Error)...>>
     : public ::beman::lazy::detail::result_type<Stop, Value, Error...> {
   public:

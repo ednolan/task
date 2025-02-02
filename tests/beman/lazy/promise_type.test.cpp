@@ -11,6 +11,11 @@
 #include <latch>
 #include <cassert>
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmismatched-new-delete"
+#endif
+
 namespace ex = beman::execution;
 
 // ----------------------------------------------------------------------------
