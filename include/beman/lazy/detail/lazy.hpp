@@ -16,6 +16,9 @@
 #include <beman/lazy/detail/final_awaiter.hpp>
 #include <beman/lazy/detail/handle.hpp>
 #include <beman/lazy/detail/sub_visit.hpp>
+#include <beman/lazy/detail/with_error.hpp>
+#include <beman/lazy/detail/state_base.hpp>
+#include <beman/lazy/detail/error_types_of.hpp>
 #include <concepts>
 #include <coroutine>
 #include <optional>
@@ -29,33 +32,6 @@
 
 namespace beman::lazy::detail {
 
-template <typename Awaiter>
-concept awaiter = ::beman::execution::sender<Awaiter> && requires(Awaiter&& awaiter) {
-    { awaiter.await_ready() } -> std::same_as<bool>;
-    awaiter.disabled(); // remove this to get an awaiter unfriendly coroutine
-};
-
-template <typename E>
-struct with_error {
-    E error;
-
-    // the members below are only need for co_await with_error{...}
-    static constexpr bool await_ready() noexcept { return false; }
-    template <typename Promise>
-        requires requires(Promise p, E e) {
-            p.result.template emplace<E>(std::move(e));
-            p.state->complete(p.result);
-        }
-    void await_suspend(std::coroutine_handle<Promise> handle) noexcept(
-        noexcept(handle.promise().result.template emplace<E>(std::move(this->error)))) {
-        handle.promise().result.template emplace<E>(std::move(this->error));
-        handle.promise().state->complete(handle.promise().result);
-    }
-    static constexpr void await_resume() noexcept {}
-};
-template <typename E>
-with_error(E&&) -> with_error<std::remove_cvref_t<E>>;
-
 struct default_context {};
 
 template <typename T = void, typename C = default_context>
@@ -68,42 +44,36 @@ struct lazy {
     using sender_concept = ::beman::execution::sender_t;
     using completion_signatures =
         ::beman::execution::completion_signatures<beman::lazy::detail::completion_t<T>,
+                                                  //-dk:TODO create the appropriate completion signatures
                                                   ::beman::execution::set_error_t(std::exception_ptr),
                                                   ::beman::execution::set_error_t(std::error_code),
                                                   ::beman::execution::set_stopped_t()>;
 
-    struct state_base {
-        virtual void            complete()       = 0;
-        virtual stop_token_type get_stop_token() = 0;
-        virtual C&              get_context()    = 0;
-
-      protected:
-        virtual ~state_base() = default;
-    };
-
     struct promise_type : ::beman::lazy::detail::promise_base<::beman::lazy::detail::stoppable::yes,
                                                               ::std::remove_cvref_t<T>,
-                                                              ::std::exception_ptr,
-                                                              ::std::error_code //-dk:TODO determine erors correctly
-                                                              >,
+                                                              ::beman::lazy::detail::error_types_of_t<C>>,
                           ::beman::lazy::detail::allocator_support<allocator_type> {
         void notify_complete() { this->state->complete(); }
-        void start(auto&& e, state_base* s) {
-            this->scheduler.emplace(::beman::execution::get_scheduler(e));
+        void start(auto&& e, ::beman::lazy::detail::state_base<C>* s) {
             this->state = s;
+            if constexpr (std::same_as<::beman::lazy::detail::inline_scheduler, scheduler_type>)
+                this->scheduler.emplace();
+            else
+                this->scheduler.emplace(::beman::execution::get_scheduler(e));
             std::coroutine_handle<promise_type>::from_promise(*this).resume();
         }
 
         template <typename... A>
         promise_type(const A&... a) : allocator(::beman::lazy::detail::find_allocator<allocator_type>(a...)) {}
 
-        std::suspend_always initial_suspend() noexcept { return {}; }
+        std::suspend_always initial_suspend() noexcept { return {}; /*-dk:TODO resume on the correct scheduler */ }
         final_awaiter       final_suspend() noexcept { return {}; }
         void                unhandled_exception() { this->set_error(std::current_exception()); }
         auto                get_return_object() { return lazy(::beman::lazy::detail::handle<promise_type>(this)); }
 
         template <typename E>
-        auto await_transform(with_error<E> with) noexcept {
+        auto await_transform(::beman::lazy::detail::with_error<E> with) noexcept {
+            // This overload is only used if error completions use `co_await with_error(e)`.
             return std::move(with);
         }
         template <::beman::execution::sender Sender>
@@ -114,8 +84,6 @@ struct lazy {
                 return ::beman::execution::as_awaitable(
                     ::beman::execution::continues_on(std::forward<Sender>(sender), *(this->scheduler)), *this);
         }
-        template <::beman::lazy::detail::awaiter Awaiter>
-        auto await_transform(Awaiter&&) noexcept = delete;
 
         template <typename E>
         final_awaiter yield_value(with_error<E> with) noexcept {
@@ -125,7 +93,7 @@ struct lazy {
 
         [[no_unique_address]] allocator_type allocator;
         std::optional<scheduler_type>        scheduler{};
-        state_base*                          state{};
+        ::beman::lazy::detail::state_base<C>* state{};
 
         std::coroutine_handle<> unhandled_stopped() {
             this->state->complete();
@@ -185,7 +153,7 @@ struct lazy {
     };
 
     template <typename Receiver>
-    struct state : state_base, state_rep<Receiver> {
+    struct state : ::beman::lazy::detail::state_base<C>, state_rep<Receiver> {
         using operation_state_concept = ::beman::execution::operation_state_t;
         using stop_token_t =
             decltype(::beman::execution::get_stop_token(::beman::execution::get_env(std::declval<Receiver>())));
@@ -202,8 +170,8 @@ struct lazy {
         std::optional<stop_callback_t>              stop_callback;
 
         void            start() & noexcept { this->handle.start(::beman::execution::get_env(this->receiver), this); }
-        void            complete() override { this->handle.complete(::std::move(this->receiver)); }
-        stop_token_type get_stop_token() override {
+        void            do_complete() override { this->handle.complete(::std::move(this->receiver)); }
+        stop_token_type do_get_stop_token() override {
             if (this->source.stop_possible() && not this->stop_callback) {
                 this->stop_callback.emplace(
                     ::beman::execution::get_stop_token(::beman::execution::get_env(this->receiver)),
@@ -211,7 +179,7 @@ struct lazy {
             }
             return this->source.get_token();
         }
-        C& get_context() override { return this->context; }
+        C& do_get_context() override { return this->context; }
     };
 
     ::beman::lazy::detail::handle<promise_type> handle;
