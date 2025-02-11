@@ -1,4 +1,4 @@
-.PHONY: default doc 
+.PHONY: default doc
 
 default: doc
 
@@ -12,4 +12,3 @@ distclean: clean
 	$(RM) mkerr olderr
 
 include wg21/Makefile
-
