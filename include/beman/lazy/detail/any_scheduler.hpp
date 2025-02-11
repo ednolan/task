@@ -223,17 +223,14 @@ class any_scheduler {
     using scheduler_concept = ::beman::execution::scheduler_t;
 
     template <typename S, typename Allocator = ::std::allocator<void>>
-        requires(not std::same_as<any_scheduler, std::remove_cvref_t<S>>)
-           && ::beman::execution::scheduler<S>
-    explicit any_scheduler(S&& s, Allocator = {}) : scheduler(static_cast<concrete<std::decay_t<S>>*>(nullptr), std::forward<S>(s)) {}
-    any_scheduler(any_scheduler const&) = default;
+        requires(not std::same_as<any_scheduler, std::remove_cvref_t<S>>) && ::beman::execution::scheduler<S>
+    explicit any_scheduler(S&& s, Allocator = {})
+        : scheduler(static_cast<concrete<std::decay_t<S>>*>(nullptr), std::forward<S>(s)) {}
+    any_scheduler(const any_scheduler&) = default;
     template <typename Allocator>
-    any_scheduler(any_scheduler const& other, Allocator)
-        : scheduler(other.scheduler)
-    {
-    }
-    any_scheduler& operator=(any_scheduler const&) = default;
-    ~any_scheduler() = default;
+    any_scheduler(const any_scheduler& other, Allocator) : scheduler(other.scheduler) {}
+    any_scheduler& operator=(const any_scheduler&) = default;
+    ~any_scheduler()                               = default;
 
     sender schedule() { return this->scheduler->schedule(); }
     bool   operator==(const any_scheduler&) const = default;

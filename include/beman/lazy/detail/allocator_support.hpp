@@ -56,8 +56,7 @@ struct allocator_support {
             void*     ptr{allocator_traits::allocate(alloc, allocator_support::offset(size) + sizeof(Allocator))};
             try {
                 new (allocator_support::get_allocator(ptr, size)) Allocator(alloc);
-            }
-            catch (...) {
+            } catch (...) {
                 allocator_traits::deallocate(
                     alloc, static_cast<std::byte*>(ptr), allocator_support::offset(size) + sizeof(Allocator));
                 throw;

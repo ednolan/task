@@ -35,31 +35,24 @@ namespace beman::lazy::detail {
 template <typename Scheduler>
 struct optional_ref_scheduler {
     using scheduler_concept = ::beman::execution::scheduler_t;
-    using ptr_type = ::std::optional<Scheduler>*;
+    using ptr_type          = ::std::optional<Scheduler>*;
 
     template <typename Receiver>
     struct state {
         using operation_state_concept = ::beman::execution::operation_state_t;
         ptr_type sched;
         Receiver receiver;
-        using inner_t = decltype(::beman::execution::connect(
-            ::beman::execution::schedule(**sched), ::std::declval<Receiver>()
-        ));
+        using inner_t =
+            decltype(::beman::execution::connect(::beman::execution::schedule(**sched), ::std::declval<Receiver>()));
         struct connector {
             inner_t inner;
             template <typename S, typename R>
-            connector(S&& s, R&& r)
-                : inner(::beman::execution::connect(::std::forward<S>(s), ::std::forward<R>(r)))
-            {
-            }
-            void start() {
-                ::beman::execution::start(this->inner);
-            }
+            connector(S&& s, R&& r) : inner(::beman::execution::connect(::std::forward<S>(s), ::std::forward<R>(r))) {}
+            void start() { ::beman::execution::start(this->inner); }
         };
         std::optional<connector> inner;
-        void start() & noexcept {
-            inner.emplace(::beman::execution::schedule(**this->sched),
-                ::std::forward<Receiver>(receiver));
+        void                     start() & noexcept {
+            inner.emplace(::beman::execution::schedule(**this->sched), ::std::forward<Receiver>(receiver));
             (*this->inner).start();
         }
     };
@@ -68,29 +61,28 @@ struct optional_ref_scheduler {
 
         template <typename Tag>
         optional_ref_scheduler query(::beman::execution::get_completion_scheduler_t<Tag>) const noexcept {
-            return { this->sched };
+            return {this->sched};
         }
     };
     struct sender {
         using sender_concept = ::beman::execution::sender_t;
-        using completion_signatures = ::beman::execution::completion_signatures<
-            ::beman::execution::set_value_t(),
-            ::beman::execution::set_error_t(::std::exception_ptr),
-            ::beman::execution::set_error_t(::std::system_error),
-            ::beman::execution::set_stopped_t()
-        >;
+        using completion_signatures =
+            ::beman::execution::completion_signatures<::beman::execution::set_value_t(),
+                                                      ::beman::execution::set_error_t(::std::exception_ptr),
+                                                      ::beman::execution::set_error_t(::std::system_error),
+                                                      ::beman::execution::set_stopped_t()>;
         ptr_type sched;
         template <::beman::execution::receiver Receiver>
         auto connect(Receiver&& receiver) {
             return state<::std::remove_cvref_t<Receiver>>{this->sched, ::std::forward<Receiver>(receiver), {}};
         }
-        env get_env() const noexcept { return {this->sched} ;}
+        env get_env() const noexcept { return {this->sched}; }
     };
     static_assert(::beman::execution::sender<sender>);
 
     ptr_type sched;
-    sender schedule() const noexcept { return {this->sched}; }
-    bool operator== (optional_ref_scheduler const&) const = default;
+    sender   schedule() const noexcept { return {this->sched}; }
+    bool     operator==(const optional_ref_scheduler&) const = default;
 };
 static_assert(::beman::execution::scheduler<::beman::lazy::detail::any_scheduler>);
 static_assert(::beman::execution::scheduler<::beman::lazy::detail::inline_scheduler>);
@@ -110,9 +102,7 @@ struct promise_type : ::beman::lazy::detail::promise_base<::beman::lazy::detail:
     struct receiver {
         using receiver_concept = ::beman::execution::receiver_t;
         promise_type* self{};
-        void set_value() && noexcept {
-            std::coroutine_handle<promise_type>::from_promise(*this->self).resume();
-        }
+        void set_value() && noexcept { std::coroutine_handle<promise_type>::from_promise(*this->self).resume(); }
         void set_error(auto&&) && noexcept {
             //-dk:TODO
         }
@@ -123,12 +113,10 @@ struct promise_type : ::beman::lazy::detail::promise_base<::beman::lazy::detail:
     struct connector {
         decltype(::beman::execution::connect(
             ::beman::execution::schedule(::std::declval<::beman::lazy::detail::any_scheduler>()),
-            ::std::declval<receiver>()
-           )) state;
+            ::std::declval<receiver>())) state;
         connector(::beman::lazy::detail::any_scheduler scheduler, receiver rcvr)
-            : state(::beman::execution::connect(::beman::execution::schedule(::std::move(scheduler)), ::std::move(rcvr)))
-        {
-        }
+            : state(::beman::execution::connect(::beman::execution::schedule(::std::move(scheduler)),
+                                                ::std::move(rcvr))) {}
     };
 
     void notify_complete() { this->state->complete(); }
@@ -136,8 +124,7 @@ struct promise_type : ::beman::lazy::detail::promise_base<::beman::lazy::detail:
         this->state = s;
         if constexpr (std::same_as<::beman::lazy::detail::inline_scheduler, scheduler_type>) {
             this->scheduler.emplace();
-        }
-        else {
+        } else {
             this->scheduler.emplace(::beman::execution::get_scheduler(e));
         }
         this->initial->run();
@@ -148,25 +135,21 @@ struct promise_type : ::beman::lazy::detail::promise_base<::beman::lazy::detail:
 
     struct initial_base {
         virtual ~initial_base() = default;
-        virtual void run() = 0;
+        virtual void run()      = 0;
     };
     struct initial_sender {
-        using sender_concept = ::beman::execution::sender_t;
+        using sender_concept        = ::beman::execution::sender_t;
         using completion_signatures = ::beman::execution::completion_signatures<::beman::execution::set_value_t()>;
 
         template <::beman::execution::receiver Receiver>
-        struct state: initial_base {
+        struct state : initial_base {
             using operation_state_concept = ::beman::execution::operation_state_t;
             promise_type* promise;
             Receiver      receiver;
             template <typename R>
-            state(promise_type* p, R&& r)
-                : promise(p), receiver(::std::forward<R>(r)) {
-            }
+            state(promise_type* p, R&& r) : promise(p), receiver(::std::forward<R>(r)) {}
             void start() & noexcept { this->promise->initial = this; }
-            void run() override {
-                ::beman::execution::set_value(::std::move(receiver));
-            }
+            void run() override { ::beman::execution::set_value(::std::move(receiver)); }
         };
 
         promise_type* promise{};
@@ -178,7 +161,7 @@ struct promise_type : ::beman::lazy::detail::promise_base<::beman::lazy::detail:
 
     auto initial_suspend() noexcept {
         return this->internal_await_transform(initial_sender{this},
-            optional_ref_scheduler<scheduler_type>{&this->scheduler});
+                                              optional_ref_scheduler<scheduler_type>{&this->scheduler});
     }
     final_awaiter       final_suspend() noexcept { return {}; }
     void                unhandled_exception() { this->set_error(std::current_exception()); }
@@ -195,7 +178,8 @@ struct promise_type : ::beman::lazy::detail::promise_base<::beman::lazy::detail:
             return ::beman::execution::as_awaitable(std::forward<Sender>(sender), *this);
         else
             return ::beman::execution::as_awaitable(
-                ::beman::execution::continues_on(::std::forward<Sender>(sender), ::std::forward<Scheduler>(sched)), *this);
+                ::beman::execution::continues_on(::std::forward<Sender>(sender), ::std::forward<Scheduler>(sched)),
+                *this);
     }
     template <::beman::execution::sender Sender>
     auto await_transform(Sender&& sender) noexcept {
@@ -211,8 +195,7 @@ struct promise_type : ::beman::lazy::detail::promise_base<::beman::lazy::detail:
     [[no_unique_address]] allocator_type  allocator;
     std::optional<scheduler_type>         scheduler{};
     ::beman::lazy::detail::state_base<C>* state{};
-    initial_base* initial{};
-
+    initial_base*                         initial{};
 
     std::coroutine_handle<> unhandled_stopped() {
         this->state->complete();
