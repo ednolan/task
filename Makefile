@@ -1,6 +1,6 @@
 #-dk: note to self: PATH=/opt/llvm-19.1.6/bin:$PATH LDFLAGS=-fuse-ld=lld
 
-.PHONY: config test default compile clean
+.PHONY: config test default compile clean doc
 
 BUILDDIR = build
 PRESET  = gcc-debug
@@ -10,6 +10,9 @@ ifeq ($(UNAME),Darwin)
 endif
 
 default: compile
+
+doc:
+	cd docs; $(MAKE)
 
 compile:
 	cmake --workflow --preset=$(PRESET)
