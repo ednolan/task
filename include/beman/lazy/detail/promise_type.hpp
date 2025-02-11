@@ -163,9 +163,9 @@ struct promise_type : ::beman::lazy::detail::promise_base<::beman::lazy::detail:
         return this->internal_await_transform(initial_sender{this},
                                               optional_ref_scheduler<scheduler_type>{&this->scheduler});
     }
-    final_awaiter       final_suspend() noexcept { return {}; }
-    void                unhandled_exception() { this->set_error(std::current_exception()); }
-    auto                get_return_object() { return Coroutine(::beman::lazy::detail::handle<promise_type>(this)); }
+    final_awaiter final_suspend() noexcept { return {}; }
+    void          unhandled_exception() { this->set_error(std::current_exception()); }
+    auto          get_return_object() { return Coroutine(::beman::lazy::detail::handle<promise_type>(this)); }
 
     template <typename E>
     auto await_transform(::beman::lazy::detail::with_error<E> with) noexcept {

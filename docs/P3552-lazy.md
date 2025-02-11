@@ -1385,7 +1385,7 @@ class @_inline-sender_@`
 is `completion_signatures<set_value_t()>`.
 
 [3]{.pnum} Let `@_sndr_@` be an expression of type `@_inline-sender_@`, let `@_rcvr_@`
-be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` where 
+be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` where
 `CS` is `completion_signatures<set_value_t()>`.
 
 - [3.1]{.pnum} The expression `connect(@_sndr_@, @_rcvr_@)` has
@@ -1401,7 +1401,7 @@ class @_inline-state_@;
 
 [4]{.pnum} Let `@_o_@` be a non-`const` lvalue of type `@_inline-state_@<Rcvr>`, and
     let `REC(@_o_@)` be a non-`const` lvalue reference to an instance of type `Rcvr`
-    that was initialized with the expression `@_rcvr_@` passed to an invocation 
+    that was initialized with the expression `@_rcvr_@` passed to an invocation
     of `connect` that returned `@_o_@`. Then:
 
 - [4.1]{.pnum} The object to which `REC(@_o_@)` refers remains valid for the lifetime

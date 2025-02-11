@@ -53,7 +53,7 @@ struct inline_scheduler {
 
     using scheduler_concept = ::beman::execution::scheduler_t;
     constexpr sender schedule() noexcept { return {}; }
-    bool   operator==(const inline_scheduler&) const = default;
+    bool             operator==(const inline_scheduler&) const = default;
 };
 static_assert(::beman::execution::scheduler<inline_scheduler>);
 } // namespace beman::lazy::detail
