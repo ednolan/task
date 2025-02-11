@@ -175,6 +175,7 @@ void test_exception() {
 }
 
 void test_initial_scheduler() {
+    static_assert(ex::sender<std::suspend_always>);
     thread_pool     pool;
     std::thread::id id{};
     ex::sync_wait(ex::schedule(pool.get_scheduler()) | ex::then([&id] { id = std::this_thread::get_id(); }));
