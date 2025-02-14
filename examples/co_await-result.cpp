@@ -1,7 +1,7 @@
 // examples/co_await-result.cpp                                        -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include <beman/lazy/lazy.hpp>
+#include <beman/lazy/task.hpp>
 #include <beman/execution/execution.hpp>
 #include <iostream>
 #include <cassert>
@@ -11,7 +11,7 @@ namespace ex = beman::execution;
 // ----------------------------------------------------------------------------
 
 int main() {
-    [[maybe_unused]] auto o = ex::sync_wait([]() -> ex::lazy<> {
+    [[maybe_unused]] auto o = ex::sync_wait([]() -> ex::task<> {
         co_await ex::just(); // void
         std::cout << "after co_await ex::just()\n";
         [[maybe_unused]] auto v = co_await ex::just(42); // int

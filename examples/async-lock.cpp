@@ -9,7 +9,7 @@
 #include <string>
 #include <condition_variable>
 #include <beman/execution/execution.hpp>
-#include <beman/lazy/lazy.hpp>
+#include <beman/lazy/task.hpp>
 
 namespace ex = beman::execution;
 
@@ -81,7 +81,7 @@ int main(int ac, char* av[]) {
         }
     });
 
-    auto work{[](queue& que) -> ex::lazy<void> {
+    auto work{[](queue& que) -> ex::task<void> {
         std::cout << std::this_thread::get_id() << " start\n" << std::flush;
         auto result = co_await request{17, que};
         std::cout << std::this_thread::get_id() << " result=" << result << "\n" << std::flush;

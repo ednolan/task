@@ -7,11 +7,11 @@
 #include <exception>
 #include <system_error>
 #include <beman/execution/execution.hpp>
-#include <beman/lazy/lazy.hpp>
+#include <beman/lazy/task.hpp>
 
 namespace ex = beman::execution;
 
 int main() {
-    ex::sync_wait([]() -> ex::lazy<void> { co_await ex::just(); }());
-    ex::sync_wait([]() -> ex::lazy<void> { co_await std::suspend_never(); }());
+    ex::sync_wait([]() -> ex::task<void> { co_await ex::just(); }());
+    ex::sync_wait([]() -> ex::task<void> { co_await std::suspend_never(); }());
 }

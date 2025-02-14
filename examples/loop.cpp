@@ -4,11 +4,11 @@
 #include <iostream>
 #include <string>
 #include <beman/execution/execution.hpp>
-#include <beman/lazy/lazy.hpp>
+#include <beman/lazy/task.hpp>
 
 namespace ex = beman::execution;
 
-ex::lazy<void> loop() {
+ex::task<void> loop() {
     for (int i{}; i < 1000000; ++i)
         co_await ex::just(i);
 }
@@ -17,7 +17,7 @@ int main(int ac, char* av[]) {
     auto count = ac < 1 && av[1] == std::string_view("run-it") ? 1000000 : 1000;
     ex::sync_wait(
         // ex::detail::write_env(
-        [](auto cnt) -> ex::lazy<void> {
+        [](auto cnt) -> ex::task<void> {
             for (int i{}; i < cnt; ++i)
                 co_await ex::just(i);
         }(count)

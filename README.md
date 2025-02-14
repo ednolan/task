@@ -2,27 +2,27 @@
 SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 -->
 
-# beman.lazy: Beman Library Implementation of `lazy` (P3552)
+# beman.lazy: Beman Library Implementation of `task` (P3552)
 
 ![Continuous Integration Tests](https://github.com/bemanproject/lazy/actions/workflows/ci_tests.yml/badge.svg)
 
-`beman::execution::lazy<T, Context>` is a class template which
+`beman::execution::task<T, Context>` is a class template which
 is used as the the type of coroutine tasks. The corresponding objects
 are senders.  The first template argument (`T`) defines the result
 type which becomes a `set_value_t(T)` completion signatures. The
 second template argument (`Context`) provides a way to configure
 the behavior of the coroutine. By default it can be left alone.
 
-Implements: `std::execution::lazy` proposed in [Add a Coroutine Lazy Type (P3552r0)](https://wg21.link/P3552r0).
+Implements: `std::execution::task` proposed in [Add a Coroutine Lazy Type (P3552r0)](https://wg21.link/P3552r0).
 
 ## Usage
 
-The following code snippet shows a basic use of `beman::lazy::lazy`
+The following code snippet shows a basic use of `beman::lazy::task`
 using sender/receiver facilities to implement version of `hello,
 world`:
 
 ```cpp
-#include <beman/lazy/lazy.hpp>
+#include <beman/lazy/task.hpp>
 #include <beman/execution/execution.hpp>
 #include <iostream>
 
@@ -30,7 +30,7 @@ namespace ex = beman::execution;
 namespace ly = beman::lazy;
 
 int main() {
-    return std::get<0>(*ex::sync_wait([]->ex::lazy<int> {
+    return std::get<0>(*ex::sync_wait([]->ex::task<int> {
         std::cout << "Hello, world!\n";
         co_return co_await ex::just(0);
     }()));

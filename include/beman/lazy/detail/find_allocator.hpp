@@ -11,7 +11,7 @@
 namespace beman::lazy::detail {
 /*!
  * \brief Utility locating an allocator_arg/allocator pair
- * \headerfile beman/lazy/lazy.hpp <beman/lazy/lazy.hpp>
+ * \headerfile beman/lazy/task.hpp <beman/lazy/task.hpp>
  * \internal
  */
 template <typename Allocator>

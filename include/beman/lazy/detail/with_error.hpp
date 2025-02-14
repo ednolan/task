@@ -10,7 +10,7 @@
 // ----------------------------------------------------------------------------
 /*
  * \brief Tag type used to indicate an error is produced.
- * \headerfile beman/lazy/lazy.hpp <beman/lazy/lazy.hpp>
+ * \headerfile beman/lazy/task.hpp <beman/lazy/task.hpp>
  * \internal
  */
 namespace beman::lazy::detail {

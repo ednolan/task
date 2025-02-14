@@ -16,7 +16,7 @@
 namespace beman::lazy::detail {
 /*!
  * \brief Utility adding allocator support to type by embedding the allocator
- * \headerfile beman/lazy/lazy.hpp <beman/lazy/lazy.hpp>
+ * \headerfile beman/lazy/task.hpp <beman/lazy/task.hpp>
  *
  * To add allocator support using this class just publicly inherit from
  * allocator_support<Allocator, YourPromiseType>. This utility is probably
