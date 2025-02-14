@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <iostream>
+#include <memory_resource>
 #include <cassert>
 #include <cstdlib>
 #include <beman/execution/execution.hpp>
