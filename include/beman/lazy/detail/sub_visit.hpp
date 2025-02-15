@@ -15,7 +15,7 @@
 namespace beman::lazy::detail {
 /*
  * \brief Helper function creatig thunks for a variant visit.
- * \headerfile beman/lazy/lazy.hpp <beman/lazy/lazy.hpp>
+ * \headerfile beman/lazy/task.hpp <beman/lazy/task.hpp>
  * \internal
  */
 template <std::size_t Start, typename Fun, typename Var, std::size_t... I>
@@ -27,7 +27,7 @@ void sub_visit_thunks(Fun& fun, Var& var, std::index_sequence<I...>) {
 
 /*
  * \brief Helper function visiting a suffix of variant options
- * \headerfile beman/lazy/lazy.hpp <beman/lazy/lazy.hpp>
+ * \headerfile beman/lazy/task.hpp <beman/lazy/task.hpp>
  * \internal
  */
 template <std::size_t Start, typename... T>

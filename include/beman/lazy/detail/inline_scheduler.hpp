@@ -13,7 +13,7 @@
 namespace beman::lazy::detail {
 /*!
  * \brief Scheduler completing immmediately when started on the same thread
- * \headerfile beman/lazy/lazy.hpp <beman/lazy/lazy.hpp>
+ * \headerfile beman/lazy/task.hpp <beman/lazy/task.hpp>
  *
  * The class `inline_scheduler` is used to prevent any actual schedulering.
  * It does have a scheduler interface but it completes synchronously on

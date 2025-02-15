@@ -3,14 +3,14 @@
 add_library(beman.lazy STATIC)
 add_library(beman::lazy ALIAS beman.lazy)
 
-target_sources(beman.lazy PRIVATE lazy.cpp)
+target_sources(beman.lazy PRIVATE task.cpp)
 
 target_sources(
     beman.lazy
     PUBLIC
         FILE_SET HEADERS
         BASE_DIRS ${PROJECT_SOURCE_DIR}/include
-        FILES ${PROJECT_SOURCE_DIR}/include/beman/lazy/lazy.hpp
+        FILES ${PROJECT_SOURCE_DIR}/include/beman/lazy/task.hpp
 )
 
 set_target_properties(beman.lazy PROPERTIES VERIFY_INTERFACE_HEADER_SETS ON)

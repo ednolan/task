@@ -6,7 +6,7 @@
 #include <tuple>
 #include <system_error>
 #include <beman/execution/execution.hpp>
-#include <beman/lazy/lazy.hpp>
+#include <beman/lazy/task.hpp>
 
 namespace ex = beman::execution;
 
@@ -65,7 +65,7 @@ auto my_into_optional(S&& s) {
 
 int main() {
     queue<double> que;
-    ex::sync_wait([](auto& q) -> ex::lazy<> {
+    ex::sync_wait([](auto& q) -> ex::task<> {
         // auto x = co_await ex::just(true) | into_optional;
         [[maybe_unused]] std::optional x = co_await (q.async_pop() | ex::into_optional);
         [[maybe_unused]] std::optional y = co_await ex::into_optional(q.async_pop());

@@ -1,8 +1,8 @@
 // include/beman/lazy/detail/into_optional.hpp                        -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef INCLUDED_BEMAN_LAZY_DETAIL_LAZY
-#define INCLUDED_BEMAN_LAZY_DETAIL_LAZY
+#ifndef INCLUDED_BEMAN_LAZY_DETAIL_TASK
+#define INCLUDED_BEMAN_LAZY_DETAIL_TASK
 
 #include <beman/execution/execution.hpp>
 #include <beman/lazy/detail/allocator_of.hpp>
@@ -35,7 +35,7 @@ namespace beman::lazy::detail {
 struct default_context {};
 
 template <typename T = void, typename C = default_context>
-struct lazy {
+struct task {
     using stop_source_type = ::beman::lazy::detail::stop_source_of_t<C>;
     using stop_token_type  = decltype(std::declval<stop_source_type>().get_token());
 
@@ -47,7 +47,7 @@ struct lazy {
                                                   ::beman::execution::set_error_t(std::error_code),
                                                   ::beman::execution::set_stopped_t()>;
 
-    using promise_type = ::beman::lazy::detail::promise_type<lazy, T, C>;
+    using promise_type = ::beman::lazy::detail::promise_type<task, T, C>;
 
     template <typename Receiver>
     struct state_rep {
@@ -117,7 +117,7 @@ struct lazy {
 
   private:
     friend promise_type;
-    explicit lazy(::beman::lazy::detail::handle<promise_type> h) : handle(std::move(h)) {}
+    explicit task(::beman::lazy::detail::handle<promise_type> h) : handle(std::move(h)) {}
 
   public:
     template <typename Receiver>

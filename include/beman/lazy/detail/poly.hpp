@@ -14,7 +14,7 @@
 namespace beman::lazy::detail {
 /*!
  * \brief Utility providing small object optimization and type erasure.
- * \headerfile beman/lazy/lazy.hpp <beman/lazy/lazy.hpp>
+ * \headerfile beman/lazy/task.hpp <beman/lazy/task.hpp>
  * \internal
  */
 template <typename Base, std::size_t Size = 4u * sizeof(void*)>

@@ -5,8 +5,9 @@
 #include <memory_resource>
 #include <cassert>
 #include <cstdlib>
+#include <memory_resource>
 #include <beman/execution/execution.hpp>
-#include <beman/lazy/lazy.hpp>
+#include <beman/lazy/task.hpp>
 
 namespace ex = beman::execution;
 
@@ -76,40 +77,40 @@ int main() {
     ex::sync_wait(ex::just(0));
     std::cout << "just done\n\n";
 
-    std::cout << "running ex::lazy<void, alloc_aware>\n";
-    ex::sync_wait([]() -> ex::lazy<void, alloc_aware> {
+    std::cout << "running ex::task<void, alloc_aware>\n";
+    ex::sync_wait([]() -> ex::task<void, alloc_aware> {
         co_await ex::just(0);
         co_await ex::just(0);
     }());
-    std::cout << "ex::lazy<void, alloc_aware> done\n\n";
+    std::cout << "ex::task<void, alloc_aware> done\n\n";
 
     fixed_resource<2048> resource;
     if constexpr (true) {
-        std::cout << "running ex::lazy<void, alloc_aware> with alloc\n";
-        ex::sync_wait([](auto&&...) -> ex::lazy<void, alloc_aware> {
+        std::cout << "running ex::task<void, alloc_aware> with alloc\n";
+        ex::sync_wait([](auto&&...) -> ex::task<void, alloc_aware> {
             co_await ex::just(0);
             co_await ex::just(0);
         }(std::allocator_arg, &resource));
-        std::cout << "ex::lazy<void, alloc_aware> with alloc done\n\n";
+        std::cout << "ex::task<void, alloc_aware> with alloc done\n\n";
     }
 
     if constexpr (false) {
-        std::cout << "running ex::lazy<void> with alloc\n";
-        ex::sync_wait([](auto&&...) -> ex::lazy<void> {
+        std::cout << "running ex::task<void> with alloc\n";
+        ex::sync_wait([](auto&&...) -> ex::task<void> {
             co_await ex::just(0);
             co_await ex::just(0);
         }(std::allocator_arg, &resource));
-        std::cout << "ex::lazy<void> with alloc done\n\n";
+        std::cout << "ex::task<void> with alloc done\n\n";
     }
 
     if constexpr (false) {
-        std::cout << "running ex::lazy<void, alloc_aware> extracting alloc\n";
-        ex::sync_wait([](auto&&, [[maybe_unused]] auto* res) -> ex::lazy<void, alloc_aware> {
+        std::cout << "running ex::task<void, alloc_aware> extracting alloc\n";
+        ex::sync_wait([](auto&&, [[maybe_unused]] auto* res) -> ex::task<void, alloc_aware> {
             auto alloc = co_await ex::read_env(ex::get_allocator);
             static_assert(std::same_as<std::pmr::polymorphic_allocator<std::byte>, decltype(alloc)>);
             assert(alloc == std::pmr::polymorphic_allocator<std::byte>(res));
         }(std::allocator_arg, &resource));
-        std::cout << "ex::lazy<void, alloc_aware> extracting alloc done\n\n";
+        std::cout << "ex::task<void, alloc_aware> extracting alloc done\n\n";
     }
 
     delete new test{};

@@ -16,7 +16,7 @@
 namespace beman::lazy::detail {
 /*
  * \brief Helper base class dealing with void vs. value results.
- * \headerfile beman/lazy/lazy.hpp <beman/lazy/lazy.hpp>
+ * \headerfile beman/lazy/task.hpp <beman/lazy/task.hpp>
  * \internal
  */
 template <::beman::lazy::detail::stoppable Stop, typename Value, typename ErrorCompletions>

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/execution/execution.hpp>
-#include <beman/lazy/lazy.hpp>
+#include <beman/lazy/task.hpp>
 #include <iostream>
 #include <cassert>
 #include <cinttypes>
@@ -37,13 +37,13 @@ struct context {
 
 int main() {
     ex::sync_wait(ex::detail::write_env(
-        []() -> ex::lazy<void, simple_context> {
+        []() -> ex::task<void, simple_context> {
             auto value(co_await ex::read_env(get_value));
             std::cout << "value=" << value << "\n";
         }(),
         ex::detail::make_env(get_value, 42)));
     ex::sync_wait(ex::detail::write_env(
-        []() -> ex::lazy<void, context> {
+        []() -> ex::task<void, context> {
             auto value(co_await ex::read_env(get_value));
             std::cout << "value=" << value << "\n";
         }(),

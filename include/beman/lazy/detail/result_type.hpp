@@ -16,20 +16,20 @@
 namespace beman::lazy::detail {
 /*
  * \brief Helper type used as a placeholder for a void result
- * \headerfile beman/lazy/lazy.hpp <beman/lazy/lazy.hpp>
+ * \headerfile beman/lazy/task.hpp <beman/lazy/task.hpp>
  * \internal
  */
 enum void_type : unsigned char {};
 /*
  * \brief Helper type indicating whether a stopped result is possible
- * \headerfile beman/lazy/lazy.hpp <beman/lazy/lazy.hpp>
+ * \headerfile beman/lazy/task.hpp <beman/lazy/task.hpp>
  * \internal
  */
 enum class stoppable { yes, no };
 
 /*
  * \brief Type to hold the result of a coroutine
- * \headerfile beman/lazy/lazy.hpp <beman/lazy/lazy.hpp>
+ * \headerfile beman/lazy/task.hpp <beman/lazy/task.hpp>
  */
 template <::beman::lazy::detail::stoppable Stop, typename Value, typename... Error>
 class result_type {

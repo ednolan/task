@@ -1,7 +1,7 @@
 // examples/container.cpp                                              -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include <beman/lazy/lazy.hpp>
+#include <beman/lazy/task.hpp>
 #include <beman/execution/execution.hpp>
 #include <iostream>
 #include <vector>
@@ -12,7 +12,7 @@ namespace ex = beman::execution;
 // ----------------------------------------------------------------------------
 
 int main() {
-    std::vector<ex::lazy<>> cont;
-    cont.emplace_back([]() -> ex::lazy<> { co_return; }());
-    cont.push_back([]() -> ex::lazy<> { co_return; }());
+    std::vector<ex::task<>> cont;
+    cont.emplace_back([]() -> ex::task<> { co_return; }());
+    cont.push_back([]() -> ex::task<> { co_return; }());
 }

@@ -18,7 +18,7 @@ list(
     any_scheduler
     find_allocator
     inline_scheduler
-    lazy
+    task
     poly
     scheduler_of
 )

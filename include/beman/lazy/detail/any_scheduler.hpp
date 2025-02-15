@@ -16,7 +16,7 @@ namespace beman::lazy::detail {
 
 /*!
  * \brief Type-erasing scheduler
- * \headerfile beman/lazy/lazy.hpp <beman/lazy/lazy.hpp>
+ * \headerfile beman/lazy/task.hpp <beman/lazy/task.hpp>
  *
  * The class `any_scheduler` is used to type-erase any scheduler class.
  * Any error produced by the underlying scheduler except `std::error_code` is turned into

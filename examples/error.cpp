@@ -4,11 +4,11 @@
 #include <iostream>
 #include <system_error>
 #include <beman/execution/execution.hpp>
-#include <beman/lazy/lazy.hpp>
+#include <beman/lazy/task.hpp>
 
 namespace ex = beman::execution;
 
-ex::lazy<int> fun(int i) {
+ex::task<int> fun(int i) {
     using on_exit = std::unique_ptr<const char, decltype([](auto msg) { std::cout << msg; })>;
     on_exit msg("> ");
     std::cout << "<";

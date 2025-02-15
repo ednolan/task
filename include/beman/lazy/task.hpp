@@ -1,14 +1,14 @@
-// include/beman/lazy/lazy.hpp                                        -*-C++-*-
+// include/beman/lazy/task.hpp                                        -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef INCLUDED_INCLUDE_BEMAN_LAZY_LAZY
-#define INCLUDED_INCLUDE_BEMAN_LAZY_LAZY
+#ifndef INCLUDED_INCLUDE_BEMAN_LAZY_TASK
+#define INCLUDED_INCLUDE_BEMAN_LAZY_TASK
 
 #include <beman/lazy/detail/allocator_of.hpp>
 #include <beman/lazy/detail/any_scheduler.hpp>
 #include <beman/lazy/detail/inline_scheduler.hpp>
 #include <beman/lazy/detail/into_optional.hpp>
-#include <beman/lazy/detail/lazy.hpp>
+#include <beman/lazy/detail/task.hpp>
 #include <beman/lazy/detail/scheduler_of.hpp>
 #include <beman/lazy/detail/stop_source.hpp>
 
@@ -30,7 +30,7 @@ using ::beman::lazy::detail::into_optional;
 using ::beman::lazy::detail::default_context;
 using ::beman::lazy::detail::with_error;
 template <typename T = void, typename Context = ::beman::lazy::default_context>
-using lazy = ::beman::lazy::detail::lazy<T, Context>;
+using task = ::beman::lazy::detail::task<T, Context>;
 } // namespace beman::lazy
 
 namespace beman::execution {
@@ -49,7 +49,11 @@ using ::beman::lazy::detail::into_optional;
 using ::beman::lazy::detail::default_context;
 using ::beman::lazy::detail::with_error;
 template <typename T = void, typename Context = ::beman::lazy::default_context>
-using lazy = ::beman::lazy::detail::lazy<T, Context>;
+using task = ::beman::lazy::detail::task<T, Context>;
+
+template <typename T = void, typename Context = ::beman::lazy::default_context>
+using lazy [[deprecated("beman::execution::lazy has been renamed to beman::execution::task")]] =
+    ::beman::lazy::task<T, Context>;
 } // namespace beman::execution
 
 // ----------------------------------------------------------------------------
