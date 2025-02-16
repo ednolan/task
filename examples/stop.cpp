@@ -3,7 +3,7 @@
 
 #include <beman/execution/execution.hpp>
 #include <beman/execution/stop_token.hpp>
-#include <beman/lazy/task.hpp>
+#include <beman/task/task.hpp>
 #include <iostream>
 #include <chrono>
 #include <thread>

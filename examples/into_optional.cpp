@@ -6,7 +6,7 @@
 #include <tuple>
 #include <system_error>
 #include <beman/execution/execution.hpp>
-#include <beman/lazy/task.hpp>
+#include <beman/task/task.hpp>
 
 namespace ex = beman::execution;
 

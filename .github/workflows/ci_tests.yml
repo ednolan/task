@@ -120,8 +120,8 @@ jobs:
           # Portable commands only
           cmake --build build --config Release --verbose
           # cmake --build build --config Release --target all_verify_interface_header_sets
-          cmake --install build --config Release --prefix /opt/beman.lazy
-          ls -R /opt/beman.lazy
+          cmake --install build --config Release --prefix /opt/beman.task
+          ls -R /opt/beman.task
       - name: Test Release
         run: ctest --test-dir build --build-config Release
       - name: Build Debug
@@ -129,8 +129,8 @@ jobs:
           # Portable commands only
           cmake --build build --config Debug --verbose
           # cmake --build build --config Debug --target all_verify_interface_header_sets
-          cmake --install build --config Debug --prefix /opt/beman.lazy
-          ls -R /opt/beman.lazy
+          cmake --install build --config Debug --prefix /opt/beman.task
+          ls -R /opt/beman.task
       - name: Test Debug
         run: ctest --test-dir build --build-config Debug
 
@@ -165,15 +165,15 @@ jobs:
           # Portable commands only
           cmake --build build --config Release --verbose
           # cmake --build build --config Release --target all_verify_interface_header_sets
-          cmake --install build --config Release --prefix /opt/beman.lazy
-          ls -R /opt/beman.lazy
+          cmake --install build --config Release --prefix /opt/beman.task
+          ls -R /opt/beman.task
       - name: Build Debug
         run: |
           # Portable commands only
           cmake --build build --config Debug --verbose
           # cmake --build build --config Debug --target all_verify_interface_header_sets
-          cmake --install build --config Debug --prefix /opt/beman.lazy
-          ls -R /opt/beman.lazy
+          cmake --install build --config Debug --prefix /opt/beman.task
+          ls -R /opt/beman.task
 
   compiler-test:
     runs-on: ubuntu-24.04
@@ -238,8 +238,8 @@ jobs:
         run: |
           cmake --build build --config Debug --verbose
           # cmake --build build --config Debug --target all_verify_interface_header_sets
-          cmake --install build --config Debug --prefix /opt/beman.lazy
-          find /opt/beman.lazy -type f
+          cmake --install build --config Debug --prefix /opt/beman.task
+          find /opt/beman.task -type f
       - name: Test Debug
         run: ctest --test-dir build --build-config Debug
 

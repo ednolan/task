@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception -->
 
-# Resources Related to `beman::lazy`
+# Resources Related to `beman::task`
 
 This page has links to some resources related to this repository:
 

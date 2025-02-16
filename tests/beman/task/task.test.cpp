@@ -1,10 +1,8 @@
-// examples/container.cpp                                              -*-C++-*-
+// tests/beman/task/task.test.cpp                                     -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/task/task.hpp>
 #include <beman/execution/execution.hpp>
-#include <iostream>
-#include <vector>
 #include <cassert>
 
 namespace ex = beman::execution;
@@ -12,7 +10,10 @@ namespace ex = beman::execution;
 // ----------------------------------------------------------------------------
 
 int main() {
-    std::vector<ex::task<>> cont;
-    cont.emplace_back([]() -> ex::task<> { co_return; }());
-    cont.push_back([]() -> ex::task<> { co_return; }());
+#if 0
+    auto rc = ex::sync_wait([]() -> ex::task<int> { co_return 17; }());
+    assert(rc);
+    auto [value] = rc.value_or(std::tuple{0});
+    assert(value == 17);
+#endif
 }

@@ -2,7 +2,7 @@
 
 default: doc
 
-doc: P3552-lazy.pdf
+doc: P3552-task.pdf
 
 wg21/Makefile:
 	git clone https://github.com/mpark/wg21.git

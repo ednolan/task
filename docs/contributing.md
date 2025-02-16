@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception -->
 
-# Contributing to `beman::lazy`
+# Contributing to `beman::task`
 
 We welcome all constructive contributions! You will have something you
 can contribute independent of your level of expertise!
@@ -15,14 +15,14 @@ incomplete list of starting points for contributions:
 * Something reference moved or the reference is out of date.
 * When compiling the code on your system warnings or even errors are
     created.
-* The [issues page](https://github.com/bemanproject/lazy/issues) lists
+* The [issues page](https://github.com/bemanproject/task/issues) lists
     known issues.
 * The implememtation of a component may be missing.
 * The layout of some pages related to the project can be improved.
 * Some behaviour of a component isn't tested or documented.
 * You found something which should be linked from the
-    [resources](https://github.com/bemanproject/lazy/blob/main/docs/resources.md) page.
-* There are [pull requests](https://github.com/bemanproject/lazy/pulls)
+    [resources](https://github.com/bemanproject/task/blob/main/docs/resources.md) page.
+* There are [pull requests](https://github.com/bemanproject/task/pulls)
     which could be reviewed.
 * This very page or list is lacking something.
 

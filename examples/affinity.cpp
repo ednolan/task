@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/execution/execution.hpp>
-#include <beman/lazy/task.hpp>
+#include <beman/task/task.hpp>
 #include "demo-thread_pool.hpp"
 #include <iostream>
 #include <cassert>

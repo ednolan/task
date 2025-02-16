@@ -3,9 +3,9 @@
 cmake_minimum_required(VERSION 3.25)
 
 project(
-    beman.lazy # CMake Project Name, which is also the name of the top-level
+    beman.task # CMake Project Name, which is also the name of the top-level
     # targets (e.g., library, executable, etc.).
-    DESCRIPTION "A Beman library lazy (coroutine task)"
+    DESCRIPTION "A Beman library task (coroutine task)"
     LANGUAGES CXX
 )
 
@@ -36,10 +36,10 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(execution)
 
-add_subdirectory(src/beman/lazy)
+add_subdirectory(src/beman/task)
 
 if(BEMAN_LAZY_BUILD_TESTS)
-    add_subdirectory(tests/beman/lazy)
+    add_subdirectory(tests/beman/task)
 endif()
 
 if(BEMAN_LAZY_BUILD_EXAMPLES)
