@@ -24,7 +24,6 @@ list(
     sub_visit
     task
     with_error
-
 )
 
 foreach(test ${task_tests})
