@@ -10,17 +10,21 @@
 // ----------------------------------------------------------------------------
 
 namespace beman::task::detail {
-    class single_thread_context {
-    private:
-        ::beman::execution::run_loop loop;
-        ::std::thread                thread{[this]{ this->loop.run(); }};
-    public:
-        single_thread_context() = default;
-        ~single_thread_context() { this->finish(); this->thread.join(); }
-        auto get_scheduler() { return this->loop.get_scheduler(); }
-        void finish() { this->loop.finish(); }
-    };
-}
+class single_thread_context {
+  private:
+    ::beman::execution::run_loop loop;
+    ::std::thread                thread{[this] { this->loop.run(); }};
+
+  public:
+    single_thread_context() = default;
+    ~single_thread_context() {
+        this->finish();
+        this->thread.join();
+    }
+    auto get_scheduler() { return this->loop.get_scheduler(); }
+    void finish() { this->loop.finish(); }
+};
+} // namespace beman::task::detail
 // ----------------------------------------------------------------------------
 
 #endif

@@ -14,23 +14,23 @@ namespace ex = beman::execution;
 // ----------------------------------------------------------------------------
 
 namespace {
-    struct receiver {
-        using receiver_concept = ex::receiver_t;
+struct receiver {
+    using receiver_concept = ex::receiver_t;
 
-        void set_value(auto&&...) && noexcept {}
-        void set_error(auto&&) && noexcept {}
-        void set_stopped() && noexcept {}
-    };
-    static_assert(ex::receiver<receiver>);
-}
+    void set_value(auto&&...) && noexcept {}
+    void set_error(auto&&) && noexcept {}
+    void set_stopped() && noexcept {}
+};
+static_assert(ex::receiver<receiver>);
+} // namespace
 
 int main() {
     beman::task::detail::single_thread_context context;
 
     auto main_id{std::this_thread::get_id()};
-    auto[thread_id]{ex::sync_wait(ex::schedule(context.get_scheduler())
-        | ex::then([]{ return std::this_thread::get_id(); })
-    ).value_or(std::tuple{ std::thread::id{} })};
+    auto [thread_id]{
+        ex::sync_wait(ex::schedule(context.get_scheduler()) | ex::then([] { return std::this_thread::get_id(); }))
+            .value_or(std::tuple{std::thread::id{}})};
 
     assert(main_id != thread_id);
 
@@ -44,8 +44,8 @@ int main() {
 #else
     ex::sync_wait(beman::execution::continues_on(ex::just(42), context.get_scheduler())
 #endif
-        | ex::then([thread_id](int value){
-            assert(thread_id == std::this_thread::get_id());
-            assert(value == 42);
-        }));
+                  | ex::then([thread_id](int value) {
+                        assert(thread_id == std::this_thread::get_id());
+                        assert(value == 42);
+                    }));
 }
