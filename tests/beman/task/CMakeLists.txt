@@ -3,6 +3,7 @@
 list(
     APPEND
     task_tests
+    single_thread_context
     affine_on
     allocator_of
     allocator_support
