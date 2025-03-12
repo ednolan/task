@@ -1314,15 +1314,13 @@ Howes for comments on drafts of this proposal and general guidance.
 
 ## Proposed Wording
 
-The intent is to have all relevant wording in place before the
-Hagenberg meeting.
-
 Based on the discussion the wording would get
 Entities to describe:
 
+- `affinity_on`
 - `inline_scheduler`
-- `any_scheduler`
-- `lazy`
+- `task_scheduler`
+- `task`
 - any internally used tool
 - <code><i>allocator_of_t<i></code> exposition-only?
 - <code><i>scheduler_of_t<i></code> exposition-only?
@@ -1336,14 +1334,18 @@ In [execution.syn]{.sref} add declarations for the new classes:
       template<class-type Promise>
         struct with_awaitable_senders;
 
+      @[// [exec.affinity.on]{.sref}]{.add}@
+      @[constexpr affinity_on_t affinity_on;]{.add}@
+
       @[// [exec.inline.scheduler]{.sref}]{.add}@
       @[class inline_scheduler;]{.add}@
 
-      @[// [exec.any.scheduler]{.sref}]{.add}@
-      @[class any_scheduler;]{.add}@
+      @[// [exec.task.scheduler]{.sref}]{.add}@
+      @[class task_scheduler;]{.add}@
 
-      @[// [exec.lazy]{.sref}]{.add}@
-      @[class lazy;]{.add}@
+      @[// [exec.task]{.sref}]{.add}@
+      @[template <typename T, typename Context>]{.add}@
+      @[class task;]{.add}@
     }
 
 Add new subsetions for the different classes at the end of [exec]{.sref}:
@@ -1386,7 +1388,7 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
     type `@_inline-state_@<decay_t<@_rcvr_@>>` and is only throwing if
     `((void)@_sndr_@, auto(@_rcvr_@))` is potentially throwing.
 - [3.2]{.pnum} The expression `get_completion_scheduler<set_value_t>(get_env(@_sndr_@))`
-    has type `inline_scheduler`.  and is potentially-throwing if and only if `@_sndr_@` is potentially-throwing.
+    has type `inline_scheduler`  and is potentially-throwing if and only if `@_sndr_@` is potentially-throwing.
 
     template <receiver R>
     class @_inline-state_@;
@@ -1400,39 +1402,39 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
     of the object to which `@_o_@` refers.
 - [4.2]{.pnum} The expression `start(@_o_@)` is equivalent to `set_value(std::move(REC(@_o_@)))`.
 
-## `execution::any_scheduler` [exec.any.scheduler]
+## `execution::task_scheduler` [exec.task.scheduler]
 
     namespace std::execution {
-        class any_scheduler {
-            class @_any-sender_@; // exposition-only
+        class task_scheduler {
+            class @_sender_@; // exposition-only
             template <receiver R>
-            class @_any-state_@;  // exposition-only
+            class @_state_@;  // exposition-only
 
         public:
             using scheduler_concept = scheduler_t;
 
             template <scheduler Sched, typename Allocator = allocator<void>>
-                requires(not std::same_as<any_scheduler, std::remove_cvref_t<S>>)
+                requires(not std::same_as<task_scheduler, std::remove_cvref_t<S>>)
                     && ::beman::execution::scheduler<S>
-            explicit any_scheduler(Sched&& sched, Allocator alloc = {});
+            explicit task_scheduler(Sched&& sched, Allocator alloc = {});
             template <typename Allocator>
-            any_scheduler(any_scheduler const&, Allocator);
-            any_scheduler(any_scheduler const&);
-            any_scheduler& operator=(any_scheduler const&);
+            task_scheduler(task_scheduler const&, Allocator);
+            task_scheduler(task_scheduler const&);
+            task_scheduler& operator=(task_scheduler const&);
 
-            @_any-sender_@ schedule();
-            bool operator== (const any_scheduler&) const noexcept = default;
+            @_sender_@ schedule();
+            bool operator== (const task_scheduler&) const noexcept = default;
         };
     }
 
-[1]{.pnum} `any_scheduler` is a class that models `scheduler`
-    [exec.scheduler]{.sref}. Let `a` be an object of type `any_scheduler`
-    then `SCHED(a)` is an object of a type different than `any_scheduler`
+[1]{.pnum} `task_scheduler` is a class that models `scheduler`
+    [exec.scheduler]{.sref}. Let `s` be an object of type `task_scheduler`
+    then `SCHED(s)` is an object of a type different than `task_scheduler`
     modeling `scheduler`.
 
     template <scheduler Sched, typename Allocator = allocator<void>>
-        requires(not same_as<any_scheduler, decay_t<S>>) && scheduler<S>
-    explicit any_scheduler(Sched&& sched, Allocator alloc = {});
+        requires(not same_as<task_scheduler, decay_t<S>>) && scheduler<S>
+    explicit task_scheduler(Sched&& sched, Allocator alloc = {});
 
 [2]{.pnum} _Effects_: Initialises the object from `sched` and `alloc`.
     Allocations, if any, use `alloc` to get memory.
@@ -1440,7 +1442,7 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
 [3]{.pnum} _Post Condition_: `SCHED(*this) == sched` is true.
 
     template <typename Allocator>
-    any_scheduler(any_scheduler const& other, Allocator alloc);
+    task_scheduler(task_scheduler const& other, Allocator alloc);
 
 [4]{.pnum} _Effects_: Initialises the object from `other` and `alloc`.
     Any allocation used by `this` use an allocator obtained by rebinding
@@ -1448,28 +1450,34 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
 
 [5]{.pnum} _Post Condition_: `*this == other` is true.
 
-    any_scheduler(any_scheduler const& other);
+    task_scheduler(task_scheduler const& other);
 
-[6]{.pnum} _Effects_: equivalent to `any_scheduler(other, allocator<void>{});
+[6]{.pnum} _Effects_: equivalent to `task_scheduler(other, allocator<void>{});
 
-    any_scheduler& operator=(any_scheduler const& other);
+    task_scheduler& operator=(task_scheduler const& other);
 
 [7]{.pnum} _Post Condition_: `*this == other` is true.
 
-    @_any-sender_@ schedule();
+    @_sender_@ schedule();
 
-[8]{.pnum} _Effects_: Creates an `@_any-sender_@` initialized with
+[8]{.pnum} _Effects_: Creates a `@_sender_@` initialized with
     `schedule(SCHED(*this))`.
 
-    bool operator== (const any_scheduler& other) const noexcept = default;
+    bool operator== (const task_scheduler& other) const noexcept = default;
 
 [9]{.pnum} _Returns_: `false` if the types of `SCHED(*this)` and `SCHED(other)` are
     different, otherwise `SCHED(*this) == SCHED(other);`
 
-    class @_any-sender_@;
+    class task_scheduler::@_sender_@ {
+    public:
+        using sender_concept = sender_t;
 
-[10]{.pnum} `@_any-sender_@` is an exposition-only class that models `sender` [exec.sender]{.sref}.
-    For any type `Env`, the type `completion_signatures_t<@_any-sender_@, Env>` is
+        template <receiver R>
+        @_state_@<R> connect(R&& rcvr);
+    };
+
+[10]{.pnum} `@_sender_@` is an exposition-only class that models `sender` [exec.sender]{.sref}.
+    For any type `Env`, the type `completion_signatures_t<@_sender_@, Env>` is
 
     completion_signatures<
         set_value_t(),
@@ -1477,12 +1485,55 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
         set_error_t(exception_ptr),
         set_stopped_t()>
 
-[11]{.pnum} Let `sched` be an object of type `any_scehduler` and
-let `sndr` be an object of type `@_any-sender@` obtained from
-`schedule(sched)`. Then
-`get_completion_scheduler<set_value_t>(get_env(sndr)) == sched` is
-`true`.
+[11]{.pnum} Let `sched` be an object of type `task_scheduler` and
+    let `sndr` be an object of type `@_sender_@` obtained from
+    `schedule(sched)`. Then
+    `get_completion_scheduler<set_value_t>(get_env(sndr)) == sched`
+    is true. The object `SENDER(sndr)` is the object initialized
+    with `schedule(SCHED(sched))` or an object move constructed from
+    that.
 
-## `execution::lazy` [exec.lazy]
+    template<receiver R>
+    task_scheduler::@_state_@<R> task_scheduler::@_sender_@::connect(R&& rcvr);
 
-TODO
+[12]{.pnum} _Effects_: Creates a `@_sender_@<R>` initialized with
+    `connect(SENDER(*this), std::forward<R>(rcvr))`.
+
+    template <receiver R>
+    class task_scheduler::@_state_@ {
+    public:
+        using operation_state_concept = operation_state_t;
+
+        void start() & noexcept;
+    };
+
+[13]{.pnum} `@_state_@` is an exposition-only class tmplate whose specializations
+    model `operation_state` [exec.opstate]{.sref}. Let `R` be a type that models
+    `receiver`, let `rcvr` be an object of type`R`, [ex.receiver]{.sref},
+    and let `st` be an object of type `@_state_@<R>`. `STATE(st)` is the object
+    the object `st` got intialised with.
+
+    void task_scheduler::@_state_@<R>::start() &;
+
+[14]{.pnum} _Effects_: Equivalent to `start(STATE(*this))`.
+
+## `execution::task` [exec.task]
+
+### `task` Overview [task.overview]
+
+The class template `task` represents a sender used to `co_await` awaitables by
+evaluating a coroutines. The first template parameter `T` defines the type which
+can be used with `co_return` and which becomes the `set_value_t(T)` completion.
+The second template `Context` is used to specify various customisations for the
+supported by the `task`.
+
+### Task synopsis [task.syn]
+
+-dk:TODO this needs to inte
+
+```c++
+namespace std::execution {
+    template <typename T, typename Context>
+    class task;
+}
+```
