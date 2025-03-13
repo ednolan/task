@@ -458,8 +458,8 @@ something like this:
     struct allocator_aware_context {
         using allocator_type = std::pmr::polymorphic_allocator<std::byte>;
     };
-    template <typename T>
-    using my_lazy = ex::lazy<T, allocator_aware_context>;
+    template <class T>
+    using my_task = ex::task<T, allocator_aware_context>;
 
 Using various different types for task coroutines isn't a problem
 as the corresponding objects normally don't show up in containers.
@@ -829,8 +829,8 @@ the corresponding allocator if present. For example:
         using allocator_type = std::pmr::polymorphic_allocator<std::byte>;
     };
 
-    template <typename...A>
-    ex::lazy<int, allocator_aware_context> fun(int value, A&&...) {
+    template <class...A>
+    ex::task<int, allocator_aware_context> fun(int value, A&&...) {
         co_return value;
     }
 
@@ -1049,7 +1049,7 @@ The discussion below assumes the use of the class template `with_error<E>`
 to indicate that the coroutine completed with an error. It can be as
 simple as
 
-    template <typename E> struct with_error{ E error; };
+    template <class E> struct with_error{ E error; };
 
 The name can be different although it shouldn't collide with already
 use names (like `error_code` or `upon_error`). Also, in some cases
@@ -1344,7 +1344,7 @@ In [execution.syn]{.sref} add declarations for the new classes:
       @[class task_scheduler;]{.add}@
 
       @[// [exec.task]{.sref}]{.add}@
-      @[template <typename T, typename Context>]{.add}@
+      @[template <class T, class Context>]{.add}@
       @[class task;]{.add}@
     }
 
@@ -1413,11 +1413,11 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
         public:
             using scheduler_concept = scheduler_t;
 
-            template <scheduler Sched, typename Allocator = allocator<void>>
+            template <scheduler Sched, class Allocator = allocator<void>>
                 requires(not std::same_as<task_scheduler, std::remove_cvref_t<S>>)
                     && ::beman::execution::scheduler<S>
             explicit task_scheduler(Sched&& sched, Allocator alloc = {});
-            template <typename Allocator>
+            template <class Allocator>
             task_scheduler(task_scheduler const&, Allocator);
             task_scheduler(task_scheduler const&);
             task_scheduler& operator=(task_scheduler const&);
@@ -1432,7 +1432,7 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
     then `SCHED(s)` is an object of a type different than `task_scheduler`
     modeling `scheduler`.
 
-    template <scheduler Sched, typename Allocator = allocator<void>>
+    template <scheduler Sched, class Allocator = allocator<void>>
         requires(not same_as<task_scheduler, decay_t<S>>) && scheduler<S>
     explicit task_scheduler(Sched&& sched, Allocator alloc = {});
 
@@ -1441,7 +1441,7 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
 
 [3]{.pnum} _Post Condition_: `SCHED(*this) == sched` is true.
 
-    template <typename Allocator>
+    template <class Allocator>
     task_scheduler(task_scheduler const& other, Allocator alloc);
 
 [4]{.pnum} _Effects_: Initialises the object from `other` and `alloc`.
@@ -1521,29 +1521,144 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
 
 ### `task` Overview [task.overview]
 
-The class template `task` represents a sender used to `co_await` awaitables by
-evaluating a coroutines. The first template parameter `T` defines the type which
+[1]{.pnum} The class template `task` represents a sender used to `co_await` awaitables by
+evaluating a coroutine. The first template parameter `T` defines the type which
 can be used with `co_return` and which becomes the `set_value_t(T)` completion.
-The second template `Context` is used to specify various customisations
+The second template parameter `Context` is used to specify various customisations
 supported by the `task` class template. The type `task<T, Context>` models `sender`
 [exec.snd]{.sref}
 
-### Task synopsis [task.syn]
-
--dk:TODO this needs to inte
+### Class template task [task.class]
 
 ```c++
 namespace std::execution {
-    template <typename T, typename Context>
+    template <class T, class Context>
     class task {
+        // [task.state]
+        template <receiver R>
+        class @_state_@; // @_exposition only_@
+
     public:
         using sender_concept = sender_t;
+        using completion_signatures = @_see below_@;
 
-        template <receiver R>
-        class @_state_@;
+        // [task.promise]
+        class promise_type;
+
+        task(task&&) noexcept;
+        ~task();
 
         template <receiver R>
         @_state_@<R> connect(R&& recv);
+    
+    private:
+        coroutine_handle<promise_type> @_handle_@; // @_exposition only_@
     };
 }
 ```
+
+[1]{.pnum} The `task` template determines multiple types based on the `Context` parameter:
+
+- [1.1]{.pnum} If the type `Context::allocator_type` exists let `Alloc` be that type,
+    otherwise let `Alloc` be `allocator<byte>`.
+- [1.2]{.pnum} If the type `Context::scheduler_type` exists let `Scheduler` be that
+    type, otherwise let `Scheduler` be `task_scheduler`.
+- [1.3]{.pnum} If the type `Context::stop_source_type` exists let `StopSource` be that
+    type, otherwise let `StopSource` be `inplace_stop_source`.
+- [1.4]{.pnum} If the type `Context::error_types` exists let `Errors` be that type,
+    otherwise let `Errors` be `completion_signatures<set_error_t(exception_ptr)>`.
+    `Errors` must be a specialization `completion_signatures<ErrorSig...>` where each
+    element of `ErrorSig...` is of the form `set_error_t(E)` for some type `E`.
+
+[2]{.pnum} The type alias `task<T, Context>::completion_signatures`
+    is a specialization of `excution::completion_signatures` with
+    the template arguments `set_value_t(T)`, `ErrorSig...`, and
+    `set_stopped_t()` in an unspecified order.
+
+[3]{.pnum} _Mandates_:
+
+- [2.1]{.pnum} `Alloc` shall meet the _Cpp17Allocator_ requirements.
+
+
+### Task Members [task.members]
+
+    task(task&& other) noexcept;
+
+[1]{.pnum} _Effects:_ Initializes `@_handle_@` with `exchange(other.@_handle_@, {})`.
+
+    ~task();
+
+[2]{.pnum} _Effects:_ Equivalent to:
+
+        if (@_handle_@)
+            @_handle_@.destroy();
+    
+    template <receiver R>
+    @_state_@<R> connect(R&& recv);
+
+[3]{.pnum} _Precondition_ `bool(@_handle_@)` is true.
+
+[4]{.pnum} _Returns:_ `@_state_@<R>{ exchange(@_handle_@, {}), forward<R>(recv) };`
+    
+### Class template task::state [task.state]
+
+    namespace std::execution {
+        template <class T, class Context>
+            template <receiver R>
+        class task<T, Context>::@_state_@ { // @_exposition only_@
+        public:
+            coroutine_handle<promise_type> @_handle_@; // @_exposition only_@
+            remove_cvref_t<R>              @_rcvr_@; // @_exposition only_@
+
+            template <class RR>
+            @_state_@(auto handle, RR&& rr);
+            ~@_state_@();
+            void start() & noexcept;
+        };
+    }
+
+    template <class RR>
+    @_state_@(auto h, RR&& rr);
+
+[2]{.pnum} _Effects:_ Initializes `@_handle_@` with `std::move(h)` and `@_rcvr_@`
+    with `std::forward<RR>(rr)`.
+
+    ~@_state_@();
+
+[3]{.pnum} _Effects:_ Equivalent to
+
+        if (@_handle_@)
+            @_handle_@.destroy();
+
+    void start() & nexcept;
+
+[4]{.pnum} _Effects:_ Invokes `@_handle_@.resume()`.
+
+### Class task::promise_type [task.promise]
+
+    namespace std::execution {
+        template <class T, class Context>
+        class task<T, Context>::promise_type {
+        public:
+            constexpr always_suspend initial_suspend() noexcept;
+            constexpr @_unspecified_@ final_suspend() noexcept;
+
+            void uncaught_exception();
+            task get_return_object();
+
+            void return_void(); // if same_as<void, T>
+            template <class V>
+            void return_value(V&& value); // if !same_as<void, T>
+
+            template <class E>
+            @_unspecified_@ yield_value(with_error<E> error);
+
+            template <class A>
+            auto await_transform(A&& a);
+
+            template <class... Args>
+            void* operator new(size_t size, Args&&... args);
+
+            void operator delete(void* pointer, size_t size) noexcept;
+        };
+    }

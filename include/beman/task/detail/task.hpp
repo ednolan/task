@@ -35,10 +35,12 @@ namespace beman::task::detail {
 struct default_context {};
 
 template <typename T = void, typename C = default_context>
-struct task {
+class task {
+private:
     using stop_source_type = ::beman::task::detail::stop_source_of_t<C>;
     using stop_token_type  = decltype(std::declval<stop_source_type>().get_token());
 
+public:
     using sender_concept = ::beman::execution::sender_t;
     using completion_signatures =
         ::beman::execution::completion_signatures<beman::task::detail::completion_t<T>,
@@ -49,6 +51,7 @@ struct task {
 
     using promise_type = ::beman::task::detail::promise_type<task, T, C>;
 
+private:
     template <typename Receiver>
     struct state_rep {
         std::remove_cvref_t<Receiver> receiver;
@@ -120,6 +123,12 @@ struct task {
     explicit task(::beman::task::detail::handle<promise_type> h) : handle(std::move(h)) {}
 
   public:
+    task(task const&) = delete;
+    task(task&&) noexcept = default;
+    task& operator= (task const&) = delete;
+    task& operator= (task&&) noexcept = delete;
+    ~task() = default;
+
     template <typename Receiver>
     state<Receiver> connect(Receiver receiver) {
         return state<Receiver>(std::forward<Receiver>(receiver), std::move(this->handle));
