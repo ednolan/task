@@ -1509,7 +1509,7 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
 
 [13]{.pnum} `@_state_@` is an exposition-only class tmplate whose specializations
     model `operation_state` [exec.opstate]{.sref}. Let `R` be a type that models
-    `receiver`, let `rcvr` be an object of type`R`, [ex.receiver]{.sref},
+    `receiver`, let `rcvr` be an object of type`R`, [exec.recv]{.sref},
     and let `st` be an object of type `@_state_@<R>`. `STATE(st)` is the object
     the object `st` got intialised with.
 
@@ -1524,8 +1524,9 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
 The class template `task` represents a sender used to `co_await` awaitables by
 evaluating a coroutines. The first template parameter `T` defines the type which
 can be used with `co_return` and which becomes the `set_value_t(T)` completion.
-The second template `Context` is used to specify various customisations for the
-supported by the `task`.
+The second template `Context` is used to specify various customisations
+supported by the `task` class template. The type `task<T, Context>` models `sender`
+[exec.snd]{.sref}
 
 ### Task synopsis [task.syn]
 
@@ -1534,6 +1535,15 @@ supported by the `task`.
 ```c++
 namespace std::execution {
     template <typename T, typename Context>
-    class task;
+    class task {
+    public:
+        using sender_concept = sender_t;
+
+        template <receiver R>
+        class @_state_@;
+
+        template <receiver R>
+        @_state_@<R> connect(R&& recv);
+    };
 }
 ```
