@@ -1632,7 +1632,8 @@ namespace std::execution {
 
     void start() & nexcept;
 
-[4]{.pnum} _Effects:_ Invokes `@_handle_@.resume()`.
+[4]{.pnum} _Effects:_ Associates `this` with `@_handle_@.promise()` and then
+    invokes `@_handle_@.resume()`.
 
 ### Class task::promise_type [task.promise]
 
@@ -1640,11 +1641,15 @@ namespace std::execution {
         template <class T, class Context>
         class task<T, Context>::promise_type {
         public:
-            constexpr always_suspend initial_suspend() noexcept;
-            constexpr @_unspecified_@ final_suspend() noexcept;
+            task get_return_object() noexcept;
+
+            constexpr always_suspend initial_suspend() noexcept { return {}; }
+            constexpr auto final_suspend() noexcept;
+
+            template <class Error>
+            auto yield_value(with_error<E> error);
 
             void uncaught_exception();
-            task get_return_object();
 
             void return_void(); // if same_as<void, T>
             template <class V>
@@ -1660,5 +1665,55 @@ namespace std::execution {
             void* operator new(size_t size, Args&&... args);
 
             void operator delete(void* pointer, size_t size) noexcept;
+        
+        private:
+            optional<T> @_result_@; //  if !same_as<void, T>; @_exposition only@
         };
     }
+
+[1]{.pnum} Let `prom` be an object of `promise_type` and let `tsk`
+    be the `task` object created by `prom.get_return_object()`. The
+    description below refers to objects associated with `prom` whose
+    dynamic type isn't known using a notation which still just
+    accesses them.  [Note: An implementation could, e.g., use
+    dispatching through a base class to implement the neccessary
+    accesses.  --End Note]
+
+- [1.1]{.pnum} `STATE(prom)` is the operation state object used to
+    resume the `task` coroutines.
+- [1.2]{.pnum} `RCVR(prom)` is an object initialised from `rcvr`
+    where `rcvr` is the receiver used to get `STATE(prom)` by using
+    `connect(tsk, rcvr)`.
+- [1.3]{.pnum} `SCHED(prom)` is an object of type `Scheduler` which
+    is associated with `prom`. It is originally initialised using
+    `Scheduler(get_scheduler(get_env(RCVR(prom))))` if that
+    expression is valid and using `Scheduler()` otherwise. If neither
+    of these expression is valid, the program is ill-formed.
+
+    task get_return_object() noexcept;
+
+[2]{.pnum} _Returns:_ A `task` object whose member `@_handle_@` is
+    `coroutine_handle<promise_type>::from_promise(*this)`.
+
+    constexpr auto final_suspend() noexcept;
+
+[3]{.pnum} _Returns:_ An awaitable object of unspecified type
+    ([expr.await]) whose member functions arrange for the calling
+    coroutine to be suspended and then for calling `set_value` with
+    the appropriate arguments:
+
+- [3.1]{.pnum} If `same_as<void, T>` is true `set_value(std::move(RCVR(*this)))`
+    is called,
+- [3.2]{.pnum} otherwise, `set_value(std::move(RCVR(*this)), *@_result_@)`
+    is called.
+
+    template <class Err>
+    auto yield_value(with_error<Err> err);
+
+[4]{.pnum} _Mandates_ The type `Err` is unambigiously convertible to
+    one of the `set_error_t` argument types of `Errors`.
+
+[5]{.pnum} _Returns:_ An awaitable object of unspecified type
+    ([expr.await]) whose member functions arrange for the calling
+    coroutine to be suspended and then for calling
+    `set_error(std::move(RCVR(*this), std::move(err.error)))`.
