@@ -46,7 +46,7 @@ struct allocator_support {
     }
 
     template <typename... A>
-    static void* operator new(std::size_t size, A&&... a) {
+    static void* operator new(std::size_t size, A const&... a) {
         if constexpr (::std::same_as<Allocator, ::std::allocator<::std::byte>>) {
             Allocator alloc{};
             return allocator_traits::allocate(alloc, size);
@@ -65,7 +65,7 @@ struct allocator_support {
         }
     }
     template <typename... A>
-    static void operator delete(void* ptr, std::size_t size, A&&...) {
+    static void operator delete(void* ptr, std::size_t size, A const&...) {
         allocator_support::operator delete(ptr, size);
     }
     static void operator delete(void* ptr, std::size_t size) {

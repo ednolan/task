@@ -1667,7 +1667,8 @@ namespace std::execution {
             void operator delete(void* pointer, size_t size) noexcept;
         
         private:
-            optional<T> @_result_@; //  if !same_as<void, T>; @_exposition only@
+            optional<T> @_result_@; //  if !same_as<void, T>; @_exposition only_@
+            exception_ptr @_except_@; // @_exposition only_@
         };
     }
 
@@ -1699,12 +1700,14 @@ namespace std::execution {
 
 [3]{.pnum} _Returns:_ An awaitable object of unspecified type
     ([expr.await]) whose member functions arrange for the calling
-    coroutine to be suspended and then for calling `set_value` with
-    the appropriate arguments:
+    coroutine to be suspended and then for calling `set_value` or
+    `set_error` with the appropriate arguments:
 
-- [3.1]{.pnum} If `same_as<void, T>` is true `set_value(std::move(RCVR(*this)))`
-    is called,
-- [3.2]{.pnum} otherwise, `set_value(std::move(RCVR(*this)), *@_result_@)`
+- [3.1]{.pnum} If the coroutine exited with an exception,
+    `set_error(std::move(RCVR(*this)), std::move(@_except_@))`.
+- [3.2]{.pnum} Otherwise, if `same_as<void, T>` is true
+    `set_value(std::move(RCVR(*this)))` is called.
+- [3.3]{.pnum} Otherwise, `set_value(std::move(RCVR(*this)), *@_result_@)`
     is called.
 
     template <class Err>
@@ -1717,3 +1720,62 @@ namespace std::execution {
     ([expr.await]) whose member functions arrange for the calling
     coroutine to be suspended and then for calling
     `set_error(std::move(RCVR(*this), std::move(err.error)))`.
+
+    template <sender Sender>
+    auto await_transform(Sender&& sndr) noexcept;
+
+[6]{.pnum} _Returns_: If `same_as<inline_scheduler, Scheduler>` is
+    true returns `as_awaitable(std::forward<Sender>(sndr), *this)`;
+    otherwise returns
+    `as_awaitable(affine_on(std::forward<Sender>(sndr), SCHED(*this)), *this)`.
+
+    auto await_transform(change_scheduler<Scheduler> s) noexcept;
+
+[7]{.pnum} _Returns:_ `as_awaitable(just(exchange(SCHED(*this), s.scheduler)), *this);`
+
+    void uncaught_exception();
+
+[8]{.pnum} _Effects:_ If the signature `set_error_t(exception_ptr)` is
+    not an element of `Errors` calls `terminate()`. Otherwise stores
+    `current_exception()` into `@_except_@`.
+    
+    void unhandled_stopped();
+
+[9]{.pnum} _Effects:_ Calls `set_stopped(std::move(RCVR(*this)))`.
+
+[10]{.pnum} _Returns:_ `noop_coroutine();`
+
+    template <class... Args>
+    void* operator new(size_t size, const Args&... args);
+
+[11]{.pnum} If there is no parameter with type `allocator_arg_t`
+    then let `alloc` be `Allocator()`; otherwise, if there is no
+    parameter following the first `allocator_arg_t` parameter then
+    the program is ill-formed; otherise, let `arg_next` be the
+    parameter following the first `allocator_arg_t` parameter and
+    the program is ill-formed if `Allocator(arg_next)` isn't a valid
+    expression, otherwise let `alloc` be `Allocator(arg_next)`.
+    Let `PAlloc` be `allocator_traits<Allocator>::template rebind_alloc<U>`
+    where `U` is an unspecified type whose size and alignmnet are both
+    `__STDCPP_DEFAULT_NEW_ALOIGNMENT__`.
+
+[12]{.pnum} _Mandates:_ `allocator_traits<PAlloc>::pointer` is a pointer
+    type.
+
+[13]{.pnum} _Effects:_ Initializes an allocator `palloc` of type `PAlloc`
+    with `alloc`. Uses `palloc` to allocate storage for the smallest
+    array of `U` sufficient to provide stroage for coroutine state
+    of size `size`, and unspecified additional state neccessary to
+    ensure that `operator delete` can later deallocate this memory
+    block with an allocator equal to `palloc`.
+
+[14]{.pnum} _Returns:_ A pointer to the allocated storage.
+
+    void operator delete(void* pointer, size_t size) noexcept;
+
+[15]{.pnum} _Preconditions:_ `pointer` was returned from an invocation
+    of the above overload of `operator new` with a size argument
+    equal to `size`.
+
+[16]{.pnum} _Effects:_ Deallocates the storage pointed to by `pointer`
+    using an allocator equivalent to that used to allocate it.

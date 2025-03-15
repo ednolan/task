@@ -2,6 +2,7 @@
 
 set(ALL_EXAMPLES
     affinity
+    escaped-exception
     co_await-result
     friendly
     loop
