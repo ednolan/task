@@ -47,6 +47,7 @@ Just to get an idea what this proposal is about: here is a simple
 
 - Changed the name from `lazy` to `task` based on SG1 feedback and
   dropped the section on why `lazy` was chosen.
+- Changed the name of `any_scheduler` to `task_scheduler`.
 - Added wording for the `task` specification.
 
 ## Prior Work
@@ -700,12 +701,21 @@ The basic idea for scheduler affinity consists of a few parts:
     of a scheduler with a known type which can be constructed from
     `scheduler`. The used scheduler type is determined based on the
     context parameter `C` of the coroutine type `task<T, C>` using
-    `typename C::scheduler_type` and defaults to `any_scheduler`
-    if this type isn't defined. `any_scheduler` uses type-erasure
+    `typename C::scheduler_type` and defaults to `task_scheduler`
+    if this type isn't defined. `task_scheduler` uses type-erasure
     to deal with arbitrary schedulers (and small object optimisations
     to avoid allocations). The used scheduler type can be parameterised
     to allow use of `task` contexts where the scheduler type is
     known, e.g., to avoid the costs of type erasure.
+
+    Originally `task_scheduler` was called `any_scheduler` but there
+    was feedback from SG1 suggesting that a general `any_scheduler`
+    may need to cover various additional properties. To avoid dealing
+    with generalizing the facility a different name is used. The
+    name remains specified as it is still a useful component, at
+    least until an `any_scheduler` is defined by the standard
+    library. If necessary, the type erased scheduler type used by
+    `task` can be unspecified.
 
 3. When an operation which is `co_await`ed completes the execution
      is transferred to the held scheduler using `continues_on`.
@@ -1421,7 +1431,11 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
             task_scheduler& operator=(task_scheduler const&);
 
             @_sender_@ schedule();
-            bool operator== (const task_scheduler&) const noexcept = default;
+            bool operator== (const task_scheduler&) const noexcept;
+            template <class Sched>
+                requires (not same_as<task_scheduler, remove_cvref_t<Sched>>)
+                && scheduler<Sched>
+            bool operator== (const Sched& sched) const noexcept;
         };
     }
 
@@ -1461,10 +1475,18 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
 [8]{.pnum} _Effects_: Creates a `@_sender_@` initialized with
     `schedule(SCHED(*this))`.
 
-    bool operator== (const task_scheduler& other) const noexcept = default;
+    bool operator== (const task_scheduler& other) const noexcept;
 
 [9]{.pnum} _Returns_: `false` if the types of `SCHED(*this)` and `SCHED(other)` are
     different, otherwise `SCHED(*this) == SCHED(other);`
+
+    template <class Sched>
+        requires (not same_as<task_scheduler, remove_cvref_t<Sched>>)
+        && scheduler<Sched>
+    bool operator== (const Sched& other) const noexcept;
+
+[10]{.pnum} _Returns_: `false` if the types of `SCHED(*this)` and `Sched` are
+    different, otherwise `SCHED(*this) == Sched;`
 
     class task_scheduler::@_sender_@ {
     public:
@@ -1474,7 +1496,7 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
         @_state_@<R> connect(R&& rcvr);
     };
 
-[10]{.pnum} `@_sender_@` is an exposition-only class that models `sender` [exec.sender]{.sref}.
+[11]{.pnum} `@_sender_@` is an exposition-only class that models `sender` [exec.sender]{.sref}.
     For any type `Env`, the type `completion_signatures_t<@_sender_@, Env>` is
 
     completion_signatures<
@@ -1483,7 +1505,7 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
         set_error_t(exception_ptr),
         set_stopped_t()>
 
-[11]{.pnum} Let `sched` be an object of type `task_scheduler` and
+[12]{.pnum} Let `sched` be an object of type `task_scheduler` and
     let `sndr` be an object of type `@_sender_@` obtained from
     `schedule(sched)`. Then
     `get_completion_scheduler<set_value_t>(get_env(sndr)) == sched`
@@ -1494,7 +1516,7 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
     template<receiver R>
     task_scheduler::@_state_@<R> task_scheduler::@_sender_@::connect(R&& rcvr);
 
-[12]{.pnum} _Effects_: Creates a `@_sender_@<R>` initialized with
+[13]{.pnum} _Effects_: Creates a `@_sender_@<R>` initialized with
     `connect(SENDER(*this), std::forward<R>(rcvr))`.
 
     template <receiver R>
@@ -1505,7 +1527,7 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
         void start() & noexcept;
     };
 
-[13]{.pnum} `@_state_@` is an exposition-only class tmplate whose specializations
+[14]{.pnum} `@_state_@` is an exposition-only class tmplate whose specializations
     model `operation_state` [exec.opstate]{.sref}. Let `R` be a type that models
     `receiver`, let `rcvr` be an object of type`R`, [exec.recv]{.sref},
     and let `st` be an object of type `@_state_@<R>`. `STATE(st)` is the object
@@ -1513,7 +1535,7 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
 
     void task_scheduler::@_state_@<R>::start() &;
 
-[14]{.pnum} _Effects_: Equivalent to `start(STATE(*this))`.
+[15]{.pnum} _Effects_: Equivalent to `start(STATE(*this))`.
 
 ## `execution::task` [exec.task]
 
