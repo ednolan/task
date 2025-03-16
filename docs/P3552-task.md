@@ -1,7 +1,7 @@
 ---
-title: Add a Coroutine Lazy Type
-document: D3552R0
-date: 2024-01-12
+title: Add a Coroutine Task Type
+document: P3552R1
+date: 2025-03-16
 audience:
     - Concurrency Working Group (SG1)
     - Library Evolution Working Group (LEWG)
@@ -12,7 +12,7 @@ author:
     - name: Maikel Nadolski
       email: <maikel.nadolski@gmail.com>
 source:
-    - https://github.com/bemanproject/lazy/doc/P3552.md
+    - https://github.com/bemanproject/task/doc/P3552-task.md
 toc: false
 ---
 
@@ -33,23 +33,21 @@ Just to get an idea what this proposal is about: here is a simple
     namespace ex = std::execution;
 
     int main() {
-        return std::get<0>(*ex::sync_wait([]->ex::lazy<int> {
+        return std::get<0>(*ex::sync_wait([]->ex::task<int> {
             std::cout << "Hello, world!\n";
             co_return co_await ex::just(0);
         }()));
     }
 
-## The Name
+## Change History
 
-Just to get it out of the way: the class (template) used to implement
-a coroutine task needs to have a name. In previous discussions, [SG1
-requested](https://wiki.edg.com/bin/view/Wg21rapperswil2018/P1056R0)
-that the name `task` is retained and LEWG chose `lazy` as an
-alternative.  It isn't clear whether the respective reasoning is
-still relevant. To the authors, the name matters much less than
-various other details of the interface.  Thus, the text is written
-in terms of `lazy`. The name is easily changed (prior to standardisation)
-if that is desired.
+### R0 Initial Revision
+
+### R1 Hagenberg Feedback
+
+- Changed the name from `lazy` to `task` based on SG1 feedback and
+  dropped the section on why `lazy` was chosen.
+- Added wording for the `task` specification.
 
 ## Prior Work
 
@@ -380,10 +378,10 @@ no particular order):
     asynchronous clean-up operation which is triggered upon
     coroutine exit. See the section on [asynchronous clean-up](#asynchronous-clean-up)
     below for more discussing
-12. The `lazy` coroutine provided by the standard library may
+12. The `task` coroutine provided by the standard library may
     not always fit user's needs although they may need/want various
     of the facilities. To avoid having users implement all functionality
-    from scratch `lazy` should use specified components which can
+    from scratch `task` should use specified components which can
     be used by users when building their own coroutine. The components
     `as_awaitable` and `with_awaitable_sender` are two parts of
     achieving this objective but there are likely others.
@@ -394,7 +392,7 @@ no particular order):
     the CRTP class template `std::execution::with_awaitable_senders`.
     It may be reasonable to adjust the functionality of these
     components instead of defining the functionality specific to a
-    `lazy<...>` coroutine task.
+    `task<...>` coroutine task.
 
 It is important to note that different coroutine task implementations
 can live side by side: not all functionality has to be implemented
@@ -411,7 +409,7 @@ listed objectives. Most of the designs are independent of each other
 and can be left out if the consensus is that it shouldn't be used
 for whatever reason.
 
-### Template Declaration for `lazy`
+### Template Declaration for `task`
 
 Coroutines can use `co_return` to produce a value. The value returned can
 reasonably provide the argument for the `set_value_t` completion
@@ -422,8 +420,8 @@ should be the first template parameter which gets defaulted to
 `void` for coroutines not producing any value. For example:
 
     int main() {
-        ex::sync_wait([]->ex::lazy<>{
-            int result = co_await []->ex::lazy<int> { co_return 42; }();
+        ex::sync_wait([]->ex::task<>{
+            int result = co_await []->ex::task<int> { co_return 42; }();
             assert(result == 42);
         }());
     }
@@ -470,9 +468,9 @@ they are used in a container, e.g., to process data using a range
 of coroutines, they are likely to use the same result type and
 context types for configurations.
 
-### `lazy` Completion Signatures
+### `task` Completion Signatures
 
-The discussion above established that `lazy<T, C>` can have a
+The discussion above established that `task<T, C>` can have a
 successful completion using `set_value_t(T)`. The coroutine completes
 accordingly when it is exited using a matching `co_return`. When
 `T` is `void` the coroutine also completes successfully using
@@ -493,7 +491,7 @@ itself to also complete with `set_stopped()`.
 
 The coroutine implementation cannot inspect the coroutine body to
 determine how the different asynchronous operations may complete. As
-a result, the default completion signatures for `lazy<T>` are
+a result, the default completion signatures for `task<T>` are
 
     ex::completion_signatures<
         ex::set_value_t(T),  // or ex::set_value_t() if T == void
@@ -504,12 +502,12 @@ a result, the default completion signatures for `lazy<T>` are
 Support for [reporting an error without exception](#error-reporting)
 may modify the completion signatures.
 
-### `lazy` constructors and assignments
+### `task` constructors and assignments
 
 Coroutines are created via a factory function which returns the
 coroutine type and whose body uses one of the `co_*` function, e.g.
 
-    lazy<> nothing(){ co_return; }
+    task<> nothing(){ co_return; }
 
 The actual object is created via the promise type's `get_return_object`
 function and it is between the promise and coroutine types how
@@ -526,27 +524,27 @@ assignments either don't make sense or enable dangerous practices:
     Previous papers [P1056](https://wg21.link/p1056) and
     [P2506](https://wg21.link/p2506) also argued against a move
     assignment. However, one of the arguments doesn't apply to the
-    `lazy` proposed here: There is no need to deal with cancellation
-    when assigning or destroying a `lazy` object. Upon `start()`
-    of `lazy` the coroutine handle is transferred to an operation
+    `task` proposed here: There is no need to deal with cancellation
+    when assigning or destroying a `task` object. Upon `start()`
+    of `task` the coroutine handle is transferred to an operation
     state and the original coroutine object doesn't have any
     reference to the object anymore.
 3. If there is no assignment, a default constructed object doesn't make
-    much sense, i.e., `lazy` also doesn't have a default constructor.
+    much sense, i.e., `task` also doesn't have a default constructor.
 
 Based on experience with [Folly](https://github.com/facebook/folly)
-the suggestion was even stronger: `lazy` shouldn't even have move
-construction! That would mean that `lazy` can't be a sender or that
+the suggestion was even stronger: `task` shouldn't even have move
+construction! That would mean that `task` can't be a sender or that
 there would need to be some internal interface enabling the necessary
 transfer. That direction isn't pursued by this proposal.
 
-The lack of move assignment doesn't mean that `lazy` can't be held
+The lack of move assignment doesn't mean that `task` can't be held
 in a container: it is perfectly fine to `push_back` objects of this
 type into a container, e.g.:
 
-    std::vector<ex::lazy<>> cont;
-    cont.emplace_back([]->ex::lazy<> { co_return; }());
-    cont.push_back([]->ex::lazy<> { co_return; }());
+    std::vector<ex::task<>> cont;
+    cont.emplace_back([]->ex::task<> { co_return; }());
+    cont.push_back([]->ex::task<> { co_return; }());
 
 The expectation is that most of the time coroutines don't end up
 in normal containers. Instead, they'd be managed by a
@@ -555,20 +553,20 @@ in a work graph composed of senders.
 
 Technically there isn't a problem adding a default constructor, move
 assignment, and a `swap()` function. Based on experience with similar
-components it seems `lazy` is better off not having them.
+components it seems `task` is better off not having them.
 
 ### Result Type For `co_await`
 
 When `co_await`ing a sender `sndr` in a coroutine, `sndr` needs to
 be transformed to an awaitable. The existing approach is to use
 `execution::as_waitable(sndr)` [[exex.as.awaitable]](https://eel.is/c++draft/exec.as.awaitable)
-in the promise type's `await_transform` and `lazy` uses that approach.
+in the promise type's `await_transform` and `task` uses that approach.
 The awaitable returned from `as_awaitable(sndr)` has the following
 behaviour (`rcvr` is the receiver the sender `sndr` is connected to):
 
 1. When `sndr` completes with `set_stopped(std::move(rcvr))` the function `unhandled_stopped()`
     on the promise type is called and the awaiting coroutine is never
-    resumed. The `unhandled_stopped()` results in `lazy` itself
+    resumed. The `unhandled_stopped()` results in `task` itself
     also completing with `set_stopped_t()`.
 2. When `sndr` completes with `set_error(std::move(rcvr), error)` the coroutine is resumed
     and the `co_await sndr` expression results in `error` being thrown as an
@@ -591,7 +589,7 @@ be never resumed or an exception being thrown.
 
 Here is an example which summarises the different supported result types:
 
-    lazy<> fun() {
+    task<> fun() {
         co_await ex::just();                               // void
         auto v = co_await ex::just(0);                     // int
         auto[i, b, c] = co_await ex::just(0, true, 'c');   // tuple<int, bool, char>
@@ -626,7 +624,7 @@ fails because the function accepts only senders with at most
 one `set_value_t` completion. Thus, it is necessary to use something
 like the below:
 
-        lazy<> pop_demo(auto& queue) {
+        task<> pop_demo(auto& queue) {
             // auto value = co_await queue.async_pop(); // doesn't work
             std::optional v0 = co_await (queue.async_pop() | into_optional);
             std::optional v1 = co_await into_optional(queue.async_pop());
@@ -701,12 +699,12 @@ The basic idea for scheduler affinity consists of a few parts:
     Thus, the coroutine implementation needs to operate in terms
     of a scheduler with a known type which can be constructed from
     `scheduler`. The used scheduler type is determined based on the
-    context parameter `C` of the coroutine type `lazy<T, C>` using
+    context parameter `C` of the coroutine type `task<T, C>` using
     `typename C::scheduler_type` and defaults to `any_scheduler`
     if this type isn't defined. `any_scheduler` uses type-erasure
     to deal with arbitrary schedulers (and small object optimisations
     to avoid allocations). The used scheduler type can be parameterised
-    to allow use of `lazy` contexts where the scheduler type is
+    to allow use of `task` contexts where the scheduler type is
     known, e.g., to avoid the costs of type erasure.
 
 3. When an operation which is `co_await`ed completes the execution
@@ -729,7 +727,7 @@ There are a few immediate issues with the basic idea:
 2. What should happen if the obtained `scheduler` is incompatible with
     the coroutine's scheduler?
 3. Scheduling isn't free and despite the potential problems it should
-    be possible to use `lazy` without scheduler affinity.
+    be possible to use `task` without scheduler affinity.
 4. When operations are known to complete inline the scheduler isn't
     actually changed and the scheduling operation should be avoided.
 5. It should be possible to explicitly change the scheduler used by
@@ -745,11 +743,11 @@ The scope doesn't know about any schedulers and, thus, the receiver
 used by `counting_scope` when `connect`ing to a sender doesn't
 support the `get_scheduler` query, i.e., this example doesn't work:
 
-    ex::spawn([]->ex::lazy<void> { co_await ex::just(); }(), token);
+    ex::spawn([]->ex::task<void> { co_await ex::just(); }(), token);
 
 Using `spawn()` with coroutines doing the actual work is expected
 to be quite common, i.e., it isn't just a theoretical possibility that
-`lazy` is used together with `counting_scope`.  The approach used by
+`task` is used together with `counting_scope`.  The approach used by
 [`unifex`](https://github.com/facebookexperimental/libunifex) is
 to fail compilation when trying to `connect` a `Task` to a receiver
 without a scheduler. The approach taken by
@@ -820,7 +818,7 @@ When using coroutines at least the coroutine frame may end up being
 allocated on the heap: the [HALO](https://wg21.link/P0981) optimisations
 aren't always possible, e.g., when a coroutine becomes a child of
 another sender. To control how this allocation is done and to support
-environments where allocations aren't possible `lazy` should have
+environments where allocations aren't possible `task` should have
 allocator support. The idea is to pick up on a pair of arguments of
 type `std::allocator_arg_t` and an allocator type being passed and use
 the corresponding allocator if present. For example:
@@ -854,8 +852,8 @@ via the pointer passed to `operator delete`, e.g., stored at the
 offset `size`.
 
 To avoid any cost introduced by type erasing an allocator
-type as part of the `lazy` definition the expected allocator type
-is obtained from the context argument `C` of `lazy<T, C>`:
+type as part of the `task` definition the expected allocator type
+is obtained from the context argument `C` of `task<T, C>`:
 
     using allocator_type = ex::allocator_of_t<C>;
 
@@ -880,7 +878,7 @@ the allocator can be obtained from there:
     fixed_resource<2048> resource;
 
     ex::sync_wait([](auto&&, auto* resource)
-            -> ex::lazy<void, allocator_aware_context> {
+            -> ex::task<void, allocator_aware_context> {
         auto alloc = co_await ex::read_env(ex::get_allocator);
         use(alloc);
     }(allocator_arg, &resource));
@@ -916,7 +914,7 @@ to the coroutine, though:
     returns `false` or if the stop token type of the coroutine's
     receiver matches that of `ex::stop_source_of_t<C>`.
 
-For any other environment query the context `C` of `lazy<T, C>` can
+For any other environment query the context `C` of `task<T, C>` can
 be used. The coroutine can maintain an instance of type `C`. In many
 cases queries from the environment of the coroutine's `receiver` need
 to be forwarded. Let `env` be `get_env(receiver)` and `Env`
@@ -952,7 +950,7 @@ For example:
     int main() {
         ex::sync_wait(
             ex::write_env(
-                []->demo::lazy<void, context> {
+                []->demo::task<void, context> {
                     auto sched(co_await ex::read_env(get_scheduler));
                     auto value(co_await ex::read_env(get_value));
                     std::cout << "value=" << value << "\n";
@@ -1011,7 +1009,7 @@ limitations with this approach:
     mechanism is provided.
 3. To extract the actual error information from `std::exception_ptr`
     the exception has to be rethrown.
-4. The completion signatures for `lazy<T, C>` necessarily contain
+4. The completion signatures for `task<T, C>` necessarily contain
     `set_error_t(std::exception_ptr)` which is problematic when
     exceptions are unavailable: `std::exception_ptr` may also be
     unavailable. Also, without exception as it is impossible to
@@ -1019,7 +1017,7 @@ limitations with this approach:
     don't declare such a completion signature.
 
 Before going into details on how errors can be reported it is
-necessary to provide a way for `lazy<T, C>` to control the error
+necessary to provide a way for `task<T, C>` to control the error
 completion signatures.  Similar to the return type the error types
 cannot be deduced from the coroutine body. Instead, they can be
 declared using the context type `C`:
@@ -1070,7 +1068,7 @@ can be exited:
     into a `set_error(std::move(rcvr), err)` completion.
 
     One restriction with this approach is that for a
-    `lazy<void, C>` the body can't contain `co_return with_error{e};`: the
+    `task<void, C>` the body can't contain `co_return with_error{e};`: the
     `void` result requires that the promise type contains a function
     `return_void()` and if that is present it isn't possible to
     also have a `return_value(T)`.
@@ -1142,7 +1140,7 @@ because loops don't really execute like loops. For example, a
 coroutine like this can easily result in a stack overflow:
 
     ex::sync_wait(ex::write_env(
-        []() -> ex::lazy<void> {
+        []() -> ex::task<void> {
             for (int i{}; i < 1000000; ++i)
                 co_await ex::just(i);
         }(),
@@ -1191,7 +1189,7 @@ scheduler where the operation was started! The execution remained
 on that scheduler all along. However, not rescheduling the work
 means that the stack isn't unwound.
 
-Since `lazy` uses scheduler affinity by default, stack overflow
+Since `task` uses scheduler affinity by default, stack overflow
 shouldn't be a problem and there is no separate provision required
 to combat stack overflow. If the implementation chooses to avoid
 rescheduling work it will need to make sure that doing so doesn't
@@ -1213,7 +1211,7 @@ independent of a coroutine task. For example the
 [async-object](https://wg21.link/p2849) proposal is in this direction.
 There is similar work ongoing in the context of
 [Folly](https://github.com/facebook/folly). Thus, there is currently
-not plan to support asynchronous clean-up as part of the `lazy`
+no plan to support asynchronous clean-up as part of the `task`
 implementation.  Instead, it can be composed based on other facilities.
 
 ## Caveats
@@ -1268,14 +1266,14 @@ if there opinions deviating from the recommendation.
     one `set_value_t(T...)` completion? Recommendation: no.
 - Result type: add transformation algorithms like `into_optional`,
     `into_expected`? Recommendation: no, different proposals.
-- Scheduler affinity: should `lazy` support scheduler affinity?
+- Scheduler affinity: should `task` support scheduler affinity?
     Recommendation: yes.
 - Scheduler affinity: require a `get_scheduler()` query on the
     receiver's environments? Recommendation: yes.
 - Scheduler affinity: add a definition for `inline_scheduler`
     (using whatever name) to support disabling scheduler affinity?
     Recommendation: yes.
-- Allocator support: should `lazy` support allocators (default
+- Allocator support: should `task` support allocators (default
     `std::allocator<std::byte>`)? Recommendation: yes.
 - Error reporting: should it be possible to return an error
     without throwing an exception? Recommendation: yes.
@@ -1288,8 +1286,8 @@ if there opinions deviating from the recommendation.
 
 ## Implementation
 
-An implementation of `lazy` as proposed in this document is available
-from [`beman::lazy`](https://github.com/bemanproject/lazy). This
+An implementation of `task` as proposed in this document is available
+from [`beman::task`](https://github.com/bemanproject/task). This
 implementation hasn't received much use, yet, as it is fairly new. It
 is setup to be buildable and provides some examples as a starting
 point for experimentation.
@@ -1305,7 +1303,7 @@ three implementations in wide use:
 The first one
 ([`Folly::Task`](https://github.com/facebook/folly/blob/main/folly/coro/Task.h))
 isn't based on sender/receiver. Usage experience from all three
-have influenced the design of `lazy`.
+have influenced the design of `task`.
 
 ## Acknowledgements
 
@@ -1550,7 +1548,7 @@ namespace std::execution {
 
         template <receiver R>
         @_state_@<R> connect(R&& recv);
-    
+
     private:
         coroutine_handle<promise_type> @_handle_@; // @_exposition only_@
     };
@@ -1592,14 +1590,14 @@ namespace std::execution {
 
         if (@_handle_@)
             @_handle_@.destroy();
-    
+
     template <receiver R>
     @_state_@<R> connect(R&& recv);
 
 [3]{.pnum} _Precondition_ `bool(@_handle_@)` is true.
 
 [4]{.pnum} _Returns:_ `@_state_@<R>{ exchange(@_handle_@, {}), forward<R>(recv) };`
-    
+
 ### Class template task::state [task.state]
 
     namespace std::execution {
@@ -1638,6 +1636,22 @@ namespace std::execution {
 ### Class task::promise_type [task.promise]
 
     namespace std::execution {
+        template <class E>
+        struct with_error {
+            using type = remove_cvref_t<E>;
+            type error;
+        };
+        template <class E>
+        with_error(E&&) -> with_error<E>;
+
+        template <scheduler S>
+        struct change_coroutine_scheduler {
+            using type = remove_cvref_t<S>;
+            type scheduler;
+        }
+        template <scheduler S>
+        change_coroutine_scheduler(S&&) -> change_coroutine_scheduler<S>;
+
         template <class T, class Context>
         class task<T, Context>::promise_type {
         public:
@@ -1645,9 +1659,6 @@ namespace std::execution {
 
             constexpr always_suspend initial_suspend() noexcept { return {}; }
             constexpr auto final_suspend() noexcept;
-
-            template <class Error>
-            auto yield_value(with_error<E> error);
 
             void uncaught_exception();
 
@@ -1661,11 +1672,13 @@ namespace std::execution {
             template <class A>
             auto await_transform(A&& a);
 
+            @_unspecified_@ get_env() const noexcept;
+
             template <class... Args>
             void* operator new(size_t size, Args&&... args);
 
             void operator delete(void* pointer, size_t size) noexcept;
-        
+
         private:
             optional<T> @_result_@; //  if !same_as<void, T>; @_exposition only_@
             exception_ptr @_except_@; // @_exposition only_@
@@ -1729,7 +1742,7 @@ namespace std::execution {
     otherwise returns
     `as_awaitable(affine_on(std::forward<Sender>(sndr), SCHED(*this)), *this)`.
 
-    auto await_transform(change_scheduler<Scheduler> s) noexcept;
+    auto await_transform(change_coroutine_scheduler<Scheduler> s) noexcept;
 
 [7]{.pnum} _Returns:_ `as_awaitable(just(exchange(SCHED(*this), s.scheduler)), *this);`
 
@@ -1738,17 +1751,30 @@ namespace std::execution {
 [8]{.pnum} _Effects:_ If the signature `set_error_t(exception_ptr)` is
     not an element of `Errors` calls `terminate()`. Otherwise stores
     `current_exception()` into `@_except_@`.
-    
+
     void unhandled_stopped();
 
 [9]{.pnum} _Effects:_ Calls `set_stopped(std::move(RCVR(*this)))`.
 
 [10]{.pnum} _Returns:_ `noop_coroutine();`
 
+    @_unspecified_@ get_env() const noexcept;
+
+[11]{.pnum} _Returns:_ The member function returns an object `env`
+    such that queries are forwarded as follows:
+
+- [11.1]{.pnum} `env.query(get_scheduler)` returns `SCHED(*this)`.
+- [11.2]{.pnum} `env.query(get_allocator)` returns `ALLOC(*this)`.
+- [11.3]{.pnum} `env.query(get_stop_token)` returns `TOKEN(*this)`.
+- [11.4]{.pnum} For any other query `q` and arguments `a...` a
+    call to `env.query(q, a...)` returns `get_env(STATE(*this)).query(q,
+    a...)` if this expression is well-formed and `forwarding_query(q)`
+    is well-formed.  Otherwise the expression is ill-formed.
+
     template <class... Args>
     void* operator new(size_t size, const Args&... args);
 
-[11]{.pnum} If there is no parameter with type `allocator_arg_t`
+[12]{.pnum} If there is no parameter with type `allocator_arg_t`
     then let `alloc` be `Allocator()`; otherwise, if there is no
     parameter following the first `allocator_arg_t` parameter then
     the program is ill-formed; otherise, let `arg_next` be the
@@ -1759,31 +1785,28 @@ namespace std::execution {
     where `U` is an unspecified type whose size and alignmnet are both
     `__STDCPP_DEFAULT_NEW_ALOIGNMENT__`.
 
-[12]{.pnum} _Mandates:_ `allocator_traits<PAlloc>::pointer` is a pointer
+[13]{.pnum} _Mandates:_ `allocator_traits<PAlloc>::pointer` is a pointer
     type.
 
-[13]{.pnum} _Effects:_ Initializes an allocator `palloc` of type `PAlloc`
+[14]{.pnum} _Effects:_ Initializes an allocator `palloc` of type `PAlloc`
     with `alloc`. Uses `palloc` to allocate storage for the smallest
     array of `U` sufficient to provide stroage for coroutine state
     of size `size`, and unspecified additional state neccessary to
     ensure that `operator delete` can later deallocate this memory
     block with an allocator equal to `palloc`.
 
-[14]{.pnum} _Returns:_ A pointer to the allocated storage.
+[15]{.pnum} _Returns:_ A pointer to the allocated storage.
 
     void operator delete(void* pointer, size_t size) noexcept;
 
-[15]{.pnum} _Preconditions:_ `pointer` was returned from an invocation
+[16]{.pnum} _Preconditions:_ `pointer` was returned from an invocation
     of the above overload of `operator new` with a size argument
     equal to `size`.
 
-[16]{.pnum} _Effects:_ Deallocates the storage pointed to by `pointer`
+[17]{.pnum} _Effects:_ Deallocates the storage pointed to by `pointer`
     using an allocator equivalent to that used to allocate it.
 
 TODO:
 - affine_on
-- promise_type get_env
+- state type get_env
 - resume from initial_suspend()
-- change_coroutine_scheduler
-- with_error
-

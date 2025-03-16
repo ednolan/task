@@ -219,7 +219,10 @@ struct promise_type : ::beman::task::detail::promise_base<::beman::task::detail:
             return promise->state->get_stop_token();
         }
         template <typename Q, typename... A>
-            requires requires(const C& c, Q q, A&&... a) { q(c, std::forward<A>(a)...); }
+            requires requires(const C& c, Q q, A&&... a) {
+                ::beman::execution::forwarding_query(q);
+                q(c, std::forward<A>(a)...);
+            }
         auto query(Q q, A&&... a) const noexcept {
             return q(promise->state->get_context(), std::forward<A>(a)...);
         }
