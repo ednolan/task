@@ -1779,3 +1779,11 @@ namespace std::execution {
 
 [16]{.pnum} _Effects:_ Deallocates the storage pointed to by `pointer`
     using an allocator equivalent to that used to allocate it.
+
+TODO:
+- affine_on
+- promise_type get_env
+- resume from initial_suspend()
+- change_coroutine_scheduler
+- with_error
+
