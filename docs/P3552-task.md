@@ -39,18 +39,18 @@ Just to get an idea what this proposal is about: here is a simple
         }()));
     }
 
-## Change History
+# Change History
 
-### R0 Initial Revision
+## R0 Initial Revision
 
-### R1 Hagenberg Feedback
+## R1 Hagenberg Feedback
 
 - Changed the name from `lazy` to `task` based on SG1 feedback and
   dropped the section on why `lazy` was chosen.
 - Changed the name of `any_scheduler` to `task_scheduler`.
 - Added wording for the `task` specification.
 
-## Prior Work
+# Prior Work
 
 This proposal isn't the first to propose a coroutine type. Prior proposals
 didn't see any recent (post introduction of sender/receiver) update, although
@@ -60,7 +60,7 @@ model in active use. This section provides an overview of this prior work,
 and where relevant, of corresponding discussions. This section is primarily
 for motivating requirements and describing some points in the design space.
 
-### [P1056](https://wg21.link/P1056): Add lazy coroutine (coroutine task) type
+## [P1056](https://wg21.link/P1056): Add lazy coroutine (coroutine task) type
 
 The paper describes a `task`/`lazy` type (in
 [P1056r0](https://wg21.link/P1056r0) the name was `task`; the primary
@@ -103,7 +103,7 @@ are details on how the coroutine is implemented.
 - Votes against deal with associated executors and a request to have
   strong language about transfer between threads.
 
-### [P2506](https://wg21.link/P2506): std::lazy: a coroutine for deferred execution
+## [P2506](https://wg21.link/P2506): std::lazy: a coroutine for deferred execution
 
 This paper is effectively restating what [P1056](https://wg21.link/P1056)
 said with the primary change being more complete proposed wording.
@@ -115,7 +115,7 @@ interface into account.
 Although there were mails seemingly scheduling a discussion in LEWG,
 we didn't manage to actually locate any discussion notes.
 
-### [cppcoro](https://github.com/lewissbaker/cppcoro)
+## [cppcoro](https://github.com/lewissbaker/cppcoro)
 
 This library contains multiple coroutine types, algorithms, and
 some facilities for asynchronous work. For the purpose of this
@@ -161,7 +161,7 @@ sender/receiver world. Likewise, throwing of results can be avoid
 by suitably rewriting the result of the `set_error` channel avoiding
 the need for an operation akin to `when_ready()`.
 
-### [libunifex](https://github.com/facebookexperimental/libunifex)
+## [libunifex](https://github.com/facebookexperimental/libunifex)
 
 `unifex` is an earlier implementation of the sender/receiver
 ideas. Compared to `std::execution` it is lacking some of the
@@ -255,7 +255,7 @@ isn't always inline, the issue only arises when `co_await`ing many
 senders with `blocking_kind::always_inline` or when the scheduler
 resumes inline.
 
-### [stdexec](https://github.com/NVIDIA/stdexec)
+## [stdexec](https://github.com/NVIDIA/stdexec)
 
 The
 [`exec::task`](https://github.com/NVIDIA/stdexec/blob/main/include/exec/task.hpp)
@@ -282,7 +282,7 @@ which is connected to the task.
 Like the unifex task `exec::task<T, C>` doesn't provide any allocator
 support. When creating a task there are two allocations.
 
-## Objectives
+# Objectives
 
 Also see [sender/receiver issue 241](https://github.com/cplusplus/sender-receiver/issues/241).
 
@@ -403,14 +403,14 @@ for most uses. It may also be reasonable to provide some variations
 as different names. A future revision of the standard or third party
 libraries can also provide additional variations.
 
-## Design
+# Design
 
 This section discusses various design options for achieving the
 listed objectives. Most of the designs are independent of each other
 and can be left out if the consensus is that it shouldn't be used
 for whatever reason.
 
-### Template Declaration for `task`
+## Template Declaration for `task`
 
 Coroutines can use `co_return` to produce a value. The value returned can
 reasonably provide the argument for the `set_value_t` completion
@@ -469,7 +469,7 @@ they are used in a container, e.g., to process data using a range
 of coroutines, they are likely to use the same result type and
 context types for configurations.
 
-### `task` Completion Signatures
+## `task` Completion Signatures
 
 The discussion above established that `task<T, C>` can have a
 successful completion using `set_value_t(T)`. The coroutine completes
@@ -503,7 +503,7 @@ a result, the default completion signatures for `task<T>` are
 Support for [reporting an error without exception](#error-reporting)
 may modify the completion signatures.
 
-### `task` constructors and assignments
+## `task` constructors and assignments
 
 Coroutines are created via a factory function which returns the
 coroutine type and whose body uses one of the `co_*` function, e.g.
@@ -556,7 +556,7 @@ Technically there isn't a problem adding a default constructor, move
 assignment, and a `swap()` function. Based on experience with similar
 components it seems `task` is better off not having them.
 
-### Result Type For `co_await`
+## Result Type For `co_await`
 
 When `co_await`ing a sender `sndr` in a coroutine, `sndr` needs to
 be transformed to an awaitable. The existing approach is to use
@@ -652,7 +652,7 @@ into an `std::expected` instead. However, there should probably be
 some transformation algorithms like `into_optional`, `into_expected`,
 etc.  similar to `into_variant`.
 
-### Scheduler Affinity
+## Scheduler Affinity
 
 Coroutines look very similar to synchronous code with a few
 `co`-keywords sprinkled over the code. When reading such code the
@@ -822,7 +822,7 @@ scheduler the call stack is unwound. Without that it may be necessary
 to inject scheduling just for the purpose of avoiding stack overflow
 when too many operations complete inline.
 
-### Allocator Support
+## Allocator Support
 
 When using coroutines at least the coroutine frame may end up being
 allocated on the heap: the [HALO](https://wg21.link/P0981) optimisations
@@ -893,7 +893,7 @@ the allocator can be obtained from there:
         use(alloc);
     }(allocator_arg, &resource));
 
-### Environment Support
+## Environment Support
 
 When `co_await`ing child operations these may want to access an
 environment. Ideally, the coroutine would expose the environment
@@ -971,7 +971,7 @@ For example:
         );
     }
 
-### Support For Requesting Cancellation/Stopped
+## Support For Requesting Cancellation/Stopped
 
 When a coroutine task executes the actual work it may listen to
 a stop token to recognise that it got canceled. Once it recognises
@@ -985,7 +985,7 @@ The sender `just_stopped()` completes with `set_stopped()` causing
 the coroutine to be canceled. Any other sender completing with
 `set_stopped()` can also be used.
 
-### Error Reporting
+## Error Reporting
 
 The sender/receiver approach to error reporting is for operations
 to complete with a call to `set_error(rcvr, err)` for some receiver
@@ -1143,7 +1143,7 @@ completing with the error from `exp.error()`.  Using this approach
 produces a fairly compact approach to propagating the error retaining
 the type and without using exceptions.
 
-### Avoiding Stack Overflow
+## Avoiding Stack Overflow
 
 It is easy to use a coroutine to accidentally create a stack overflow
 because loops don't really execute like loops. For example, a
@@ -1208,7 +1208,7 @@ using an inline scheduler the user will need to be very careful to
 not overflow the stack or cause any of the various other problems
 with executing immediately.
 
-### Asynchronous Clean-Up
+## Asynchronous Clean-Up
 
 Asynchronous clean-up of objects is an important facility. Both
 [`unifex`](https://github.com/facebookexperimental/libunifex) and
@@ -1224,7 +1224,7 @@ There is similar work ongoing in the context of
 no plan to support asynchronous clean-up as part of the `task`
 implementation.  Instead, it can be composed based on other facilities.
 
-## Caveats
+# Caveats
 
 The use of coroutines introduces some issues which are entirely
 independent of how specific coroutines are defined. Some of these
@@ -1266,7 +1266,7 @@ to discuss them. Discussion of these issues should be delegated
 to suitable proposals wanting to improve this situation in some
 form.
 
-## Questions
+# Questions
 
 This section lists questions based on the design discussion
 above. Each one has a recommendation and a vote is only needed
@@ -1294,7 +1294,7 @@ if there opinions deviating from the recommendation.
 - Clean-up: should asynchronous clean-up be supported? Recommendation:
     no.
 
-## Implementation
+# Implementation
 
 An implementation of `task` as proposed in this document is available
 from [`beman::task`](https://github.com/bemanproject/task). This
@@ -1315,24 +1315,12 @@ The first one
 isn't based on sender/receiver. Usage experience from all three
 have influenced the design of `task`.
 
-## Acknowledgements
+# Acknowledgements
 
 We would like to thank Ian Petersen, Alexey Spiridonov, and Lee
 Howes for comments on drafts of this proposal and general guidance.
 
-## Proposed Wording
-
-Based on the discussion the wording would get
-Entities to describe:
-
-- `affinity_on`
-- `inline_scheduler`
-- `task_scheduler`
-- `task`
-- any internally used tool
-- <code><i>allocator_of_t<i></code> exposition-only?
-- <code><i>scheduler_of_t<i></code> exposition-only?
-- <code><i>stop_source_of_t<i></code> exposition-only?
+# Proposed Wording
 
 In [execution.syn]{.sref} add declarations for the new classes:
 
@@ -1342,8 +1330,9 @@ In [execution.syn]{.sref} add declarations for the new classes:
       template<class-type Promise>
         struct with_awaitable_senders;
 
-      @[// [exec.affinity.on]{.sref}]{.add}@
-      @[constexpr affinity_on_t affinity_on;]{.add}@
+      @[// [exec.affine.on]{.sref}]{.add}@
+      @@[struct affine_on_t { @_unspecified_@  };]{.add}@@
+      @[constexpr affine_on_t affine_on;]{.add}@
 
       @[// [exec.inline.scheduler]{.sref}]{.add}@
       @[class inline_scheduler;]{.add}@
@@ -1356,12 +1345,60 @@ In [execution.syn]{.sref} add declarations for the new classes:
       @[class task;]{.add}@
     }
 
-Add new subsetions for the different classes at the end of [exec]{.sref}:
+Add new subsections for the different classes at the end of [exec]{.sref}:
 
 ::: draftnote
 Evertyhing below is text meant to got at the end of the [exec]{.sref}
 section without any color highlight of what it being added.
 :::
+
+## `execution::affine_on` [exec.affine.on]
+
+[1]{.pnum} `affine_on` adapts a sender into one that complets on
+   the specified scheduler. If the algorithm determines that the
+   adapted sender already completes on the correct sender it is
+   allowed to avoid any scheduling operation.
+
+[2]{.pnum} The name `affine_on` denotes a pipeable sender adaptor
+    object. For subexpressions `sch` and `sndr`, if `decltype((sch))`
+    does not satisfy `scheduler`, or `decltype((sndr))` does not
+    satisfy `sender`, `affine_on(sndr, sch)` is ill-formed.
+
+[3]{.pnum} Otherwise, the expression `affine_on(sndr, sch)` is
+    expression-equivalent to:
+
+        transform_sender(@_get-domain-early_@(sndr), @_make-sender_@(affine_on, sch, sndr))
+
+except that `sndr` is evalutated only once.
+
+[4]{.pnum} The exposition-only class template `@_impls-for_@` is specialized
+   for `affine_on_t` as follows:
+
+      namespace std::execution {
+        template <>
+        struct @_impls_for_@<affine_on_t>: @_default-impls_@ {
+          static constexpr auto @_get-attrs_@ =
+            [](const auto& data, const auto& child) noexcept -> decltype(auto) {
+              return @_JOIN-ENV_@(_SCHED-ATTRS_@(data), @_FWD-ENV_@(get_env(child)));
+            };
+        };
+      }
+
+[5]{.pnum} Let `out_sndr` be a subexpression denoting a sender returned
+    from `continues_on(sndr, sch)` or one equal to such, and let
+    `OutSndr` be the type `decltype((out_sndr))`. Let `out_rcvr`
+    be a subexpression denoting a receiver that has an environment
+    of type `Env` such that `sender_in<OutSndr, Env>` is `true`.
+    Let `op` be an lvalue referring to the operation state that
+    results from connecting `out_sndr` to `out_rcvr`. Calling
+    `start(op)` will start `sndr` on the current execution agent
+    and execute completion operations on `out_rcvr` on an execution
+    agent of the execution resource associated with `sch`. If the
+    current execution resource is the same as the execution resource
+    associated with `sch` the completion operation on `out_rcvr`
+    may be called before `start(op)` completes. If scheduling onto
+    `sch` fails, an error compeltion on `out_rcvr` shall be executed
+    on an unspecified execution agent.
 
 ## `execution::inline_scheduler` [exec.inline.scheduler]
 
@@ -1442,7 +1479,7 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
 [1]{.pnum} `task_scheduler` is a class that models `scheduler`
     [exec.scheduler]{.sref}. Let `s` be an object of type `task_scheduler`
     then `SCHED(s)` is an object of a type different than `task_scheduler`
-    modeling `scheduler`.
+    modeling `scheduler` which is used by `s` to do the actual scheduling.
 
     template <scheduler Sched, class Allocator = allocator<void>>
         requires(not same_as<task_scheduler, decay_t<S>>) && scheduler<S>
@@ -1652,8 +1689,21 @@ namespace std::execution {
 
     void start() & nexcept;
 
-[4]{.pnum} _Effects:_ Associates `this` with `@_handle_@.promise()` and then
-    invokes `@_handle_@.resume()`.
+[4]{.pnum} _Effects:_ Let `prom` be the object `@_handle_@.promise()`. 
+    The object `prom` is set up to refer to `*this`:
+
+- [4.1]{.pnum} `STATE(prom)` is `*this` (see [task.promise]).
+- [4.2]{.pnum} `RSVR(prom)` is `@_rcvr_@`.
+- [4.3]{.pnum} `SCHED(prom)` is initialised using
+    `Scheduler(get_scheduler(get_env(@_rcvr_@)))` if that expression is
+    valid and using `Scheduler()` otherwise. If neither of these
+    expressions is valid, the program is ill-formed.
+- [4.4]{.pnum} `prom.@_source_@` and `prom.@_token_@` are set up
+    such that `prom.@_token_@` reflects the state of
+    `get_stop_token(get_env(@_rcvr_@))`.
+
+After that invokes `@_handle_@.resume()`.
+
 
 ### Class task::promise_type [task.promise]
 
@@ -1677,6 +1727,9 @@ namespace std::execution {
         template <class T, class Context>
         class task<T, Context>::promise_type {
         public:
+            template <class... Args>
+            promise_type(Args const&... args);
+
             task get_return_object() noexcept;
 
             constexpr always_suspend initial_suspend() noexcept { return {}; }
@@ -1702,7 +1755,11 @@ namespace std::execution {
             void operator delete(void* pointer, size_t size) noexcept;
 
         private:
-            optional<T> @_result_@; //  if !same_as<void, T>; @_exposition only_@
+            using StopToken = decltype(decl_val<StopSource>().get_token());
+            Alloc         @_alloc_@;  // @_exposition only_@
+            StopSource    @_source_@; // @_exposition only_@
+            StopToken     @_token_@;  // @_exposition only_@
+            optional<T>   @_result_@; // if !same_as<void, T>; @_exposition only_@
             exception_ptr @_except_@; // @_exposition only_@
         };
     }
@@ -1721,37 +1778,42 @@ namespace std::execution {
     where `rcvr` is the receiver used to get `STATE(prom)` by using
     `connect(tsk, rcvr)`.
 - [1.3]{.pnum} `SCHED(prom)` is an object of type `Scheduler` which
-    is associated with `prom`. It is originally initialised using
-    `Scheduler(get_scheduler(get_env(RCVR(prom))))` if that
-    expression is valid and using `Scheduler()` otherwise. If neither
-    of these expression is valid, the program is ill-formed.
+    is associated with `prom`.
+
+    template <class... Args>
+    promise_type(Args const&... args);
+
+[2]{.pnum} _Effects:_ If `Args` contains an element of type
+    `allocator_arg_t` then `@_alloc_@` is initialised with the
+    corresponding next element of `args`. Otherwse, `@_alloc_@`
+    is initialised with `Alloc()`.
 
     task get_return_object() noexcept;
 
-[2]{.pnum} _Returns:_ A `task` object whose member `@_handle_@` is
+[3]{.pnum} _Returns:_ A `task` object whose member `@_handle_@` is
     `coroutine_handle<promise_type>::from_promise(*this)`.
 
     constexpr auto final_suspend() noexcept;
 
-[3]{.pnum} _Returns:_ An awaitable object of unspecified type
+[4]{.pnum} _Returns:_ An awaitable object of unspecified type
     ([expr.await]) whose member functions arrange for the calling
     coroutine to be suspended and then for calling `set_value` or
     `set_error` with the appropriate arguments:
 
-- [3.1]{.pnum} If the coroutine exited with an exception,
+- [4.1]{.pnum} If the coroutine exited with an exception,
     `set_error(std::move(RCVR(*this)), std::move(@_except_@))`.
-- [3.2]{.pnum} Otherwise, if `same_as<void, T>` is true
+- [4.2]{.pnum} Otherwise, if `same_as<void, T>` is true
     `set_value(std::move(RCVR(*this)))` is called.
-- [3.3]{.pnum} Otherwise, `set_value(std::move(RCVR(*this)), *@_result_@)`
+- [4.3]{.pnum} Otherwise, `set_value(std::move(RCVR(*this)), *@_result_@)`
     is called.
 
     template <class Err>
     auto yield_value(with_error<Err> err);
 
-[4]{.pnum} _Mandates_ The type `Err` is unambigiously convertible to
+[5]{.pnum} _Mandates_ The type `Err` is unambigiously convertible to
     one of the `set_error_t` argument types of `Errors`.
 
-[5]{.pnum} _Returns:_ An awaitable object of unspecified type
+[6]{.pnum} _Returns:_ An awaitable object of unspecified type
     ([expr.await]) whose member functions arrange for the calling
     coroutine to be suspended and then for calling
     `set_error(std::move(RCVR(*this), std::move(err.error)))`.
@@ -1759,36 +1821,36 @@ namespace std::execution {
     template <sender Sender>
     auto await_transform(Sender&& sndr) noexcept;
 
-[6]{.pnum} _Returns_: If `same_as<inline_scheduler, Scheduler>` is
+[7]{.pnum} _Returns_: If `same_as<inline_scheduler, Scheduler>` is
     true returns `as_awaitable(std::forward<Sender>(sndr), *this)`;
     otherwise returns
     `as_awaitable(affine_on(std::forward<Sender>(sndr), SCHED(*this)), *this)`.
 
     auto await_transform(change_coroutine_scheduler<Scheduler> s) noexcept;
 
-[7]{.pnum} _Returns:_ `as_awaitable(just(exchange(SCHED(*this), s.scheduler)), *this);`
+[8]{.pnum} _Returns:_ `as_awaitable(just(exchange(SCHED(*this), s.scheduler)), *this);`
 
     void uncaught_exception();
 
-[8]{.pnum} _Effects:_ If the signature `set_error_t(exception_ptr)` is
+[9]{.pnum} _Effects:_ If the signature `set_error_t(exception_ptr)` is
     not an element of `Errors` calls `terminate()`. Otherwise stores
     `current_exception()` into `@_except_@`.
 
     void unhandled_stopped();
 
-[9]{.pnum} _Effects:_ Calls `set_stopped(std::move(RCVR(*this)))`.
+[10]{.pnum} _Effects:_ Calls `set_stopped(std::move(RCVR(*this)))`.
 
-[10]{.pnum} _Returns:_ `noop_coroutine();`
+[11]{.pnum} _Returns:_ `noop_coroutine();`
 
     @_unspecified_@ get_env() const noexcept;
 
-[11]{.pnum} _Returns:_ The member function returns an object `env`
+[12]{.pnum} _Returns:_ The member function returns an object `env`
     such that queries are forwarded as follows:
 
-- [11.1]{.pnum} `env.query(get_scheduler)` returns `SCHED(*this)`.
-- [11.2]{.pnum} `env.query(get_allocator)` returns `ALLOC(*this)`.
-- [11.3]{.pnum} `env.query(get_stop_token)` returns `TOKEN(*this)`.
-- [11.4]{.pnum} For any other query `q` and arguments `a...` a
+- [12.1]{.pnum} `env.query(get_scheduler)` returns `Scheduler(SCHED(*this))`.
+- [12.2]{.pnum} `env.query(get_allocator)` returns `@_alloc_@`.
+- [12.3]{.pnum} `env.query(get_stop_token)` returns `@_token_@`.
+- [12.4]{.pnum} For any other query `q` and arguments `a...` a
     call to `env.query(q, a...)` returns `get_env(STATE(*this)).query(q,
     a...)` if this expression is well-formed and `forwarding_query(q)`
     is well-formed.  Otherwise the expression is ill-formed.
@@ -1796,7 +1858,7 @@ namespace std::execution {
     template <class... Args>
     void* operator new(size_t size, const Args&... args);
 
-[12]{.pnum} If there is no parameter with type `allocator_arg_t`
+[13]{.pnum} If there is no parameter with type `allocator_arg_t`
     then let `alloc` be `Allocator()`; otherwise, if there is no
     parameter following the first `allocator_arg_t` parameter then
     the program is ill-formed; otherise, let `arg_next` be the
@@ -1807,28 +1869,27 @@ namespace std::execution {
     where `U` is an unspecified type whose size and alignmnet are both
     `__STDCPP_DEFAULT_NEW_ALOIGNMENT__`.
 
-[13]{.pnum} _Mandates:_ `allocator_traits<PAlloc>::pointer` is a pointer
+[14]{.pnum} _Mandates:_ `allocator_traits<PAlloc>::pointer` is a pointer
     type.
 
-[14]{.pnum} _Effects:_ Initializes an allocator `palloc` of type `PAlloc`
+[15]{.pnum} _Effects:_ Initializes an allocator `palloc` of type `PAlloc`
     with `alloc`. Uses `palloc` to allocate storage for the smallest
     array of `U` sufficient to provide stroage for coroutine state
     of size `size`, and unspecified additional state neccessary to
     ensure that `operator delete` can later deallocate this memory
     block with an allocator equal to `palloc`.
 
-[15]{.pnum} _Returns:_ A pointer to the allocated storage.
+[16]{.pnum} _Returns:_ A pointer to the allocated storage.
 
     void operator delete(void* pointer, size_t size) noexcept;
 
-[16]{.pnum} _Preconditions:_ `pointer` was returned from an invocation
+[17]{.pnum} _Preconditions:_ `pointer` was returned from an invocation
     of the above overload of `operator new` with a size argument
     equal to `size`.
 
-[17]{.pnum} _Effects:_ Deallocates the storage pointed to by `pointer`
+[18]{.pnum} _Effects:_ Deallocates the storage pointed to by `pointer`
     using an allocator equivalent to that used to allocate it.
 
-TODO:
-- affine_on
+TODO
 - state type get_env
 - resume from initial_suspend()
