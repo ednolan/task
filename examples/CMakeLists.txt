@@ -9,6 +9,7 @@ set(ALL_EXAMPLES
     c++now-return
     c++now-with_error
     c++now-allocator
+    c++now-stop_token
     affinity
     escaped-exception
     co_await-result
