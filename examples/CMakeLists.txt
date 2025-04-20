@@ -2,6 +2,9 @@
 
 set(ALL_EXAMPLES
     any_scheduler
+    c++now-basic
+    c++now-result-types
+    c++now-errors
     affinity
     escaped-exception
     co_await-result
