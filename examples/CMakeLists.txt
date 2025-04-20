@@ -5,6 +5,8 @@ set(ALL_EXAMPLES
     c++now-basic
     c++now-result-types
     c++now-errors
+    c++now-cancel
+    c++now-return
     affinity
     escaped-exception
     co_await-result

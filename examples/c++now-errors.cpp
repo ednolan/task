@@ -39,6 +39,13 @@ auto as_expected(Sender&& sndr) {
         ;
 }
 
+void print_expected(auto const& msg, auto const& e) {
+    if (e)
+       std::print("{} (value){}\n", msg, e.value());
+    else
+       std::print("{} (error){}\n", msg, e.error());
+}
+
 // ----------------------------------------------------------------------------
 
 ex::task<> error_result() {
@@ -46,18 +53,11 @@ ex::task<> error_result() {
     catch (int n) { std::print("Error: {}\n", n); }
 }
 
-void print_expecte(auto const& msg, auto const& e) {
-    if (e)
-       std::print("{} (value){}\n", msg, e.value());
-    else
-       std::print("{} (error){}\n", msg, e.error());
-}
-
 ex::task<> expected() {
     [[maybe_unused]] auto e = co_await as_expected(ex::just(17));
-    print_expecte("expected with value=", e);
+    print_expected("expected with value=", e);
     [[maybe_unused]] auto u = co_await as_expected(ex::just_error(17));
-    print_expecte("expected without value=", u);
+    print_expected("expected without value=", u);
 }
 
 int main() {

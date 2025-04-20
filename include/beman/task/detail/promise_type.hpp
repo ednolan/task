@@ -18,6 +18,7 @@
 #include <beman/task/detail/state_base.hpp>
 #include <beman/task/detail/with_error.hpp>
 #include <beman/execution/execution.hpp>
+#include <beman/execution/detail/meta_contains.hpp>
 #include <coroutine>
 #include <optional>
 #include <type_traits>
@@ -32,6 +33,21 @@ struct opt_rcvr {
 };
 
 namespace beman::task::detail {
+
+template <typename T> struct has_exception_ptr;
+template <typename... T>
+struct has_exception_ptr<::beman::execution::completion_signatures<T...>>
+{
+    static constexpr bool value{
+        ::beman::execution::detail::meta::contains<
+            ::beman::execution::set_error_t(::std::exception_ptr),
+            T...
+        >
+    };
+};
+
+template <typename T>
+inline constexpr bool has_exception_ptr_v{::beman::task::detail::has_exception_ptr<T>::value};
 
 template <typename Scheduler>
 struct optional_ref_scheduler {
@@ -165,7 +181,16 @@ struct promise_type : ::beman::task::detail::promise_base<::beman::task::detail:
                                               optional_ref_scheduler<scheduler_type>{&this->scheduler});
     }
     final_awaiter final_suspend() noexcept { return {}; }
-    void          unhandled_exception() { this->set_error(::std::current_exception()); }
+    void          unhandled_exception() {
+        if constexpr (::beman::task::detail::has_exception_ptr_v<
+                ::beman::task::detail::error_types_of_t<C>
+            >) {
+            this->set_error(std::current_exception());
+        }
+        else {
+            std::terminate();
+        }
+    }
     auto          get_return_object() noexcept { return Coroutine(::beman::task::detail::handle<promise_type>(this)); }
 
     template <typename E>
