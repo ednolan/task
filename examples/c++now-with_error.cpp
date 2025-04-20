@@ -10,13 +10,9 @@ namespace ex = beman::execution;
 // ----------------------------------------------------------------------------
 
 struct E { int value; };
-struct F { int value; };
 
 struct context {
-    using error_types = ex::completion_signatures<
-        ex::set_error_t(E),
-        ex::set_error_t(F)
-    >;
+    using error_types = ex::completion_signatures<ex::set_error_t(E)>;
 };
 
 // ----------------------------------------------------------------------------
@@ -24,21 +20,31 @@ struct context {
 ex::task<int, context> error_return(int arg) noexcept {
     if (arg == 1)
         co_yield ex::with_error(E{arg});
-    if (arg == 2)
-        co_yield ex::with_error(F{arg});
-    co_return 17;
+    co_return arg * 17;
 }
 
-int main() {
+struct ctxt { using error_types = ex::completion_signatures<ex::set_error_t(int)>; };
+
+ex::task<int, ctxt> call(int v) {
+    if (v == 1) co_yield ex::with_error(-1);
+    co_return 2 * v;
+}
+
+
+int main(int ac, char* av[]) {
     for (int i{}; i != 3; ++i) {
         auto[r] = *ex::sync_wait(
             error_return(i)
             | ex::upon_error([](auto x){
-                auto e{std::same_as<decltype(x), E>? "E": "F"};
-                std::print("error: {}={}\n", e, x.value);
+                std::print("error: {}\n", x.value);
                 return -1;
             })
         );
         std::print("{}: r={}\n", i, r);
     }
+
+    auto[n] = *ex::sync_wait(
+        call(ac)
+        | ex::upon_error([](int e){ std::print("error({})\n", e); return -1; })
+    );
 }
