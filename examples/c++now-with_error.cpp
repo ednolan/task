@@ -31,7 +31,7 @@ ex::task<int, ctxt> call(int v) {
 }
 
 
-int main(int ac, char* av[]) {
+int main(int ac, char*[]) {
     for (int i{}; i != 3; ++i) {
         auto[r] = *ex::sync_wait(
             error_return(i)
@@ -43,7 +43,7 @@ int main(int ac, char* av[]) {
         std::print("{}: r={}\n", i, r);
     }
 
-    auto[n] = *ex::sync_wait(
+    [[maybe_unused]] auto[n] = *ex::sync_wait(
         call(ac)
         | ex::upon_error([](int e){ std::print("error({})\n", e); return -1; })
     );

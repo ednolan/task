@@ -15,7 +15,7 @@ doc:
 	cd docs; $(MAKE)
 
 compile:
-	cmake --workflow --preset=$(PRESET)
+	CMAKE_CXX_STANDARD=26 cmake --workflow --preset=$(PRESET)
 
 list:
 	cmake --workflow --list-presets
