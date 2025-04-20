@@ -218,7 +218,8 @@ struct promise_type : ::beman::task::detail::promise_base<::beman::task::detail:
 
     template <typename E>
     final_awaiter yield_value(with_error<E> with) noexcept {
-        this->result.template emplace<E>(with.error);
+        //this->result.template emplace<E>(with.error);
+        this->set_error(::std::move(with.error));
         return {};
     }
 

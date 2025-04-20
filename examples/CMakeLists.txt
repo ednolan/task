@@ -7,6 +7,7 @@ set(ALL_EXAMPLES
     c++now-errors
     c++now-cancel
     c++now-return
+    c++now-with_error
     affinity
     escaped-exception
     co_await-result
