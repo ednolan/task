@@ -32,7 +32,7 @@ FetchContent_Declare(
     execution
     # for local development, use SOURCE_DIR <path-to>/execution
     GIT_REPOSITORY https://github.com/bemanproject/execution
-    GIT_TAG e9c3032
+    GIT_TAG 9cd2e66
 )
 FetchContent_MakeAvailable(execution)
 
