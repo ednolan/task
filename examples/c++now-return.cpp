@@ -3,7 +3,7 @@
 
 #include <beman/task/task.hpp>
 #include <beman/execution/execution.hpp>
-#include <print>
+#include <iostream>
 
 namespace ex = beman::execution;
 
@@ -36,7 +36,7 @@ int main() {
     ex::sync_wait(default_return());
     ex::sync_wait(void_return());
     [[maybe_unused]] auto [n] = *ex::sync_wait(int_return());
-    std::print("n={}\n", n);
+    std::cout << "n=" << n << "\n";
     [[maybe_unused]] auto [e] = *ex::sync_wait(error_return());
     [[maybe_unused]] auto [x] = *ex::sync_wait(no_error_return());
 }

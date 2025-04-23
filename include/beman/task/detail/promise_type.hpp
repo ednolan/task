@@ -7,8 +7,8 @@
 #include <beman/task/detail/affine_on.hpp>
 #include <beman/task/detail/allocator_of.hpp>
 #include <beman/task/detail/allocator_support.hpp>
-#include <beman/task/detail/error_types_of.hpp>
 #include <beman/task/detail/change_coroutine_scheduler.hpp>
+#include <beman/task/detail/error_types_of.hpp>
 #include <beman/task/detail/final_awaiter.hpp>
 #include <beman/task/detail/find_allocator.hpp>
 #include <beman/task/detail/handle.hpp>

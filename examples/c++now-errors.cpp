@@ -5,14 +5,15 @@
 #include <beman/execution/execution.hpp>
 #include <expected>
 #include <iostream>
-#include <print>
+#include <concepts>
+#include <type_traits>
 
 namespace ex = beman::execution;
 
 // ----------------------------------------------------------------------------
 
-// struct none_t {};
-using none_t = int;
+struct none_t {};
+std::ostream& operator<<(std::ostream& out, none_t) { return out << "<none>"; }
 
 template <typename...>
 struct identity_or_none;
@@ -43,10 +44,13 @@ auto as_expected(Sender&& sndr) {
 }
 
 void print_expected(const auto& msg, const auto& e) {
-    if (e)
-        std::print("{} (value){}\n", msg, e.value());
-    else
-        std::print("{} (error){}\n", msg, e.error());
+    if (e) {
+        if constexpr (std::same_as<none_t, std::remove_cvref_t<decltype(e.value())>>)
+            std::cout << msg << " (value)<none>\n";
+        else
+            std::cout << msg << " (value)" << std::get<0>(e.value()) << "\n";
+    } else
+        std::cout << msg << " (error)" << e.error() << "\n";
 }
 
 // ----------------------------------------------------------------------------
@@ -55,7 +59,7 @@ ex::task<> error_result() {
     try {
         co_await ex::just_error(17);
     } catch (int n) {
-        std::print("Error: {}\n", n);
+        std::cout << "Error: " << n << "\n";
     }
 }
 

@@ -3,7 +3,7 @@
 
 #include <beman/task/task.hpp>
 #include <beman/execution/execution.hpp>
-#include <print>
+#include <iostream>
 
 namespace ex = beman::execution;
 
@@ -38,14 +38,14 @@ ex::task<int, ctxt> call(int v) {
 int main(int ac, char*[]) {
     for (int i{}; i != 3; ++i) {
         auto [r] = *ex::sync_wait(error_return(i) | ex::upon_error([](auto x) {
-                                      std::print("error: {}\n", x.value);
+                                      std::cout << "error: " << x.value << "\n";
                                       return -1;
                                   }));
-        std::print("{}: r={}\n", i, r);
+        std::cout << i << ": r=" << r << "\n";
     }
 
     [[maybe_unused]] auto [n] = *ex::sync_wait(call(ac) | ex::upon_error([](int e) {
-                                                   std::print("error({})\n", e);
+                                                   std::cout << "error(" << e << "\n";
                                                    return -1;
                                                }));
 }
