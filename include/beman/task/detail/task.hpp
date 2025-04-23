@@ -43,14 +43,10 @@ class task {
 
   public:
     using sender_concept = ::beman::execution::sender_t;
-    using completion_signatures =
-        ::beman::execution::detail::meta::combine<
-             ::beman::execution::completion_signatures<
-                 beman::task::detail::completion_t<T>,
-                 ::beman::execution::set_stopped_t()
-             >,
-             ::beman::task::detail::error_types_of_t<C>
-        >;
+    using completion_signatures = ::beman::execution::detail::meta::combine<
+        ::beman::execution::completion_signatures<beman::task::detail::completion_t<T>,
+                                                  ::beman::execution::set_stopped_t()>,
+        ::beman::task::detail::error_types_of_t<C> >;
 
     using promise_type = ::beman::task::detail::promise_type<task, T, C>;
 

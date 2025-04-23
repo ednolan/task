@@ -35,16 +35,12 @@ struct opt_rcvr {
 
 namespace beman::task::detail {
 
-template <typename T> struct has_exception_ptr;
+template <typename T>
+struct has_exception_ptr;
 template <typename... T>
-struct has_exception_ptr<::beman::execution::completion_signatures<T...>>
-{
+struct has_exception_ptr<::beman::execution::completion_signatures<T...>> {
     static constexpr bool value{
-        ::beman::execution::detail::meta::contains<
-            ::beman::execution::set_error_t(::std::exception_ptr),
-            T...
-        >
-    };
+        ::beman::execution::detail::meta::contains<::beman::execution::set_error_t(::std::exception_ptr), T...>};
 };
 
 template <typename T>
@@ -183,12 +179,9 @@ struct promise_type : ::beman::task::detail::promise_base<::beman::task::detail:
     }
     final_awaiter final_suspend() noexcept { return {}; }
     void          unhandled_exception() {
-        if constexpr (::beman::task::detail::has_exception_ptr_v<
-                ::beman::task::detail::error_types_of_t<C>
-            >) {
+        if constexpr (::beman::task::detail::has_exception_ptr_v<::beman::task::detail::error_types_of_t<C>>) {
             this->set_error(std::current_exception());
-        }
-        else {
+        } else {
             std::terminate();
         }
     }

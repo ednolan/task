@@ -26,19 +26,18 @@ struct simple_context {
 
 struct context {
     struct env_base {
-        virtual ~env_base() = default;
+        virtual ~env_base()              = default;
         virtual int do_get_value() const = 0;
     };
     template <typename Env>
-    struct env_type
-        : env_base {
+    struct env_type : env_base {
         const Env& env;
         env_type(const Env& e) : env(e) {}
         int do_get_value() const override { return get_value(env) + 3; }
     };
-    env_base const& env;
-    int query(const get_value_t&) const noexcept { return this->env.do_get_value(); }
-    context(env_base const& own) : env(own) {}
+    const env_base& env;
+    int             query(const get_value_t&) const noexcept { return this->env.do_get_value(); }
+    context(const env_base& own) : env(own) {}
 };
 
 int main() {

@@ -8,10 +8,6 @@
 namespace ex = beman::execution;
 
 // ----------------------------------------------------------------------------
-ex::task<> cancel() {
-    co_await ex::just_stopped();
-}
+ex::task<> cancel() { co_await ex::just_stopped(); }
 
-int main() {
-    ex::sync_wait(cancel());
-}
+int main() { ex::sync_wait(cancel()); }

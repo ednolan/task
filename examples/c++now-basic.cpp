@@ -8,15 +8,16 @@
 namespace ex = beman::execution;
 
 // ----------------------------------------------------------------------------
-ex::task<> basic() {
-    co_await std::suspend_never{};
-}
+ex::task<> basic() { co_await std::suspend_never{}; }
 
 ex::task<> await_sender() {
     co_await ex::just();
-    [[maybe_unused]] int n = co_await ex::just(1);
-    [[maybe_unused]] auto[m, b] = co_await ex::just(1, true);
-    try { co_await ex::just_error(1); } catch (int) {}
+    [[maybe_unused]] int n       = co_await ex::just(1);
+    [[maybe_unused]] auto [m, b] = co_await ex::just(1, true);
+    try {
+        co_await ex::just_error(1);
+    } catch (int) {
+    }
     co_await ex::just_stopped();
 }
 

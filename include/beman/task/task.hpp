@@ -44,9 +44,9 @@ using inline_scheduler = ::beman::task::detail::inline_scheduler;
 using into_optional_t  = ::beman::task::detail::into_optional_t;
 using ::beman::task::detail::into_optional;
 
+using ::beman::task::detail::change_coroutine_scheduler;
 using ::beman::task::detail::default_context;
 using ::beman::task::detail::with_error;
-using ::beman::task::detail::change_coroutine_scheduler;
 template <typename T = void, typename Context = ::beman::task::default_context>
 using task = ::beman::task::detail::task<T, Context>;
 } // namespace beman::execution

@@ -13,7 +13,7 @@ namespace ex = beman::execution;
 // ----------------------------------------------------------------------------
 
 ex::task<> stopping() {
-    auto token = co_await ex::read_env(ex::get_stop_token);
+    auto        token = co_await ex::read_env(ex::get_stop_token);
     std::size_t count{};
     while (!token.stop_requested()) {
         ++count;
@@ -25,13 +25,8 @@ int main() {
     using namespace std::chrono_literals;
 
     ex::inplace_stop_source source;
-    std::thread thread([&]{
-        ex::sync_wait(
-            ex::detail::write_env(
-                stopping(),
-                ex::detail::make_env(ex::get_stop_token, source.get_token())
-            )
-        );
+    std::thread             thread([&] {
+        ex::sync_wait(ex::detail::write_env(stopping(), ex::detail::make_env(ex::get_stop_token, source.get_token())));
     });
 
     std::this_thread::sleep_for(100ms);

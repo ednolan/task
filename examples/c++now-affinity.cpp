@@ -19,25 +19,25 @@ namespace ex = beman::execution;
 class thread_context {
     struct base {
         virtual void do_run() = 0;
-        base() = default;
-        base(base&&) = delete;
-    protected:
+        base()                = default;
+        base(base&&)          = delete;
+
+      protected:
         ~base() = default;
     };
 
     ex::stop_source         source;
     std::mutex              mutex;
     std::condition_variable condition;
-    std::thread             thread{[this]{ this->run(this->source.get_token()); }};
+    std::thread             thread{[this] { this->run(this->source.get_token()); }};
     std::deque<base*>       queue;
 
     void run(auto token) {
         while (true) {
-            base* next(std::invoke([&]()->base*{
+            base* next(std::invoke([&]() -> base* {
                 std::unique_lock cerberus(this->mutex);
-                this->condition.wait(cerberus, [this, &token]{
-                    return token.stop_requested() || not this->queue.empty();
-                });
+                this->condition.wait(cerberus,
+                                     [this, &token] { return token.stop_requested() || not this->queue.empty(); });
                 if (this->queue.empty()) {
                     return nullptr;
                 }
@@ -47,14 +47,14 @@ class thread_context {
             }));
             if (next) {
                 next->do_run();
-            }
-            else {
+            } else {
                 break;
             }
         }
     }
-public:
-    thread_context() = default;
+
+  public:
+    thread_context()                 = default;
     thread_context(thread_context&&) = delete;
     ~thread_context() {
         this->source.request_stop();
@@ -71,16 +71,13 @@ public:
     }
 
     template <typename Receiver>
-    struct state final: base {
+    struct state final : base {
         using operation_state_concept = ex::operation_state_t;
         Receiver        receiver;
         thread_context* context;
 
         template <typename R>
-        state(thread_context* ctxt, R&& r)
-            : receiver(std::forward<R>(r))
-            , context(ctxt) {
-        }
+        state(thread_context* ctxt, R&& r) : receiver(std::forward<R>(r)), context(ctxt) {}
         void start() noexcept {
             static_assert(ex::operation_state<state>);
             this->context->enqueue(this);
@@ -92,31 +89,29 @@ public:
     struct env {
         thread_context* context;
         template <typename Tag>
-        scheduler query(ex::get_completion_scheduler_t<Tag> const&) const noexcept {
+        scheduler query(const ex::get_completion_scheduler_t<Tag>&) const noexcept {
             return {this->context};
         }
     };
     struct sender {
-        using sender_concept = ex::sender_t;
-        using completion_signatures = ex::completion_signatures<
-            ex::set_value_t()
-        >;
+        using sender_concept        = ex::sender_t;
+        using completion_signatures = ex::completion_signatures<ex::set_value_t()>;
         thread_context* context;
         template <ex::receiver Receiver>
         auto connect(Receiver&& r) {
             return state<std::remove_cvref_t<Receiver>>(this->context, std::forward<Receiver>(r));
         }
-        env get_env() const noexcept { return { this->context}; }
+        env get_env() const noexcept { return {this->context}; }
     };
     static_assert(ex::sender<sender>);
-    //static_assert(ex::sender_in<sender>);
+    // static_assert(ex::sender_in<sender>);
 
     struct scheduler {
         using scheduler_concept = ex::scheduler_t;
         thread_context* context;
 
         sender schedule() noexcept { return {this->context}; }
-        bool operator== (scheduler const&) const = default;
+        bool   operator==(const scheduler&) const = default;
     };
     static_assert(ex::scheduler<scheduler>);
     scheduler get_scheduler() { return {this}; }
@@ -126,38 +121,28 @@ public:
 
 ex::task<> work1(auto sched) {
     std::cout << "before id=" << std::this_thread::get_id() << "\n";
-    co_await (ex::schedule(sched)
-        | ex::then([]{
-            std::cout << "then id  =" << std::this_thread::get_id() << "\n";
-          }));
+    co_await (ex::schedule(sched) | ex::then([] { std::cout << "then id  =" << std::this_thread::get_id() << "\n"; }));
     std::cout << "after id =" << std::this_thread::get_id() << "\n\n";
 }
 
 ex::task<> work2(auto sched) {
     std::cout << "before id=" << std::this_thread::get_id() << "\n";
     auto s = co_await ex::change_coroutine_scheduler(ex::inline_scheduler());
-    co_await (ex::schedule(sched)
-        | ex::then([]{
-            std::cout << "then id  =" << std::this_thread::get_id() << "\n";
-          }));
+    co_await (ex::schedule(sched) | ex::then([] { std::cout << "then id  =" << std::this_thread::get_id() << "\n"; }));
     std::cout << "after1 id=" << std::this_thread::get_id() << "\n";
 
     co_await ex::change_coroutine_scheduler(s);
-    co_await (ex::schedule(sched)
-        | ex::then([]{
-            std::cout << "then id  =" << std::this_thread::get_id() << "\n";
-          }));
+    co_await (ex::schedule(sched) | ex::then([] { std::cout << "then id  =" << std::this_thread::get_id() << "\n"; }));
     std::cout << "after2 id=" << std::this_thread::get_id() << "\n\n";
 }
 
-struct inline_context { using scheduler_type = ex::inline_scheduler; };
+struct inline_context {
+    using scheduler_type = ex::inline_scheduler;
+};
 
 ex::task<void, inline_context> work3(auto sched) {
     std::cout << "before id=" << std::this_thread::get_id() << "\n";
-    co_await (ex::schedule(sched)
-        | ex::then([]{
-            std::cout << "then id  =" << std::this_thread::get_id() << "\n";
-          }));
+    co_await (ex::schedule(sched) | ex::then([] { std::cout << "then id  =" << std::this_thread::get_id() << "\n"; }));
     std::cout << "after id =" << std::this_thread::get_id() << "\n\n";
 }
 

@@ -13,10 +13,7 @@ struct E {};
 struct F {};
 
 struct context {
-    using error_types = ex::completion_signatures<
-        ex::set_error_t(E),
-        ex::set_error_t(F)
-    >;
+    using error_types = ex::completion_signatures<ex::set_error_t(E), ex::set_error_t(F)>;
 };
 
 struct empty_errors_context {
@@ -25,31 +22,21 @@ struct empty_errors_context {
 
 // ----------------------------------------------------------------------------
 
-ex::task<> default_return() {
-    co_return;
-}
+ex::task<> default_return() { co_return; }
 
-ex::task<void> void_return() {
-    co_return;
-}
+ex::task<void> void_return() { co_return; }
 
-ex::task<int> int_return() {
-    co_return 17;
-}
+ex::task<int> int_return() { co_return 17; }
 
-ex::task<int, context> error_return() {
-    co_return 17;
-}
+ex::task<int, context> error_return() { co_return 17; }
 
-ex::task<int, empty_errors_context> no_error_return() {
-    co_return 17;
-}
+ex::task<int, empty_errors_context> no_error_return() { co_return 17; }
 
 int main() {
     ex::sync_wait(default_return());
     ex::sync_wait(void_return());
-    [[maybe_unused]] auto[n] = *ex::sync_wait(int_return());
+    [[maybe_unused]] auto [n] = *ex::sync_wait(int_return());
     std::print("n={}\n", n);
-    [[maybe_unused]] auto[e] = *ex::sync_wait(error_return());
-    [[maybe_unused]] auto[x] = *ex::sync_wait(no_error_return());
+    [[maybe_unused]] auto [e] = *ex::sync_wait(error_return());
+    [[maybe_unused]] auto [x] = *ex::sync_wait(no_error_return());
 }

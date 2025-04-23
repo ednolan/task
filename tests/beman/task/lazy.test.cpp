@@ -4,6 +4,8 @@
 #include <beman/lazy/lazy.hpp>
 #include <beman/execution/execution.hpp>
 
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 // ----------------------------------------------------------------------------
 
 int main() {
