@@ -32,14 +32,20 @@ class thread_context {
     std::deque<base*>       queue;
 
     void run(auto token) {
-        std::unique_lock cerberus(this->mutex);
         while (true) {
-            this->condition.wait(cerberus, [this, &token]{
-                return token.stop_requested() || not this->queue.empty();
-            });
-            if (not this->queue.empty()) {
+            base* next(std::invoke([&]()->base*{
+                std::unique_lock cerberus(this->mutex);
+                this->condition.wait(cerberus, [this, &token]{
+                    return token.stop_requested() || not this->queue.empty();
+                });
+                if (this->queue.empty()) {
+                    return nullptr;
+                }
                 base* next = queue.front();
                 queue.pop_front();
+                return next;
+            }));
+            if (next) {
                 next->do_run();
             }
             else {
@@ -129,14 +135,14 @@ ex::task<> work1(auto sched) {
 
 ex::task<> work2(auto sched) {
     std::cout << "before id=" << std::this_thread::get_id() << "\n";
-    //auto s = co_await ex::change_coroutine_scheduler(ex::inline_scheduler());
+    auto s = co_await ex::change_coroutine_scheduler(ex::inline_scheduler());
     co_await (ex::schedule(sched)
         | ex::then([]{
             std::cout << "then id  =" << std::this_thread::get_id() << "\n";
           }));
     std::cout << "after1 id=" << std::this_thread::get_id() << "\n";
 
-    //co_await ex::change_coroutine_scheduler(s);
+    co_await ex::change_coroutine_scheduler(s);
     co_await (ex::schedule(sched)
         | ex::then([]{
             std::cout << "then id  =" << std::this_thread::get_id() << "\n";

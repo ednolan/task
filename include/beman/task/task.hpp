@@ -46,6 +46,7 @@ using ::beman::task::detail::into_optional;
 
 using ::beman::task::detail::default_context;
 using ::beman::task::detail::with_error;
+using ::beman::task::detail::change_coroutine_scheduler;
 template <typename T = void, typename Context = ::beman::task::default_context>
 using task = ::beman::task::detail::task<T, Context>;
 } // namespace beman::execution

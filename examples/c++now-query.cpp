@@ -33,9 +33,13 @@ ex::task<void, context> with_env() {
 }
 
 struct fancy {
-    struct env_base { virtual int get() const = 0; };
+    struct env_base {
+        virtual int get() const = 0;
+    protected:
+        ~env_base() = default;
+    };
     template <typename Env>
-    struct env_type : env_base {
+    struct env_type final: env_base {
         env_type(const Env& e) : env(e) {} Env env;
         int get() const override { return get_value(env); }
     };

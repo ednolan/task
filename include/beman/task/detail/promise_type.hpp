@@ -8,6 +8,7 @@
 #include <beman/task/detail/allocator_of.hpp>
 #include <beman/task/detail/allocator_support.hpp>
 #include <beman/task/detail/error_types_of.hpp>
+#include <beman/task/detail/change_coroutine_scheduler.hpp>
 #include <beman/task/detail/final_awaiter.hpp>
 #include <beman/task/detail/find_allocator.hpp>
 #include <beman/task/detail/handle.hpp>
@@ -215,10 +216,12 @@ struct promise_type : ::beman::task::detail::promise_base<::beman::task::detail:
     auto await_transform(Sender&& sender) noexcept {
         return this->internal_await_transform(::std::forward<Sender>(sender), *this->scheduler);
     }
+    auto await_transform(::beman::task::detail::change_coroutine_scheduler<scheduler_type> c) {
+        return ::std::move(c);
+    }
 
     template <typename E>
     final_awaiter yield_value(with_error<E> with) noexcept {
-        //this->result.template emplace<E>(with.error);
         this->set_error(::std::move(with.error));
         return {};
     }
@@ -228,6 +231,11 @@ struct promise_type : ::beman::task::detail::promise_base<::beman::task::detail:
     ::beman::task::detail::state_base<C>* state{};
     initial_base*                         initial{};
 
+    scheduler_type change_scheduler(scheduler_type other) {
+        scheduler_type rc(::std::move(*this->scheduler));
+        *this->scheduler = ::std::move(other);
+        return rc;
+    }
     std::coroutine_handle<> unhandled_stopped() {
         this->state->complete();
         return std::noop_coroutine();
