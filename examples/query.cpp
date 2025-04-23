@@ -31,7 +31,7 @@ struct context {
     };
     template <typename Env>
     struct env_type : env_base {
-        const Env& env;
+        Env env;
         env_type(const Env& e) : env(e) {}
         int do_get_value() const override { return get_value(env) + 3; }
     };
