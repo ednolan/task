@@ -32,6 +32,7 @@ struct identity_or_none<T> {
 template <typename... T>
 using identity_or_none_t = typename identity_or_none<T...>::type;
 
+#if 202202 <= __cpp_lib_expected
 template <ex::sender Sender>
 auto as_expected(Sender&& sndr) {
     using value_type  = ex::value_types_of_t<Sender, ex::empty_env, std::tuple, identity_or_none_t>;
@@ -42,6 +43,7 @@ auto as_expected(Sender&& sndr) {
            ex::then([]<typename T>(T&& x) noexcept { return result_type(std::forward<T>(x)); }) |
            ex::upon_error([]<typename T>(T&& x) noexcept { return result_type(std::unexpected(std::forward<T>(x))); });
 }
+#endif
 
 void print_expected(const auto& msg, const auto& e) {
     if (e) {
@@ -63,14 +65,18 @@ ex::task<> error_result() {
     }
 }
 
+#if 202202 <= __cpp_lib_expected
 ex::task<> expected() {
     [[maybe_unused]] auto e = co_await as_expected(ex::just(17));
     print_expected("expected with value=", e);
     [[maybe_unused]] auto u = co_await as_expected(ex::just_error(17));
     print_expected("expected without value=", u);
 }
+#endif
 
 int main() {
     ex::sync_wait(error_result());
+#if 202202 <= __cpp_lib_expected
     ex::sync_wait(expected());
+#endif
 }
