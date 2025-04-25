@@ -1673,7 +1673,6 @@ namespace std::execution {
 
 [3]{.pnum} _Mandates_: `Alloc` shall meet the _Cpp17Allocator_ requirements.
 
-
 ### Task Members [task.members]
 
 ```cpp
@@ -1725,7 +1724,7 @@ namespace std::execution {
 ```
 
 [1]{.pnum} Let `Env` be the type of the receiver's environment
-    `decltype(get_env(declval<R>()))`. The type of `@_env_@` is 
+    `decltype(get_env(declval<R>()))`. The type of `@_env_@` is
     `Context::template env_type<Env>` if this type is valid and
     `empty_env` otherwise.
 
@@ -1758,7 +1757,7 @@ template <class RR>
 void start() & nexcept;
 ```
 
-[4]{.pnum} _Effects:_ Let `prom` be the object `@_handle_@.promise()`. 
+[4]{.pnum} _Effects:_ Let `prom` be the object `@_handle_@.promise()`.
     The object `prom` is set up to refer to `*this`:
 
 - [4.1]{.pnum} `STATE(prom)` is `*this` (see [task.promise]).
