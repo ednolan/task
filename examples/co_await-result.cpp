@@ -20,8 +20,8 @@ int main() {
         assert(i == 17 && b == true && c == 'c');
         try {
             co_await ex::just_error(-1); // exception
-            assert(nullptr == "never reached");
-        } catch (int e) {
+            assert(nullptr == +"never reached");
+        } catch ([[maybe_unused]] int e) {
             assert(e == -1);
         }
         std::cout << "about to cancel\n";
@@ -29,7 +29,7 @@ int main() {
             co_await ex::just_stopped();
         } catch (...) {
         } // cancel: never resumed
-        assert(nullptr == "never reached");
+        assert(nullptr == +"never reached");
     }());
     assert(not o);
     std::cout << "done\n";

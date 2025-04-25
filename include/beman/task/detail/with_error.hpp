@@ -18,6 +18,22 @@ template <typename E>
 struct with_error {
     using type = ::std::remove_cvref_t<E>;
     type error;
+
+    template <typename EE>
+    with_error(EE&& e) : error(::std::forward<EE>(e)) {}
+    // the members below are only need for co_await with_error{...}
+    static constexpr bool await_ready() noexcept { return false; }
+    template <typename Promise>
+        requires requires(Promise p, E e) {
+            p.result.template emplace<E>(std::move(e));
+            p.state->complete(p.result);
+        }
+    void await_suspend(std::coroutine_handle<Promise> handle) noexcept(
+        noexcept(handle.promise().result.template emplace<E>(std::move(this->error)))) {
+        handle.promise().result.template emplace<E>(std::move(this->error));
+        handle.promise().state->complete(handle.promise().result);
+    }
+    static constexpr void await_resume() noexcept {}
 };
 template <typename E>
 with_error(E&&) -> with_error<E>;

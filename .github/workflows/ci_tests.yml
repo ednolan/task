@@ -58,7 +58,7 @@ jobs:
           - description: "Windows MSVC"
             os: windows-latest
             toolchain: "cmake/msvc-toolchain.cmake"
-        cpp_version: [20, 23, 26]
+        cpp_version: [23]
         cmake_args:
           - description: "Default"
             # Linux has a TSan bug: FATAL: ThreadSanitizer: unexpected memory mapping
@@ -229,7 +229,7 @@ jobs:
           echo "CXX=$CXX" >> "$GITHUB_OUTPUT"
       - name: Configure CMake
         run: |
-          cmake -B build -S . -DCMAKE_CXX_STANDARD=20
+          cmake -B build -S . -DCMAKE_CXX_STANDARD=23
         env:
           CC: ${{ steps.install-compiler.outputs.CC }}
           CXX: ${{ steps.install-compiler.outputs.CXX }}

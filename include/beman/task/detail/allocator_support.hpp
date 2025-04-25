@@ -46,11 +46,10 @@ struct allocator_support {
     }
 
     template <typename... A>
-    static void* operator new(std::size_t size, const A&... a) {
+    static void* operator new(std::size_t size, [[maybe_unused]] A&&... a) {
         if constexpr (::std::same_as<Allocator, ::std::allocator<::std::byte>>) {
             Allocator alloc{};
             return allocator_traits::allocate(alloc, size);
-
         } else {
             Allocator alloc{::beman::task::detail::find_allocator<Allocator>(a...)};
             void*     ptr{allocator_traits::allocate(alloc, allocator_support::offset(size) + sizeof(Allocator))};

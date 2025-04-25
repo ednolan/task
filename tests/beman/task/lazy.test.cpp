@@ -4,6 +4,14 @@
 #include <beman/lazy/lazy.hpp>
 #include <beman/execution/execution.hpp>
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 // ----------------------------------------------------------------------------
 
 int main() {

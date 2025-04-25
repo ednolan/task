@@ -19,6 +19,7 @@
 #include <beman/task/detail/state_base.hpp>
 #include <beman/task/detail/error_types_of.hpp>
 #include <beman/task/detail/promise_type.hpp>
+#include <beman/execution/detail/meta_combine.hpp>
 #include <concepts>
 #include <coroutine>
 #include <optional>
@@ -41,13 +42,11 @@ class task {
     using stop_token_type  = decltype(std::declval<stop_source_type>().get_token());
 
   public:
-    using sender_concept = ::beman::execution::sender_t;
-    using completion_signatures =
+    using sender_concept        = ::beman::execution::sender_t;
+    using completion_signatures = ::beman::execution::detail::meta::combine<
         ::beman::execution::completion_signatures<beman::task::detail::completion_t<T>,
-                                                  //-dk:TODO create the appropriate completion signatures
-                                                  ::beman::execution::set_error_t(std::exception_ptr),
-                                                  ::beman::execution::set_error_t(std::error_code),
-                                                  ::beman::execution::set_stopped_t()>;
+                                                  ::beman::execution::set_stopped_t()>,
+        ::beman::task::detail::error_types_of_t<C> >;
 
     using promise_type = ::beman::task::detail::promise_type<task, T, C>;
 

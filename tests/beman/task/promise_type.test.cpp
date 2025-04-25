@@ -149,8 +149,8 @@ struct exception_receiver {
     using receiver_concept = beman::execution::receiver_t;
     bool& flag;
 
-    auto set_value(int) && noexcept { assert(nullptr == "unexcepted set_value"); }
-    auto set_stopped() && noexcept { assert(nullptr == "unexcepted set_stopped"); }
+    auto set_value(int) && noexcept { assert(nullptr == +"unexcepted set_value"); }
+    auto set_stopped() && noexcept { assert(nullptr == +"unexcepted set_stopped"); }
     auto set_error(std::exception_ptr ex) && noexcept {
         flag = true;
         try {
@@ -158,7 +158,7 @@ struct exception_receiver {
         } catch (const test_error& error) {
             assert(error.value == 17);
         } catch (...) {
-            assert(nullptr == "unexpected exception");
+            assert(nullptr == +"unexpected exception");
         }
     }
 };

@@ -2,6 +2,16 @@
 
 set(ALL_EXAMPLES
     any_scheduler
+    c++now-basic
+    c++now-result-types
+    c++now-errors
+    c++now-cancel
+    c++now-return
+    c++now-with_error
+    c++now-allocator
+    c++now-stop_token
+    c++now-query
+    c++now-affinity
     affinity
     escaped-exception
     co_await-result
