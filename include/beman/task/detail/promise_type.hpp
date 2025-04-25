@@ -165,8 +165,8 @@ struct promise_type : ::beman::task::detail::promise_base<::beman::task::detail:
                                               optional_ref_scheduler<scheduler_type>{&this->scheduler});
     }
     final_awaiter final_suspend() noexcept { return {}; }
-    void          unhandled_exception() { this->set_error(std::current_exception()); }
-    auto          get_return_object() { return Coroutine(::beman::task::detail::handle<promise_type>(this)); }
+    void          unhandled_exception() { this->set_error(::std::current_exception()); }
+    auto          get_return_object() noexcept { return Coroutine(::beman::task::detail::handle<promise_type>(this)); }
 
     template <typename E>
     auto await_transform(::beman::task::detail::with_error<E> with) noexcept {
@@ -216,7 +216,10 @@ struct promise_type : ::beman::task::detail::promise_base<::beman::task::detail:
             return promise->state->get_stop_token();
         }
         template <typename Q, typename... A>
-            requires requires(const C& c, Q q, A&&... a) { q(c, std::forward<A>(a)...); }
+            requires requires(const C& c, Q q, A&&... a) {
+                ::beman::execution::forwarding_query(q);
+                q(c, std::forward<A>(a)...);
+            }
         auto query(Q q, A&&... a) const noexcept {
             return q(promise->state->get_context(), std::forward<A>(a)...);
         }

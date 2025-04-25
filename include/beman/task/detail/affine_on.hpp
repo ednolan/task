@@ -20,29 +20,33 @@ struct affine_on_t {
         }
     };
     template <::beman::execution::sender Sender, ::beman::execution::scheduler Scheduler>
-    struct sender {
-        using sender_concept = ::beman::execution::sender_t;
-        template <typename Env>
-        auto get_completion_signatures(const Env& env) const {
-            return ::beman::execution::get_completion_signatures(this->upstream, env);
-        }
-
-        Sender    upstream;
-        Scheduler scheduler;
-
-        template <::beman::execution::receiver Receiver>
-        auto connect(Receiver&&) const {
-            using result_t = state<::std::remove_cvref_t<Receiver>>;
-            static_assert(::beman::execution::operation_state<result_t>);
-            return result_t{};
-        }
-    };
+    struct sender;
 
     template <::beman::execution::sender Sender, ::beman::execution::scheduler Scheduler>
     auto operator()(Sender&& sndr, Scheduler&& scheduler) const {
         using result_t = sender<::std::remove_cvref_t<Sender>, ::std::remove_cvref_t<Scheduler>>;
         static_assert(::beman::execution::sender<result_t>);
-        return result_t{::std::forward<Sender>(sndr), ::std::forward<Scheduler>(scheduler)};
+        return result_t{*this, ::std::forward<Sender>(sndr), ::std::forward<Scheduler>(scheduler)};
+    }
+};
+
+template <::beman::execution::sender Sender, ::beman::execution::scheduler Scheduler>
+struct affine_on_t::sender {
+    using sender_concept = ::beman::execution::sender_t;
+    template <typename Env>
+    auto get_completion_signatures(const Env& env) const {
+        return ::beman::execution::get_completion_signatures(this->upstream, env);
+    }
+
+    affine_on_t tag{};
+    Sender      upstream;
+    Scheduler   scheduler;
+
+    template <::beman::execution::receiver Receiver>
+    auto connect(Receiver&&) const {
+        using result_t = state<::std::remove_cvref_t<Receiver>>;
+        static_assert(::beman::execution::operation_state<result_t>);
+        return result_t{};
     }
 };
 } // namespace beman::task::detail

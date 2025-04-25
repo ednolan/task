@@ -1,7 +1,7 @@
 ---
-title: Add a Coroutine Lazy Type
-document: D3552R0
-date: 2024-01-12
+title: Add a Coroutine Task Type
+document: P3552R1
+date: 2025-03-16
 audience:
     - Concurrency Working Group (SG1)
     - Library Evolution Working Group (LEWG)
@@ -12,7 +12,7 @@ author:
     - name: Maikel Nadolski
       email: <maikel.nadolski@gmail.com>
 source:
-    - https://github.com/bemanproject/lazy/doc/P3552.md
+    - https://github.com/bemanproject/task/doc/P3552-task.md
 toc: false
 ---
 
@@ -26,32 +26,33 @@ is providing such a definition.
 Just to get an idea what this proposal is about: here is a simple
 `Hello, world` written using the proposed coroutine type:
 
-    #include <execution>
-    #include <iostream>
-    #include <task>
+```c++
+#include <execution>
+#include <iostream>
+#include <task>
 
-    namespace ex = std::execution;
+namespace ex = std::execution;
 
-    int main() {
-        return std::get<0>(*ex::sync_wait([]->ex::lazy<int> {
-            std::cout << "Hello, world!\n";
-            co_return co_await ex::just(0);
-        }()));
-    }
+int main() {
+    return std::get<0>(*ex::sync_wait([]->ex::task<int> {
+        std::cout << "Hello, world!\n";
+        co_return co_await ex::just(0);
+    }()));
+}
+```
 
-## The Name
+# Change History
 
-Just to get it out of the way: the class (template) used to implement
-a coroutine task needs to have a name. In previous discussions, [SG1
-requested](https://wiki.edg.com/bin/view/Wg21rapperswil2018/P1056R0)
-that the name `task` is retained and LEWG chose `lazy` as an
-alternative.  It isn't clear whether the respective reasoning is
-still relevant. To the authors, the name matters much less than
-various other details of the interface.  Thus, the text is written
-in terms of `lazy`. The name is easily changed (prior to standardisation)
-if that is desired.
+## R0 Initial Revision
 
-## Prior Work
+## R1 Hagenberg Feedback
+
+- Changed the name from `lazy` to `task` based on SG1 feedback and
+  dropped the section on why `lazy` was chosen.
+- Changed the name of `any_scheduler` to `task_scheduler`.
+- Added wording for the `task` specification.
+
+# Prior Work
 
 This proposal isn't the first to propose a coroutine type. Prior proposals
 didn't see any recent (post introduction of sender/receiver) update, although
@@ -61,7 +62,7 @@ model in active use. This section provides an overview of this prior work,
 and where relevant, of corresponding discussions. This section is primarily
 for motivating requirements and describing some points in the design space.
 
-### [P1056](https://wg21.link/P1056): Add lazy coroutine (coroutine task) type
+## [P1056](https://wg21.link/P1056): Add lazy coroutine (coroutine task) type
 
 The paper describes a `task`/`lazy` type (in
 [P1056r0](https://wg21.link/P1056r0) the name was `task`; the primary
@@ -104,7 +105,7 @@ are details on how the coroutine is implemented.
 - Votes against deal with associated executors and a request to have
   strong language about transfer between threads.
 
-### [P2506](https://wg21.link/P2506): std::lazy: a coroutine for deferred execution
+## [P2506](https://wg21.link/P2506): std::lazy: a coroutine for deferred execution
 
 This paper is effectively restating what [P1056](https://wg21.link/P1056)
 said with the primary change being more complete proposed wording.
@@ -116,7 +117,7 @@ interface into account.
 Although there were mails seemingly scheduling a discussion in LEWG,
 we didn't manage to actually locate any discussion notes.
 
-### [cppcoro](https://github.com/lewissbaker/cppcoro)
+## [cppcoro](https://github.com/lewissbaker/cppcoro)
 
 This library contains multiple coroutine types, algorithms, and
 some facilities for asynchronous work. For the purpose of this
@@ -162,7 +163,7 @@ sender/receiver world. Likewise, throwing of results can be avoid
 by suitably rewriting the result of the `set_error` channel avoiding
 the need for an operation akin to `when_ready()`.
 
-### [libunifex](https://github.com/facebookexperimental/libunifex)
+## [libunifex](https://github.com/facebookexperimental/libunifex)
 
 `unifex` is an earlier implementation of the sender/receiver
 ideas. Compared to `std::execution` it is lacking some of the
@@ -256,7 +257,7 @@ isn't always inline, the issue only arises when `co_await`ing many
 senders with `blocking_kind::always_inline` or when the scheduler
 resumes inline.
 
-### [stdexec](https://github.com/NVIDIA/stdexec)
+## [stdexec](https://github.com/NVIDIA/stdexec)
 
 The
 [`exec::task`](https://github.com/NVIDIA/stdexec/blob/main/include/exec/task.hpp)
@@ -283,7 +284,7 @@ which is connected to the task.
 Like the unifex task `exec::task<T, C>` doesn't provide any allocator
 support. When creating a task there are two allocations.
 
-## Objectives
+# Objectives
 
 Also see [sender/receiver issue 241](https://github.com/cplusplus/sender-receiver/issues/241).
 
@@ -380,10 +381,10 @@ no particular order):
     asynchronous clean-up operation which is triggered upon
     coroutine exit. See the section on [asynchronous clean-up](#asynchronous-clean-up)
     below for more discussing
-12. The `lazy` coroutine provided by the standard library may
+12. The `task` coroutine provided by the standard library may
     not always fit user's needs although they may need/want various
     of the facilities. To avoid having users implement all functionality
-    from scratch `lazy` should use specified components which can
+    from scratch `task` should use specified components which can
     be used by users when building their own coroutine. The components
     `as_awaitable` and `with_awaitable_sender` are two parts of
     achieving this objective but there are likely others.
@@ -394,7 +395,7 @@ no particular order):
     the CRTP class template `std::execution::with_awaitable_senders`.
     It may be reasonable to adjust the functionality of these
     components instead of defining the functionality specific to a
-    `lazy<...>` coroutine task.
+    `task<...>` coroutine task.
 
 It is important to note that different coroutine task implementations
 can live side by side: not all functionality has to be implemented
@@ -404,14 +405,14 @@ for most uses. It may also be reasonable to provide some variations
 as different names. A future revision of the standard or third party
 libraries can also provide additional variations.
 
-## Design
+# Design
 
 This section discusses various design options for achieving the
 listed objectives. Most of the designs are independent of each other
 and can be left out if the consensus is that it shouldn't be used
 for whatever reason.
 
-### Template Declaration for `lazy`
+## Template Declaration for `task`
 
 Coroutines can use `co_return` to produce a value. The value returned can
 reasonably provide the argument for the `set_value_t` completion
@@ -421,12 +422,14 @@ type. The result type is probably the primary customisation and
 should be the first template parameter which gets defaulted to
 `void` for coroutines not producing any value. For example:
 
-    int main() {
-        ex::sync_wait([]->ex::lazy<>{
-            int result = co_await []->ex::lazy<int> { co_return 42; }();
-            assert(result == 42);
-        }());
-    }
+```c++
+int main() {
+    ex::sync_wait([]->ex::task<>{
+        int result = co_await []->ex::task<int> { co_return 42; }();
+        assert(result == 42);
+    }());
+}
+```
 
 The inner coroutines completes with `set_value_t(int)` which gets
 translated to the value returned from `co_await` (see [`co_await`
@@ -455,11 +458,13 @@ to configure a particular aspect. For example, it should be possible
 to selectively enable [allocator support](#allocator-support) using
 something like this:
 
-    struct allocator_aware_context {
-        using allocator_type = std::pmr::polymorphic_allocator<std::byte>;
-    };
-    template <typename T>
-    using my_lazy = ex::lazy<T, allocator_aware_context>;
+```c++
+struct allocator_aware_context {
+    using allocator_type = std::pmr::polymorphic_allocator<std::byte>;
+};
+template <class T>
+using my_task = ex::task<T, allocator_aware_context>;
+```
 
 Using various different types for task coroutines isn't a problem
 as the corresponding objects normally don't show up in containers.
@@ -470,9 +475,9 @@ they are used in a container, e.g., to process data using a range
 of coroutines, they are likely to use the same result type and
 context types for configurations.
 
-### `lazy` Completion Signatures
+## `task` Completion Signatures
 
-The discussion above established that `lazy<T, C>` can have a
+The discussion above established that `task<T, C>` can have a
 successful completion using `set_value_t(T)`. The coroutine completes
 accordingly when it is exited using a matching `co_return`. When
 `T` is `void` the coroutine also completes successfully using
@@ -493,23 +498,27 @@ itself to also complete with `set_stopped()`.
 
 The coroutine implementation cannot inspect the coroutine body to
 determine how the different asynchronous operations may complete. As
-a result, the default completion signatures for `lazy<T>` are
+a result, the default completion signatures for `task<T>` are
 
-    ex::completion_signatures<
-        ex::set_value_t(T),  // or ex::set_value_t() if T == void
-        ex::set_error_t(std::exception_ptr),
-        ex:set_stopped_t()
-    >;
+```c++
+ex::completion_signatures<
+    ex::set_value_t(T),  // or ex::set_value_t() if T == void
+    ex::set_error_t(std::exception_ptr),
+    ex:set_stopped_t()
+>;
+```
 
 Support for [reporting an error without exception](#error-reporting)
 may modify the completion signatures.
 
-### `lazy` constructors and assignments
+## `task` constructors and assignments
 
 Coroutines are created via a factory function which returns the
 coroutine type and whose body uses one of the `co_*` function, e.g.
 
-    lazy<> nothing(){ co_return; }
+```c++
+task<> nothing(){ co_return; }
+```
 
 The actual object is created via the promise type's `get_return_object`
 function and it is between the promise and coroutine types how
@@ -526,27 +535,29 @@ assignments either don't make sense or enable dangerous practices:
     Previous papers [P1056](https://wg21.link/p1056) and
     [P2506](https://wg21.link/p2506) also argued against a move
     assignment. However, one of the arguments doesn't apply to the
-    `lazy` proposed here: There is no need to deal with cancellation
-    when assigning or destroying a `lazy` object. Upon `start()`
-    of `lazy` the coroutine handle is transferred to an operation
+    `task` proposed here: There is no need to deal with cancellation
+    when assigning or destroying a `task` object. Upon `start()`
+    of `task` the coroutine handle is transferred to an operation
     state and the original coroutine object doesn't have any
     reference to the object anymore.
 3. If there is no assignment, a default constructed object doesn't make
-    much sense, i.e., `lazy` also doesn't have a default constructor.
+    much sense, i.e., `task` also doesn't have a default constructor.
 
 Based on experience with [Folly](https://github.com/facebook/folly)
-the suggestion was even stronger: `lazy` shouldn't even have move
-construction! That would mean that `lazy` can't be a sender or that
+the suggestion was even stronger: `task` shouldn't even have move
+construction! That would mean that `task` can't be a sender or that
 there would need to be some internal interface enabling the necessary
 transfer. That direction isn't pursued by this proposal.
 
-The lack of move assignment doesn't mean that `lazy` can't be held
+The lack of move assignment doesn't mean that `task` can't be held
 in a container: it is perfectly fine to `push_back` objects of this
 type into a container, e.g.:
 
-    std::vector<ex::lazy<>> cont;
-    cont.emplace_back([]->ex::lazy<> { co_return; }());
-    cont.push_back([]->ex::lazy<> { co_return; }());
+```c++
+std::vector<ex::task<>> cont;
+cont.emplace_back([]->ex::task<> { co_return; }());
+cont.push_back([]->ex::task<> { co_return; }());
+```
 
 The expectation is that most of the time coroutines don't end up
 in normal containers. Instead, they'd be managed by a
@@ -555,20 +566,20 @@ in a work graph composed of senders.
 
 Technically there isn't a problem adding a default constructor, move
 assignment, and a `swap()` function. Based on experience with similar
-components it seems `lazy` is better off not having them.
+components it seems `task` is better off not having them.
 
-### Result Type For `co_await`
+## Result Type For `co_await`
 
 When `co_await`ing a sender `sndr` in a coroutine, `sndr` needs to
 be transformed to an awaitable. The existing approach is to use
 `execution::as_waitable(sndr)` [[exex.as.awaitable]](https://eel.is/c++draft/exec.as.awaitable)
-in the promise type's `await_transform` and `lazy` uses that approach.
+in the promise type's `await_transform` and `task` uses that approach.
 The awaitable returned from `as_awaitable(sndr)` has the following
 behaviour (`rcvr` is the receiver the sender `sndr` is connected to):
 
 1. When `sndr` completes with `set_stopped(std::move(rcvr))` the function `unhandled_stopped()`
     on the promise type is called and the awaiting coroutine is never
-    resumed. The `unhandled_stopped()` results in `lazy` itself
+    resumed. The `unhandled_stopped()` results in `task` itself
     also completing with `set_stopped_t()`.
 2. When `sndr` completes with `set_error(std::move(rcvr), error)` the coroutine is resumed
     and the `co_await sndr` expression results in `error` being thrown as an
@@ -591,13 +602,15 @@ be never resumed or an exception being thrown.
 
 Here is an example which summarises the different supported result types:
 
-    lazy<> fun() {
-        co_await ex::just();                               // void
-        auto v = co_await ex::just(0);                     // int
-        auto[i, b, c] = co_await ex::just(0, true, 'c');   // tuple<int, bool, char>
-        try { co_await ex::just_error(0); } catch (int) {} // exception
-        co_await ex::just_stopped();                       // cancel: never resumed
-    }
+```c++
+task<> fun() {
+    co_await ex::just();                               // void
+    auto v = co_await ex::just(0);                     // int
+    auto[i, b, c] = co_await ex::just(0, true, 'c');   // tuple<int, bool, char>
+    try { co_await ex::just_error(0); } catch (int) {} // exception
+    co_await ex::just_stopped();                       // cancel: never resumed
+}
+```
 
 The sender `sndr` can have at most one `set_value_t` completion
 signature: if there are more than one `set_value_t` completion
@@ -626,11 +639,13 @@ fails because the function accepts only senders with at most
 one `set_value_t` completion. Thus, it is necessary to use something
 like the below:
 
-        lazy<> pop_demo(auto& queue) {
-            // auto value = co_await queue.async_pop(); // doesn't work
-            std::optional v0 = co_await (queue.async_pop() | into_optional);
-            std::optional v1 = co_await into_optional(queue.async_pop());
-        }
+```c++
+task<> pop_demo(auto& queue) {
+    // auto value = co_await queue.async_pop(); // doesn't work
+    std::optional v0 = co_await (queue.async_pop() | into_optional);
+    std::optional v1 = co_await into_optional(queue.async_pop());
+}
+```
 
 The algorithm `into_optional(sndr)` would determine that there is
 exactly one `set_value_t` completion with arguments and produce an
@@ -653,7 +668,7 @@ into an `std::expected` instead. However, there should probably be
 some transformation algorithms like `into_optional`, `into_expected`,
 etc.  similar to `into_variant`.
 
-### Scheduler Affinity
+## Scheduler Affinity
 
 Coroutines look very similar to synchronous code with a few
 `co`-keywords sprinkled over the code. When reading such code the
@@ -695,32 +710,45 @@ The basic idea for scheduler affinity consists of a few parts:
     The scheduler is determined based on the receiver `rcvr`'s
     environment.
 
-        auto scheduler = get_scheduler(get_env(rcvr));
+    ```c++
+    auto scheduler = get_scheduler(get_env(rcvr));
+    ```
 
 2. The type of `scheduler` is unknown when the coroutine is created.
     Thus, the coroutine implementation needs to operate in terms
     of a scheduler with a known type which can be constructed from
     `scheduler`. The used scheduler type is determined based on the
-    context parameter `C` of the coroutine type `lazy<T, C>` using
-    `typename C::scheduler_type` and defaults to `any_scheduler`
-    if this type isn't defined. `any_scheduler` uses type-erasure
+    context parameter `C` of the coroutine type `task<T, C>` using
+    `typename C::scheduler_type` and defaults to `task_scheduler`
+    if this type isn't defined. `task_scheduler` uses type-erasure
     to deal with arbitrary schedulers (and small object optimisations
     to avoid allocations). The used scheduler type can be parameterised
-    to allow use of `lazy` contexts where the scheduler type is
+    to allow use of `task` contexts where the scheduler type is
     known, e.g., to avoid the costs of type erasure.
+
+    Originally `task_scheduler` was called `any_scheduler` but there
+    was feedback from SG1 suggesting that a general `any_scheduler`
+    may need to cover various additional properties. To avoid dealing
+    with generalizing the facility a different name is used. The
+    name remains specified as it is still a useful component, at
+    least until an `any_scheduler` is defined by the standard
+    library. If necessary, the type erased scheduler type used by
+    `task` can be unspecified.
 
 3. When an operation which is `co_await`ed completes the execution
      is transferred to the held scheduler using `continues_on`.
      Injecting this operation into the graph can be done in the
      promise type's `await_transform`:
 
-        template <ex::sender Sender>
-        auto await_transform(Sender&& sndr) noexcept {
-            return ex::as_awaitable_sender(
-                ex::continues_on(std::forward<Sender>(sndr),
-                                 this->scheduler);
-            );
-        }
+    ```c++
+    template <ex::sender Sender>
+    auto await_transform(Sender&& sndr) noexcept {
+        return ex::as_awaitable_sender(
+            ex::continues_on(std::forward<Sender>(sndr),
+                             this->scheduler);
+        );
+    }
+    ```
 
 There are a few immediate issues with the basic idea:
 
@@ -729,7 +757,7 @@ There are a few immediate issues with the basic idea:
 2. What should happen if the obtained `scheduler` is incompatible with
     the coroutine's scheduler?
 3. Scheduling isn't free and despite the potential problems it should
-    be possible to use `lazy` without scheduler affinity.
+    be possible to use `task` without scheduler affinity.
 4. When operations are known to complete inline the scheduler isn't
     actually changed and the scheduling operation should be avoided.
 5. It should be possible to explicitly change the scheduler used by
@@ -745,11 +773,13 @@ The scope doesn't know about any schedulers and, thus, the receiver
 used by `counting_scope` when `connect`ing to a sender doesn't
 support the `get_scheduler` query, i.e., this example doesn't work:
 
-    ex::spawn([]->ex::lazy<void> { co_await ex::just(); }(), token);
+```c++
+ex::spawn([]->ex::task<void> { co_await ex::just(); }(), token);
+```
 
 Using `spawn()` with coroutines doing the actual work is expected
 to be quite common, i.e., it isn't just a theoretical possibility that
-`lazy` is used together with `counting_scope`.  The approach used by
+`task` is used together with `counting_scope`.  The approach used by
 [`unifex`](https://github.com/facebookexperimental/libunifex) is
 to fail compilation when trying to `connect` a `Task` to a receiver
 without a scheduler. The approach taken by
@@ -797,7 +827,9 @@ the use of `co_await schedule(scheduler);` for this purpose. That is,
 however, somewhat subtle. It may be reasonable to use a dedicated
 awaiter for this purpose and use, e.g.
 
-    auto previous = co_await co_continue_on(new_scheduler);
+```c++
+auto previous = co_await co_continue_on(new_scheduler);
+```
 
 Using this statement replaces the coroutine's scheduler with the
 `new_scheduler`. When the `co_await` completes it is on `new_scheduler`
@@ -814,34 +846,36 @@ scheduler the call stack is unwound. Without that it may be necessary
 to inject scheduling just for the purpose of avoiding stack overflow
 when too many operations complete inline.
 
-### Allocator Support
+## Allocator Support
 
 When using coroutines at least the coroutine frame may end up being
 allocated on the heap: the [HALO](https://wg21.link/P0981) optimisations
 aren't always possible, e.g., when a coroutine becomes a child of
 another sender. To control how this allocation is done and to support
-environments where allocations aren't possible `lazy` should have
+environments where allocations aren't possible `task` should have
 allocator support. The idea is to pick up on a pair of arguments of
 type `std::allocator_arg_t` and an allocator type being passed and use
 the corresponding allocator if present. For example:
 
-    struct allocator_aware_context {
-        using allocator_type = std::pmr::polymorphic_allocator<std::byte>;
-    };
+```c++
+struct allocator_aware_context {
+    using allocator_type = std::pmr::polymorphic_allocator<std::byte>;
+};
 
-    template <typename...A>
-    ex::lazy<int, allocator_aware_context> fun(int value, A&&...) {
-        co_return value;
-    }
+template <class...A>
+ex::task<int, allocator_aware_context> fun(int value, A&&...) {
+    co_return value;
+}
 
-    int main() {
-        // Use the coroutine without passing an allocator:
-        ex::sync_wait(fun(17));
+int main() {
+    // Use the coroutine without passing an allocator:
+    ex::sync_wait(fun(17));
 
-        // Use the coroutine with passing an allocator:
-        using allocator_type = std::pmr::polymorphic_alloctor<std::byte>;
-        ex::sync_wait(fun(17, std::allocator_arg, allocator_type()));
-    }
+    // Use the coroutine with passing an allocator:
+    using allocator_type = std::pmr::polymorphic_alloctor<std::byte>;
+    ex::sync_wait(fun(17, std::allocator_arg, allocator_type()));
+}
+```
 
 The arguments passed when creating the coroutine are made available
 to an `operator new` of the promise type, i.e., this operator can
@@ -854,10 +888,12 @@ via the pointer passed to `operator delete`, e.g., stored at the
 offset `size`.
 
 To avoid any cost introduced by type erasing an allocator
-type as part of the `lazy` definition the expected allocator type
-is obtained from the context argument `C` of `lazy<T, C>`:
+type as part of the `task` definition the expected allocator type
+is obtained from the context argument `C` of `task<T, C>`:
 
-    using allocator_type = ex::allocator_of_t<C>;
+```c++
+using allocator_type = ex::allocator_of_t<C>;
+```
 
 This `using` alias uses `typename C::allocator_type` if present or
 defaults to `std::allocator<std::byte>` otherwise.  This
@@ -874,18 +910,20 @@ query. The arguments passed to the coroutine are also available to
 the constructor of the promise type (if there is a matching on) and
 the allocator can be obtained from there:
 
-    struct allocator_aware_context {
-        using allocator_type = pmr::polymorphic_allocator<std::byte>;
-    };
-    fixed_resource<2048> resource;
+```c++
+struct allocator_aware_context {
+    using allocator_type = pmr::polymorphic_allocator<std::byte>;
+};
+fixed_resource<2048> resource;
 
-    ex::sync_wait([](auto&&, auto* resource)
-            -> ex::lazy<void, allocator_aware_context> {
-        auto alloc = co_await ex::read_env(ex::get_allocator);
-        use(alloc);
-    }(allocator_arg, &resource));
+ex::sync_wait([](auto&&, auto* resource)
+        -> ex::task<void, allocator_aware_context> {
+    auto alloc = co_await ex::read_env(ex::get_allocator);
+    use(alloc);
+}(allocator_arg, &resource));
+```
 
-### Environment Support
+## Environment Support
 
 When `co_await`ing child operations these may want to access an
 environment. Ideally, the coroutine would expose the environment
@@ -916,7 +954,7 @@ to the coroutine, though:
     returns `false` or if the stop token type of the coroutine's
     receiver matches that of `ex::stop_source_of_t<C>`.
 
-For any other environment query the context `C` of `lazy<T, C>` can
+For any other environment query the context `C` of `task<T, C>` can
 be used. The coroutine can maintain an instance of type `C`. In many
 cases queries from the environment of the coroutine's `receiver` need
 to be forwarded. Let `env` be `get_env(receiver)` and `Env`
@@ -943,27 +981,29 @@ part of the overload set.
 
 For example:
 
-    struct context {
-        int value{};
-        int query(get_value_t const&) const noexcept { return this->value; }
-        context(auto const& env): value(get_value(env)) {}
-    };
+```c++
+struct context {
+    int value{};
+    int query(get_value_t const&) const noexcept { return this->value; }
+    context(auto const& env): value(get_value(env)) {}
+};
 
-    int main() {
-        ex::sync_wait(
-            ex::write_env(
-                []->demo::lazy<void, context> {
-                    auto sched(co_await ex::read_env(get_scheduler));
-                    auto value(co_await ex::read_env(get_value));
-                    std::cout << "value=" << value << "\n";
-                    // ...
-                }(),
-                ex::make_env(get_value, 42)
-            )
-        );
-    }
+int main() {
+    ex::sync_wait(
+        ex::write_env(
+            []->demo::task<void, context> {
+                auto sched(co_await ex::read_env(get_scheduler));
+                auto value(co_await ex::read_env(get_value));
+                std::cout << "value=" << value << "\n";
+                // ...
+            }(),
+            ex::make_env(get_value, 42)
+        )
+    );
+}
+```
 
-### Support For Requesting Cancellation/Stopped
+## Support For Requesting Cancellation/Stopped
 
 When a coroutine task executes the actual work it may listen to
 a stop token to recognise that it got canceled. Once it recognises
@@ -971,13 +1011,15 @@ that its work should be stopped it should also complete with
 `set_stopped(rcvr)`. There is no special syntax needed as that is the
 result of using `just_stopped()`:
 
-    co_await ex::just_stopped();
+```c++
+co_await ex::just_stopped();
+```
 
 The sender `just_stopped()` completes with `set_stopped()` causing
 the coroutine to be canceled. Any other sender completing with
 `set_stopped()` can also be used.
 
-### Error Reporting
+## Error Reporting
 
 The sender/receiver approach to error reporting is for operations
 to complete with a call to `set_error(rcvr, err)` for some receiver
@@ -1011,7 +1053,7 @@ limitations with this approach:
     mechanism is provided.
 3. To extract the actual error information from `std::exception_ptr`
     the exception has to be rethrown.
-4. The completion signatures for `lazy<T, C>` necessarily contain
+4. The completion signatures for `task<T, C>` necessarily contain
     `set_error_t(std::exception_ptr)` which is problematic when
     exceptions are unavailable: `std::exception_ptr` may also be
     unavailable. Also, without exception as it is impossible to
@@ -1019,7 +1061,7 @@ limitations with this approach:
     don't declare such a completion signature.
 
 Before going into details on how errors can be reported it is
-necessary to provide a way for `lazy<T, C>` to control the error
+necessary to provide a way for `task<T, C>` to control the error
 completion signatures.  Similar to the return type the error types
 cannot be deduced from the coroutine body. Instead, they can be
 declared using the context type `C`:
@@ -1049,7 +1091,9 @@ The discussion below assumes the use of the class template `with_error<E>`
 to indicate that the coroutine completed with an error. It can be as
 simple as
 
-    template <typename E> struct with_error{ E error; };
+```c++
+template <class E> struct with_error{ E error; };
+```
 
 The name can be different although it shouldn't collide with already
 use names (like `error_code` or `upon_error`). Also, in some cases
@@ -1065,12 +1109,14 @@ can be exited:
     to explicitly using `co_return;` instead of flowing off. It
     would be possible to turn the use of
 
-        co_return with_error{err};
+    ```c++
+    co_return with_error{err};
+    ```
 
     into a `set_error(std::move(rcvr), err)` completion.
 
     One restriction with this approach is that for a
-    `lazy<void, C>` the body can't contain `co_return with_error{e};`: the
+    `task<void, C>` the body can't contain `co_return with_error{e};`: the
     `void` result requires that the promise type contains a function
     `return_void()` and if that is present it isn't possible to
     also have a `return_value(T)`.
@@ -1084,7 +1130,9 @@ can be exited:
     call `set_error(std::move(rcvr), err)` for some receiver `rcvr`
     and error `err` obtained via the awaitable `a`. Thus, using
 
-        co_await with_error{err};
+    ```c++
+    co_await with_error{err};
+    ```
 
     could complete with `set_error(std::move(rcvr), err)`.
 
@@ -1099,7 +1147,9 @@ can be exited:
     When `a`'s `await_suspend()` is called, the coroutine is suspended
     and the operation can complete accordingly. Thus, using
 
-        co_yield with_error{err};
+    ```c++
+    co_yield with_error{err};
+    ```
 
     could complete with `set_error(std::move(rcvr), err)`. Using
     `co_yield` for the purpose of returning from a coroutine with
@@ -1122,7 +1172,9 @@ possible to complete with an error sometimes and to produce a value
 at other times. That could allow a pattern (using `co_yield` for the
 potential error return):
 
-    auto value = co_yield when_error(co_await into_expected(sender));
+```c++
+auto value = co_yield when_error(co_await into_expected(sender));
+```
 
 The subexpression `into_expected(sender)` could turn the `set_value_t`
 and `set_error_t` into a suitable `std::expected<V, std::variant<E...>>`
@@ -1135,19 +1187,21 @@ completing with the error from `exp.error()`.  Using this approach
 produces a fairly compact approach to propagating the error retaining
 the type and without using exceptions.
 
-### Avoiding Stack Overflow
+## Avoiding Stack Overflow
 
 It is easy to use a coroutine to accidentally create a stack overflow
 because loops don't really execute like loops. For example, a
 coroutine like this can easily result in a stack overflow:
 
-    ex::sync_wait(ex::write_env(
-        []() -> ex::lazy<void> {
-            for (int i{}; i < 1000000; ++i)
-                co_await ex::just(i);
-        }(),
-        ex::make_env(ex::get_scheduler, ex::inline_scheduler{})
-    ));
+```c++
+ex::sync_wait(ex::write_env(
+    []() -> ex::task<void> {
+        for (int i{}; i < 1000000; ++i)
+            co_await ex::just(i);
+    }(),
+    ex::make_env(ex::get_scheduler, ex::inline_scheduler{})
+));
+```
 
 The reason this innocent looking code creates a stack overflow is
 that the use of `co_await` results in some function calls to suspend
@@ -1191,7 +1245,7 @@ scheduler where the operation was started! The execution remained
 on that scheduler all along. However, not rescheduling the work
 means that the stack isn't unwound.
 
-Since `lazy` uses scheduler affinity by default, stack overflow
+Since `task` uses scheduler affinity by default, stack overflow
 shouldn't be a problem and there is no separate provision required
 to combat stack overflow. If the implementation chooses to avoid
 rescheduling work it will need to make sure that doing so doesn't
@@ -1200,7 +1254,7 @@ using an inline scheduler the user will need to be very careful to
 not overflow the stack or cause any of the various other problems
 with executing immediately.
 
-### Asynchronous Clean-Up
+## Asynchronous Clean-Up
 
 Asynchronous clean-up of objects is an important facility. Both
 [`unifex`](https://github.com/facebookexperimental/libunifex) and
@@ -1213,10 +1267,10 @@ independent of a coroutine task. For example the
 [async-object](https://wg21.link/p2849) proposal is in this direction.
 There is similar work ongoing in the context of
 [Folly](https://github.com/facebook/folly). Thus, there is currently
-not plan to support asynchronous clean-up as part of the `lazy`
+no plan to support asynchronous clean-up as part of the `task`
 implementation.  Instead, it can be composed based on other facilities.
 
-## Caveats
+# Caveats
 
 The use of coroutines introduces some issues which are entirely
 independent of how specific coroutines are defined. Some of these
@@ -1258,7 +1312,7 @@ to discuss them. Discussion of these issues should be delegated
 to suitable proposals wanting to improve this situation in some
 form.
 
-## Questions
+# Questions
 
 This section lists questions based on the design discussion
 above. Each one has a recommendation and a vote is only needed
@@ -1268,14 +1322,14 @@ if there opinions deviating from the recommendation.
     one `set_value_t(T...)` completion? Recommendation: no.
 - Result type: add transformation algorithms like `into_optional`,
     `into_expected`? Recommendation: no, different proposals.
-- Scheduler affinity: should `lazy` support scheduler affinity?
+- Scheduler affinity: should `task` support scheduler affinity?
     Recommendation: yes.
 - Scheduler affinity: require a `get_scheduler()` query on the
     receiver's environments? Recommendation: yes.
 - Scheduler affinity: add a definition for `inline_scheduler`
     (using whatever name) to support disabling scheduler affinity?
     Recommendation: yes.
-- Allocator support: should `lazy` support allocators (default
+- Allocator support: should `task` support allocators (default
     `std::allocator<std::byte>`)? Recommendation: yes.
 - Error reporting: should it be possible to return an error
     without throwing an exception? Recommendation: yes.
@@ -1286,10 +1340,10 @@ if there opinions deviating from the recommendation.
 - Clean-up: should asynchronous clean-up be supported? Recommendation:
     no.
 
-## Implementation
+# Implementation
 
-An implementation of `lazy` as proposed in this document is available
-from [`beman::lazy`](https://github.com/bemanproject/lazy). This
+An implementation of `task` as proposed in this document is available
+from [`beman::task`](https://github.com/bemanproject/task). This
 implementation hasn't received much use, yet, as it is fairly new. It
 is setup to be buildable and provides some examples as a starting
 point for experimentation.
@@ -1305,79 +1359,127 @@ three implementations in wide use:
 The first one
 ([`Folly::Task`](https://github.com/facebook/folly/blob/main/folly/coro/Task.h))
 isn't based on sender/receiver. Usage experience from all three
-have influenced the design of `lazy`.
+have influenced the design of `task`.
 
-## Acknowledgements
+# Acknowledgements
 
 We would like to thank Ian Petersen, Alexey Spiridonov, and Lee
 Howes for comments on drafts of this proposal and general guidance.
 
-## Proposed Wording
-
-Based on the discussion the wording would get
-Entities to describe:
-
-- `affinity_on`
-- `inline_scheduler`
-- `task_scheduler`
-- `task`
-- any internally used tool
-- <code><i>allocator_of_t<i></code> exposition-only?
-- <code><i>scheduler_of_t<i></code> exposition-only?
-- <code><i>stop_source_of_t<i></code> exposition-only?
+# Proposed Wording
 
 In [execution.syn]{.sref} add declarations for the new classes:
 
-    namespace std::execution {
-        ...
-      // [exec.with.awaitable.senders]
-      template<class-type Promise>
-        struct with_awaitable_senders;
+```cpp
+namespace std::execution {
+    ...
+  // [exec.with.awaitable.senders]
+  template<class-type Promise>
+    struct with_awaitable_senders;
 
-      @[// [exec.affinity.on]{.sref}]{.add}@
-      @[constexpr affinity_on_t affinity_on;]{.add}@
+  @[// [exec.affine.on]{.sref}]{.add}@
+  @@[struct affine_on_t { @_unspecified_@  };]{.add}@@
+  @[constexpr affine_on_t affine_on;]{.add}@
 
-      @[// [exec.inline.scheduler]{.sref}]{.add}@
-      @[class inline_scheduler;]{.add}@
+  @[// [exec.inline.scheduler]{.sref}]{.add}@
+  @[class inline_scheduler;]{.add}@
 
-      @[// [exec.task.scheduler]{.sref}]{.add}@
-      @[class task_scheduler;]{.add}@
+  @[// [exec.task.scheduler]{.sref}]{.add}@
+  @[class task_scheduler;]{.add}@
 
-      @[// [exec.task]{.sref}]{.add}@
-      @[template <typename T, typename Context>]{.add}@
-      @[class task;]{.add}@
-    }
+  @[// [exec.task]{.sref}]{.add}@
+  @[template <class T, class  Context>]{.add}@ // there is a space between class and Context!
+  @[class task;]{.add}@
+}
+```
 
-Add new subsetions for the different classes at the end of [exec]{.sref}:
+Add new subsections for the different classes at the end of [exec]{.sref}:
 
 ::: draftnote
 Evertyhing below is text meant to got at the end of the [exec]{.sref}
 section without any color highlight of what it being added.
 :::
 
+## `execution::affine_on` [exec.affine.on]
+
+[1]{.pnum} `affine_on` adapts a sender into one that completes on
+   the specified scheduler. If the algorithm determines that the
+   adapted sender already completes on the correct scheduler it is
+   allowed to avoid any scheduling operation.
+
+[2]{.pnum} The name `affine_on` denotes a pipeable sender adaptor
+    object. For subexpressions `sch` and `sndr`, if `decltype((sch))`
+    does not satisfy `scheduler`, or `decltype((sndr))` does not
+    satisfy `sender`, `affine_on(sndr, sch)` is ill-formed.
+
+[3]{.pnum} Otherwise, the expression `affine_on(sndr, sch)` is
+    expression-equivalent to:
+
+```cpp
+    transform_sender(@_get-domain-early_@(sndr), @_make-sender_@(affine_on, sch, sndr))
+```
+
+except that `sndr` is evalutated only once.
+
+[4]{.pnum} The exposition-only class template `@_impls-for_@` is specialized
+   for `affine_on_t` as follows:
+
+```cpp
+  namespace std::execution {
+    template <>
+    struct @_impls_for_@<affine_on_t>: @_default-impls_@ {
+      static constexpr auto @_get-attrs_@ =
+        [](const auto& data, const auto& child) noexcept -> decltype(auto) {
+          return @_JOIN-ENV_@(_SCHED-ATTRS_@(data), @_FWD-ENV_@(get_env(child)));
+        };
+    };
+  }
+```
+
+[5]{.pnum} Let `out_sndr` be a subexpression denoting a sender returned
+    from `affine_on(sndr, sch)` or one equal to such, and let
+    `OutSndr` be the type `decltype((out_sndr))`. Let `out_rcvr`
+    be a subexpression denoting a receiver that has an environment
+    of type `Env` such that `sender_in<OutSndr, Env>` is `true`.
+    Let `op` be an lvalue referring to the operation state that
+    results from connecting `out_sndr` to `out_rcvr`. Calling
+    `start(op)` will start `sndr` on the current execution agent
+    and execute completion operations on `out_rcvr` on an execution
+    agent of the execution resource associated with `sch`. If the
+    current execution resource is the same as the execution resource
+    associated with `sch` the completion operation on `out_rcvr`
+    may be called before `start(op)` completes. If scheduling onto
+    `sch` fails, an error completion on `out_rcvr` shall be executed
+    on an unspecified execution agent.
+
 ## `execution::inline_scheduler` [exec.inline.scheduler]
 
-    namespace std::execution {
-        class inline_scheduler {
-            class @_inline-sender_@; // exposition-only
-            template <receiver R>
-            class @_inline-state_@;  // exposition-only
+```cpp
+namespace std::execution {
+  class inline_scheduler {
+    class @_inline-sender_@; // exposition-only
+    template <receiver R>
+    class @_inline-state_@;  // exposition-only
 
-        public:
-            using scheduler_concept = scheduler_t;
+  public:
+    using scheduler_concept = scheduler_t;
 
-            constexpr @_inline-sender_@ schedule() noexcept { return {}; }
-            constexpr bool operator== (const inline_scheduler&) const noexcept = default;
-        };
-    }
+    constexpr @_inline-sender_@ schedule() noexcept { return {}; }
+    constexpr bool operator== (const inline_scheduler&) const noexcept = default;
+  };
+}
+```
 
 [1]{.pnum} `inline_scheduler` is a class that models `scheduler`
 [exec.scheduler]{.sref}. All objects of type `inline_scheduler` are equal.
 
-    class @_inline-sender_@`
+```cpp
+class @_inline-sender_@`
+```
 
-[3]{.pnum} `@_inline-sender_@` is an exposition-only type that satisfies
-`sender`. For any type `Env`, the type `completion_signatures_of_t<@_inline-sender_@, Env>`
+[2]{.pnum} `@_inline-sender_@` is an exposition-only type that satisfies
+`sender`. For any type `Env`, the type<br/>
+`completion_signatures_of_t<@_inline-sender_@, Env>`
 is `completion_signatures<set_value_t()>`.
 
 [3]{.pnum} Let `@_sndr_@` be an expression of type `@_inline-sender_@`, let `@_rcvr_@`
@@ -1390,8 +1492,10 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
 - [3.2]{.pnum} The expression `get_completion_scheduler<set_value_t>(get_env(@_sndr_@))`
     has type `inline_scheduler`  and is potentially-throwing if and only if `@_sndr_@` is potentially-throwing.
 
-    template <receiver R>
-    class @_inline-state_@;
+```cpp
+template <receiver R>
+class @_inline-state_@;
+```
 
 [4]{.pnum} Let `@_o_@` be a non-`const` lvalue of type `@_inline-state_@<Rcvr>`, and
     let `REC(@_o_@)` be a non-`const` lvalue reference to an instance of type `Rcvr`
@@ -1404,45 +1508,55 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
 
 ## `execution::task_scheduler` [exec.task.scheduler]
 
-    namespace std::execution {
-        class task_scheduler {
-            class @_sender_@; // exposition-only
-            template <receiver R>
-            class @_state_@;  // exposition-only
+```cpp
+namespace std::execution {
+  class task_scheduler {
+    class @_sender_@; // exposition-only
+    template <receiver R>
+    class @_state_@;  // exposition-only
 
-        public:
-            using scheduler_concept = scheduler_t;
+  public:
+    using scheduler_concept = scheduler_t;
 
-            template <scheduler Sched, typename Allocator = allocator<void>>
-                requires(not std::same_as<task_scheduler, std::remove_cvref_t<S>>)
-                    && ::beman::execution::scheduler<S>
-            explicit task_scheduler(Sched&& sched, Allocator alloc = {});
-            template <typename Allocator>
-            task_scheduler(task_scheduler const&, Allocator);
-            task_scheduler(task_scheduler const&);
-            task_scheduler& operator=(task_scheduler const&);
+    template <scheduler Sched, class Allocator = allocator<void>>
+      requires(not std::same_as<task_scheduler, std::remove_cvref_t<S>>)
+        && ::beman::execution::scheduler<S>
+    explicit task_scheduler(Sched&& sched, Allocator alloc = {});
+    template <class Allocator>
+    task_scheduler(const task_scheduler& other, Allocator alloc);
+    task_scheduler(const task_scheduler& other);
+    task_scheduler& operator=(const task_scheduler& other);
 
-            @_sender_@ schedule();
-            bool operator== (const task_scheduler&) const noexcept = default;
-        };
-    }
+    @_sender_@ schedule();
+    bool operator== (const task_scheduler&) const noexcept;
+    template <class Sched>
+      requires (not same_as<task_scheduler, remove_cvref_t<Sched>>)
+      && scheduler<Sched>
+    bool operator== (const Sched& sched) const noexcept;
+  };
+}
+```
 
 [1]{.pnum} `task_scheduler` is a class that models `scheduler`
     [exec.scheduler]{.sref}. Let `s` be an object of type `task_scheduler`
     then `SCHED(s)` is an object of a type different than `task_scheduler`
-    modeling `scheduler`.
+    modeling `scheduler` which is used by `s` to do the actual scheduling.
 
-    template <scheduler Sched, typename Allocator = allocator<void>>
-        requires(not same_as<task_scheduler, decay_t<S>>) && scheduler<S>
-    explicit task_scheduler(Sched&& sched, Allocator alloc = {});
+```cpp
+template <scheduler Sched, class Allocator = allocator<void>>
+  requires(not same_as<task_scheduler, decay_t<S>>) && scheduler<S>
+explicit task_scheduler(Sched&& sched, Allocator alloc = {});
+```
 
 [2]{.pnum} _Effects_: Initialises the object from `sched` and `alloc`.
     Allocations, if any, use `alloc` to get memory.
 
 [3]{.pnum} _Post Condition_: `SCHED(*this) == sched` is true.
 
-    template <typename Allocator>
-    task_scheduler(task_scheduler const& other, Allocator alloc);
+```cpp
+template <class Allocator>
+task_scheduler(const task_scheduler& other, Allocator alloc);
+```
 
 [4]{.pnum} _Effects_: Initialises the object from `other` and `alloc`.
     Any allocation used by `this` use an allocator obtained by rebinding
@@ -1450,42 +1564,64 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
 
 [5]{.pnum} _Post Condition_: `*this == other` is true.
 
-    task_scheduler(task_scheduler const& other);
+```cpp
+task_scheduler(const task_scheduler& other);
+```
 
 [6]{.pnum} _Effects_: equivalent to `task_scheduler(other, allocator<void>{});
 
-    task_scheduler& operator=(task_scheduler const& other);
+```cpp
+task_scheduler& operator=(const task_scheduler& other);
+```
 
 [7]{.pnum} _Post Condition_: `*this == other` is true.
 
-    @_sender_@ schedule();
+```cpp
+@_sender_@ schedule();
+```
 
 [8]{.pnum} _Effects_: Creates a `@_sender_@` initialized with
     `schedule(SCHED(*this))`.
 
-    bool operator== (const task_scheduler& other) const noexcept = default;
+```cpp
+bool operator== (const task_scheduler& other) const noexcept;
+```
 
 [9]{.pnum} _Returns_: `false` if the types of `SCHED(*this)` and `SCHED(other)` are
     different, otherwise `SCHED(*this) == SCHED(other);`
 
-    class task_scheduler::@_sender_@ {
-    public:
-        using sender_concept = sender_t;
+```cpp
+template <class Sched>
+  requires (not same_as<task_scheduler, remove_cvref_t<Sched>>)
+        && scheduler<Sched>
+bool operator== (const Sched& other) const noexcept;
+```
 
-        template <receiver R>
-        @_state_@<R> connect(R&& rcvr);
-    };
+[10]{.pnum} _Returns_: `false` if the types of `SCHED(*this)` and `other` are
+    different, otherwise `SCHED(*this) == other;`
 
-[10]{.pnum} `@_sender_@` is an exposition-only class that models `sender` [exec.sender]{.sref}.
+```cpp
+class task_scheduler::@_sender_@ {
+public:
+  using sender_concept = sender_t;
+
+  template <receiver R>
+  @_state_@<R> connect(R&& rcvr);
+};
+```
+
+[11]{.pnum} `@_sender_@` is an exposition-only class that models `sender` [exec.sender]{.sref}.
     For any type `Env`, the type `completion_signatures_t<@_sender_@, Env>` is
 
-    completion_signatures<
-        set_value_t(),
-        set_error_t(error_code),
-        set_error_t(exception_ptr),
-        set_stopped_t()>
+```cpp
+completion_signatures<
+  set_value_t(),
+  set_error_t(error_code),
+  set_error_t(exception_ptr),
+  set_stopped_t()>
+```
 
-[11]{.pnum} Let `sched` be an object of type `task_scheduler` and
+[12]{.pnum} Let `sched` be an object of type `task_scheduler` and
     let `sndr` be an object of type `@_sender_@` obtained from
     `schedule(sched)`. Then
     `get_completion_scheduler<set_value_t>(get_env(sndr)) == sched`
@@ -1493,47 +1629,420 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
     with `schedule(SCHED(sched))` or an object move constructed from
     that.
 
-    template<receiver R>
-    task_scheduler::@_state_@<R> task_scheduler::@_sender_@::connect(R&& rcvr);
+```cpp
+template<receiver R>
+task_scheduler::@_state_@<R> task_scheduler::@_sender_@::connect(R&& rcvr);
+```
 
-[12]{.pnum} _Effects_: Creates a `@_sender_@<R>` initialized with
+[13]{.pnum} _Effects_: Creates a `@_sender_@<R>` initialized with
     `connect(SENDER(*this), std::forward<R>(rcvr))`.
 
-    template <receiver R>
-    class task_scheduler::@_state_@ {
-    public:
-        using operation_state_concept = operation_state_t;
+```cpp
+template <receiver R>
+class task_scheduler::@_state_@ {
+public:
+  using operation_state_concept = operation_state_t;
 
-        void start() & noexcept;
-    };
+  void start() & noexcept;
+};
+```
 
-[13]{.pnum} `@_state_@` is an exposition-only class tmplate whose specializations
+[14]{.pnum} `@_state_@` is an exposition-only class tmplate whose specializations
     model `operation_state` [exec.opstate]{.sref}. Let `R` be a type that models
-    `receiver`, let `rcvr` be an object of type`R`, [ex.receiver]{.sref},
+    `receiver`, let `rcvr` be an object of type`R`, [exec.recv]{.sref},
     and let `st` be an object of type `@_state_@<R>`. `STATE(st)` is the object
     the object `st` got intialised with.
 
-    void task_scheduler::@_state_@<R>::start() &;
+```cpp
+void task_scheduler::@_state_@<R>::start() & noexcept;
+```
 
-[14]{.pnum} _Effects_: Equivalent to `start(STATE(*this))`.
+[15]{.pnum} _Effects_: Equivalent to `start(STATE(*this))`.
 
 ## `execution::task` [exec.task]
 
 ### `task` Overview [task.overview]
 
-The class template `task` represents a sender used to `co_await` awaitables by
-evaluating a coroutines. The first template parameter `T` defines the type which
+[1]{.pnum} The class template `task` represents a sender used to `co_await` awaitables by
+evaluating a coroutine. The first template parameter `T` defines the type which
 can be used with `co_return` and which becomes the `set_value_t(T)` completion.
-The second template `Context` is used to specify various customisations for the
-supported by the `task`.
+The second template parameter `Context` is used to specify various customisations
+supported by the `task` class template. The type `task<T, Context>` models `sender`
+[exec.snd]{.sref}
 
-### Task synopsis [task.syn]
+### Class template task [task.class]
 
--dk:TODO this needs to inte
-
-```c++
+```cpp
 namespace std::execution {
-    template <typename T, typename Context>
-    class task;
+  template <class T, class Context>
+  class task {
+    // [task.state]
+    template <receiver R>
+    class @_state_@; // @_exposition only_@
+
+  public:
+    using sender_concept = sender_t;
+    using completion_signatures = @_see below_@;
+
+    // [task.promise]
+    class promise_type;
+
+    task(task&&) noexcept;
+    ~task();
+
+    template <receiver R>
+    @_state_@<R> connect(R&& recv);
+
+  private:
+    coroutine_handle<promise_type> @_handle_@; // @_exposition only_@
+  };
 }
 ```
+
+[1]{.pnum} The `task` template determines multiple types based on the `Context` parameter:
+
+- [1.1]{.pnum} If the type `Context::allocator_type` exists let `Alloc` be that type,
+    otherwise let `Alloc` be `allocator<byte>`.
+- [1.2]{.pnum} If the type `Context::scheduler_type` exists let `Scheduler` be that
+    type, otherwise let `Scheduler` be `task_scheduler`.
+- [1.3]{.pnum} If the type `Context::stop_source_type` exists let `StopSource` be that
+    type, otherwise let `StopSource` be `inplace_stop_source`.
+- [1.4]{.pnum} If the type `Context::error_types` exists let `Errors` be that type,
+    otherwise let `Errors` be `completion_signatures<set_error_t(exception_ptr)>`.
+    `Errors` must be a specialization<br/>`completion_signatures<ErrorSig...>`
+    where each element of `ErrorSig...` is of the form `set_error_t(E)` for some type `E`.
+
+[2]{.pnum} The type alias `task<T, Context>::completion_signatures`
+    is a specialization of `excution::completion_signatures` with
+    the template arguments `set_value_t(T)`, `ErrorSig...`, and
+    `set_stopped_t()` in an unspecified order.
+
+[3]{.pnum} _Mandates_: `Alloc` shall meet the _Cpp17Allocator_ requirements.
+
+### Task Members [task.members]
+
+```cpp
+task(task&& other) noexcept;
+```
+
+[1]{.pnum} _Effects:_ Initializes `@_handle_@` with `exchange(other.@_handle_@, {})`.
+
+```cpp
+~task();
+```
+
+[2]{.pnum} _Effects:_ Equivalent to:
+
+```cpp
+    if (@_handle_@)
+      @_handle_@.destroy();
+```
+
+```cpp
+template <receiver R>
+@_state_@<R> connect(R&& recv);
+```
+
+[3]{.pnum} _Precondition_ `bool(@_handle_@)` is true.
+
+[4]{.pnum} _Returns:_ `@_state_@<R>{ exchange(@_handle_@, {}), forward<R>(recv) };`
+
+### Class template task::state [task.state]
+
+```cpp
+namespace std::execution {
+  template <class T, class Context>
+    template <receiver R>
+  class task<T, Context>::@_state_@ { // @_exposition only_@
+  public:
+    coroutine_handle<promise_type> @_handle_@;  // @_exposition only_@
+    remove_cvref_t<R>              @_rcvr_@;    // @_exposition only_@
+    @_see below_@                      @_own-env_@; // @_exposition only_@
+    Context                        @_context_@; // @exposition only_@
+
+    template <class RR>
+    @_state_@(coroutine_handle<promise_type> h, RR&& rr);
+    ~@_state_@();
+    void start() & noexcept;
+    const Context& @_get-context_@() const noexcept;
+  };
+}
+```
+
+[1]{.pnum} Let `Env` be the type of the receiver's environment
+    `decltype(get_env(declval<R>()))`. The type of `@_env_@` is
+    `Context::template env_type<Env>` if this type is valid and
+    `empty_env` otherwise.
+
+```cpp
+template <class RR>
+@_state_@(coroutine_handle<promise_type> h, RR&& rr);
+```
+
+[2]{.pnum} _Effects:_ Initializes `@_handle_@` with `std::move(h)`
+    and `@_rcvr_@` with `std::forward<RR>(rr)`. `@_own-env_@` is
+    initialised with `get_env(@_rcvr_@)` if that initialisation
+    is valid and default constructed otherwise. `@_context_@` is
+    initialised with `@_own-env_@` if that initialisation is
+    valid, otherwise, it is initalised with `get_env(@_rcvr_@)`
+    if this initialisation is valid, otherwise it is default
+    constructed.
+
+```cpp
+~@_state_@();
+```
+
+[3]{.pnum} _Effects:_ Equivalent to
+
+```cpp
+    if (@_handle_@)
+      @_handle_@.destroy();
+```
+
+```cpp
+void start() & nexcept;
+```
+
+[4]{.pnum} _Effects:_ Let `prom` be the object `@_handle_@.promise()`.
+    The object `prom` is set up to refer to `*this`:
+
+- [4.1]{.pnum} `STATE(prom)` is `*this` (see [task.promise]).
+- [4.2]{.pnum} `RSVR(prom)` is `@_rcvr_@`.
+- [4.3]{.pnum} `SCHED(prom)` is initialised using
+    `Scheduler(get_scheduler(get_env(@_rcvr_@)))` if that expression is
+    valid and using `Scheduler()` otherwise. If neither of these
+    expressions is valid, the program is ill-formed.
+- [4.4]{.pnum} `prom.@_source_@` and `prom.@_token_@` are set up
+    such that `prom.@_token_@` reflects the state of
+    `get_stop_token(get_env(@_rcvr_@))`.
+
+After that invokes `@_handle_@.resume()`.
+
+```cpp
+const Context& @_get-context_@() const noexcept;
+```
+
+[5]{.pnum} _Returns:_ `@_context_@;`
+
+### Class task::promise_type [task.promise]
+
+```cpp
+namespace std::execution {
+  template <class E>
+  struct with_error {
+    using type = remove_cvref_t<E>;
+    type error;
+  };
+  template <class E>
+  with_error(E&&) -> with_error<E>;
+
+  template <scheduler S>
+  struct change_coroutine_scheduler {
+    using type = remove_cvref_t<S>;
+    type scheduler;
+  };
+  template <scheduler S>
+  change_coroutine_scheduler(S&&) -> change_coroutine_scheduler<S>;
+
+  template <class T, class Context>
+  class task<T, Context>::promise_type {
+  public:
+    template <class... Args>
+    promise_type(const Args&... args);
+
+    task get_return_object() noexcept;
+
+    auto initial_suspend() noexcept;
+    auto final_suspend() noexcept;
+
+    void uncaught_exception();
+
+    void return_void(); // if same_as<void, T>
+    template <class V>
+    void return_value(V&& value); // if !same_as<void, T>
+
+    template <class E>
+    @_unspecified_@ yield_value(with_error<E> error);
+
+    template <class A>
+    auto await_transform(A&& a);
+    template <class S>
+    auto await_transform(change_coroutine_scheduler<S> sched);
+
+    @_unspecified_@ get_env() const noexcept;
+
+    template <class... Args>
+    void* operator new(size_t size, Args&&... args);
+
+    void operator delete(void* pointer, size_t size) noexcept;
+
+  private:
+    using StopToken = decltype(decl_val<StopSource>().get_token());
+    Alloc         @_alloc_@;  // @_exposition only_@
+    StopSource    @_source_@; // @_exposition only_@
+    StopToken     @_token_@;  // @_exposition only_@
+    optional<T>   @_result_@; // if !same_as<void, T>; @_exposition only_@
+    exception_ptr @_except_@; // @_exposition only_@
+  };
+}
+```
+
+[1]{.pnum} Let `prom` be an object of `promise_type` and let `tsk`
+    be the `task` object created by `prom.get_return_object()`. The
+    description below refers to objects associated with `prom` whose
+    dynamic type isn't known using a notation which still just
+    accesses them.  [An implementation could, e.g., use
+    dispatching through a base class to implement the neccessary
+    accesses.]{.note}
+
+- [1.1]{.pnum} `STATE(prom)` is the operation state object used to
+    resume the `task` coroutines.
+- [1.2]{.pnum} `RCVR(prom)` is an object initialised from `rcvr`
+    where `rcvr` is the receiver used to get `STATE(prom)` by using
+    `connect(tsk, rcvr)`.
+- [1.3]{.pnum} `SCHED(prom)` is an object of type `Scheduler` which
+    is associated with `prom`.
+
+```cpp
+template <class... Args>
+promise_type(const Args&... args);
+```
+
+[2]{.pnum} _Effects:_ If `Args` contains an element of type
+    `allocator_arg_t` then `@_alloc_@` is initialised with the
+    corresponding next element of `args`. Otherwse, `@_alloc_@`
+    is initialised with `Alloc()`.
+
+```cpp
+task get_return_object() noexcept;
+```
+
+[3]{.pnum} _Returns:_ A `task` object whose member `@_handle_@` is
+    `coroutine_handle<promise_type>::from_promise(*this)`.
+
+```cpp
+auto initial_suspend() noexcept;
+```
+
+[4]{.pnum} _Returns:_ An awaitable object of unspecified type
+    ([expr.await]) whose member functions arrange for the calling
+    coroutine to be suspended. The awaitable also arranges for
+    the coroutine to be resumed on an execution resource matching
+    `SCHED(*this)`.
+
+```cpp
+auto final_suspend() noexcept;
+```
+
+[5]{.pnum} _Returns:_ An awaitable object of unspecified type
+    ([expr.await]) whose member functions arrange for the calling
+    coroutine to be suspended and then for calling `set_value` or
+    `set_error` with the appropriate arguments:
+
+- [5.1]{.pnum} If the coroutine exited with an exception,
+    `set_error(std::move(RCVR(*this)), std::move(@_except_@))`
+    is called.
+- [5.2]{.pnum} Otherwise, if `same_as<void, T>` is true
+    `set_value(std::move(RCVR(*this)))` is called.
+- [5.3]{.pnum} Otherwise, `set_value(std::move(RCVR(*this)), *@_result_@)`
+    is called.
+
+```cpp
+template <class Err>
+auto yield_value(with_error<Err> err);
+```
+
+[6]{.pnum} _Mandates_ The type `Err` is unambigiously convertible to
+    one of the `set_error_t` argument types of `Errors`.
+
+[7]{.pnum} _Returns:_ An awaitable object of unspecified type
+    ([expr.await]) whose member functions arrange for the calling
+    coroutine to be suspended and then for calling
+    `set_error(std::move(RCVR(*this), std::move(err.error)))`.
+
+```cpp
+template <sender Sender>
+auto await_transform(Sender&& sndr) noexcept;
+```
+
+[8]{.pnum} _Returns_: If `same_as<inline_scheduler, Scheduler>` is
+    true returns `as_awaitable(std::forward<Sender>(sndr), *this)`;
+    otherwise returns
+    `as_awaitable(affine_on(std::forward<Sender>(sndr), SCHED(*this)), *this)`.
+
+```cpp
+auto await_transform(change_coroutine_scheduler<Scheduler> s) noexcept;
+```
+
+[9]{.pnum} _Returns:_ `as_awaitable(just(exchange(SCHED(*this), s.scheduler)), *this);`
+
+```cpp
+void uncaught_exception();
+```
+
+[10]{.pnum} _Effects:_ If the signature `set_error_t(exception_ptr)` is
+    not an element of `Errors` calls `terminate()`. Otherwise stores
+    `current_exception()` into `@_except_@`.
+
+```cpp
+void unhandled_stopped();
+```
+
+[11]{.pnum} _Effects:_ Calls `set_stopped(std::move(RCVR(*this)))`.
+
+[12]{.pnum} _Returns:_ `noop_coroutine();`
+
+```cpp
+@_unspecified_@ get_env() const noexcept;
+```
+
+[13]{.pnum} _Returns:_ The member function returns an object `env`
+    such that queries are forwarded as follows:
+
+- [13.1]{.pnum} `env.query(get_scheduler)` returns `Scheduler(SCHED(*this))`.
+- [13.2]{.pnum} `env.query(get_allocator)` returns `@_alloc_@`.
+- [13.3]{.pnum} `env.query(get_stop_token)` returns `@_token_@`.
+- [13.4]{.pnum} For any other query `q` and arguments `a...` a
+    call to `env.query(q, a...)` returns
+    <br/>`STATE(*this).@_get-context_@().query(q, a...)` if this expression
+    is well-formed and `forwarding_query(q)` is well-formed.  Otherwise
+    `env.query(q, a...)` is ill-formed.
+
+```cpp
+template <class... Args>
+void* operator new(size_t size, const Args&... args);
+```
+
+[13]{.pnum} If there is no parameter with type `allocator_arg_t`
+    then let `alloc` be `Allocator()`; otherwise, if there is no
+    parameter following the first `allocator_arg_t` parameter then
+    the program is ill-formed; otherise, let `arg_next` be the
+    parameter following the first `allocator_arg_t` parameter and
+    the program is ill-formed if `Allocator(arg_next)` isn't a valid
+    expression, otherwise let `alloc` be `Allocator(arg_next)`.
+    Let `PAlloc` be `allocator_traits<Allocator>::template rebind_alloc<U>`
+    where `U` is an unspecified type whose size and alignmnet are both
+    `__STDCPP_DEFAULT_NEW_ALOIGNMENT__`.
+
+[14]{.pnum} _Mandates:_ `allocator_traits<PAlloc>::pointer` is a pointer
+    type.
+
+[15]{.pnum} _Effects:_ Initializes an allocator `palloc` of type `PAlloc`
+    with `alloc`. Uses `palloc` to allocate storage for the smallest
+    array of `U` sufficient to provide stroage for coroutine state
+    of size `size`, and unspecified additional state neccessary to
+    ensure that `operator delete` can later deallocate this memory
+    block with an allocator equal to `palloc`.
+
+[16]{.pnum} _Returns:_ A pointer to the allocated storage.
+
+```cpp
+void operator delete(void* pointer, size_t size) noexcept;
+```
+
+[17]{.pnum} _Preconditions:_ `pointer` was returned from an invocation
+    of the above overload of `operator new` with a size argument
+    equal to `size`.
+
+[18]{.pnum} _Effects:_ Deallocates the storage pointed to by `pointer`
+    using an allocator equivalent to that used to allocate it.
