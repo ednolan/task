@@ -50,7 +50,6 @@ struct allocator_support {
         if constexpr (::std::same_as<Allocator, ::std::allocator<::std::byte>>) {
             Allocator alloc{};
             return allocator_traits::allocate(alloc, size);
-
         } else {
             Allocator alloc{::beman::task::detail::find_allocator<Allocator>(a...)};
             void*     ptr{allocator_traits::allocate(alloc, allocator_support::offset(size) + sizeof(Allocator))};

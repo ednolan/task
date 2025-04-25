@@ -55,6 +55,9 @@ int main() {
     assert(resource.outstanding != 0u);
     ptr->~type();
     assert(resource.outstanding != 0u);
+#ifdef __GNUC__
+#pragma GCC diagnostic ignored "-Wmismatched-new-delete"
+#endif
     type::operator delete(ptr, sizeof(type), std::allocator_arg, &resource);
     assert(resource.outstanding == 0u);
 }
