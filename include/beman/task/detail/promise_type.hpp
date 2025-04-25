@@ -185,7 +185,7 @@ struct promise_type : ::beman::task::detail::promise_base<::beman::task::detail:
             std::terminate();
         }
     }
-    auto          get_return_object() noexcept { return Coroutine(::beman::task::detail::handle<promise_type>(this)); }
+    auto get_return_object() noexcept { return Coroutine(::beman::task::detail::handle<promise_type>(this)); }
 
     template <typename E>
     auto await_transform(::beman::task::detail::with_error<E> with) noexcept {
