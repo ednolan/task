@@ -26,11 +26,7 @@ struct affine_on_t {
     auto operator()(Sender&& sndr, Scheduler&& scheduler) const {
         using result_t = sender<::std::remove_cvref_t<Sender>, ::std::remove_cvref_t<Scheduler>>;
         static_assert(::beman::execution::sender<result_t>);
-        return result_t{
-            *this,
-            ::std::forward<Sender>(sndr),
-            ::std::forward<Scheduler>(scheduler)
-            };
+        return result_t{*this, ::std::forward<Sender>(sndr), ::std::forward<Scheduler>(scheduler)};
     }
 };
 
@@ -43,8 +39,8 @@ struct affine_on_t::sender {
     }
 
     affine_on_t tag{};
-    Sender    upstream;
-    Scheduler scheduler;
+    Sender      upstream;
+    Scheduler   scheduler;
 
     template <::beman::execution::receiver Receiver>
     auto connect(Receiver&&) const {

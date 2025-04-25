@@ -224,8 +224,8 @@ class any_scheduler {
     using scheduler_concept = ::beman::execution::scheduler_t;
 
     template <typename S, typename Allocator = ::std::allocator<void>>
-        requires(not std::same_as<any_scheduler, std::remove_cvref_t<S>>)
-        && ::beman::execution::scheduler<::std::remove_cvref_t<S>>
+        requires(not std::same_as<any_scheduler, std::remove_cvref_t<S>>) &&
+                ::beman::execution::scheduler<::std::remove_cvref_t<S>>
     explicit any_scheduler(S&& s, Allocator = {})
         : scheduler(static_cast<concrete<std::decay_t<S>>*>(nullptr), std::forward<S>(s)) {}
     any_scheduler(const any_scheduler&) = default;
@@ -237,9 +237,8 @@ class any_scheduler {
     sender schedule() { return this->scheduler->schedule(); }
     bool   operator==(const any_scheduler&) const = default;
     template <typename Sched>
-        requires (not ::std::same_as<any_scheduler, Sched>)
-        && ::beman::execution::scheduler<Sched>
-    bool   operator==(const Sched& other[[maybe_unused]]) const {
+        requires(not ::std::same_as<any_scheduler, Sched>) && ::beman::execution::scheduler<Sched>
+    bool operator==(const Sched& other [[maybe_unused]]) const {
         return *this == any_scheduler(other);
     }
 };

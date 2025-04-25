@@ -4,19 +4,27 @@
 #include <beman/task/task.hpp>
 #include <beman/execution/execution.hpp>
 #include <iostream>
+#include <exception>
 
 namespace ex = beman::execution;
-namespace ts = beman::task;
+
+struct my_exception : std::exception {
+    const char* what() const noexcept override { return "my_exception"; }
+};
 
 int main() {
     try {
         ex::sync_wait([]() -> ex::task<int> {
-            throw std::runtime_error("error");
+#ifndef __clang__
+            //-dk:TODO determine what's up with clang
+            throw my_exception{};
+#endif
             co_return 0;
         }());
         std::cout << "not reached!\n";
-    }
-    catch (std::exception const& ex) {
+    } catch (const std::exception& ex) {
         std::cout << "ERROR: " << ex.what() << "\n";
+    } catch (...) {
+        std::cout << "ERROR: unknown exception\n";
     }
 }

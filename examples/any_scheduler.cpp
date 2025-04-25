@@ -10,18 +10,13 @@ namespace ex = beman::execution;
 namespace ts = beman::task;
 
 int main() {
-    ts::inline_scheduler isched;
-    ts::inline_scheduler const cisched;
-    ts::any_scheduler    asched(isched);
-    ts::any_scheduler const   casched(cisched);
+    ts::inline_scheduler       isched;
+    const ts::inline_scheduler cisched;
+    ts::any_scheduler          asched(isched);
+    const ts::any_scheduler    casched(cisched);
 
-    return isched == isched
-        && asched == asched
-        && asched == isched
-        && isched == asched
-        && asched == cisched
-        && cisched == casched
-        && !(cisched != casched)
-        && !(asched != isched)
-        ? EXIT_SUCCESS: EXIT_FAILURE;
+    return isched == isched && asched == asched && asched == isched && isched == asched && asched == cisched &&
+                   cisched == casched && !(cisched != casched) && !(asched != isched)
+               ? EXIT_SUCCESS
+               : EXIT_FAILURE;
 }

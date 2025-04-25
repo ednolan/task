@@ -165,9 +165,7 @@ struct promise_type : ::beman::task::detail::promise_base<::beman::task::detail:
                                               optional_ref_scheduler<scheduler_type>{&this->scheduler});
     }
     final_awaiter final_suspend() noexcept { return {}; }
-    void          unhandled_exception() {
-        this->set_error(::std::current_exception());
-    }
+    void          unhandled_exception() { this->set_error(::std::current_exception()); }
     auto          get_return_object() noexcept { return Coroutine(::beman::task::detail::handle<promise_type>(this)); }
 
     template <typename E>
