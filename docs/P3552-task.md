@@ -26,18 +26,20 @@ is providing such a definition.
 Just to get an idea what this proposal is about: here is a simple
 `Hello, world` written using the proposed coroutine type:
 
-    #include <execution>
-    #include <iostream>
-    #include <task>
+```c++
+#include <execution>
+#include <iostream>
+#include <task>
 
-    namespace ex = std::execution;
+namespace ex = std::execution;
 
-    int main() {
-        return std::get<0>(*ex::sync_wait([]->ex::task<int> {
-            std::cout << "Hello, world!\n";
-            co_return co_await ex::just(0);
-        }()));
-    }
+int main() {
+    return std::get<0>(*ex::sync_wait([]->ex::task<int> {
+        std::cout << "Hello, world!\n";
+        co_return co_await ex::just(0);
+    }()));
+}
+```
 
 # Change History
 
@@ -420,12 +422,14 @@ type. The result type is probably the primary customisation and
 should be the first template parameter which gets defaulted to
 `void` for coroutines not producing any value. For example:
 
-    int main() {
-        ex::sync_wait([]->ex::task<>{
-            int result = co_await []->ex::task<int> { co_return 42; }();
-            assert(result == 42);
-        }());
-    }
+```c++
+int main() {
+    ex::sync_wait([]->ex::task<>{
+        int result = co_await []->ex::task<int> { co_return 42; }();
+        assert(result == 42);
+    }());
+}
+```
 
 The inner coroutines completes with `set_value_t(int)` which gets
 translated to the value returned from `co_await` (see [`co_await`
@@ -454,11 +458,13 @@ to configure a particular aspect. For example, it should be possible
 to selectively enable [allocator support](#allocator-support) using
 something like this:
 
-    struct allocator_aware_context {
-        using allocator_type = std::pmr::polymorphic_allocator<std::byte>;
-    };
-    template <class T>
-    using my_task = ex::task<T, allocator_aware_context>;
+```c++
+struct allocator_aware_context {
+    using allocator_type = std::pmr::polymorphic_allocator<std::byte>;
+};
+template <class T>
+using my_task = ex::task<T, allocator_aware_context>;
+```
 
 Using various different types for task coroutines isn't a problem
 as the corresponding objects normally don't show up in containers.
@@ -494,11 +500,13 @@ The coroutine implementation cannot inspect the coroutine body to
 determine how the different asynchronous operations may complete. As
 a result, the default completion signatures for `task<T>` are
 
-    ex::completion_signatures<
-        ex::set_value_t(T),  // or ex::set_value_t() if T == void
-        ex::set_error_t(std::exception_ptr),
-        ex:set_stopped_t()
-    >;
+```c++
+ex::completion_signatures<
+    ex::set_value_t(T),  // or ex::set_value_t() if T == void
+    ex::set_error_t(std::exception_ptr),
+    ex:set_stopped_t()
+>;
+```
 
 Support for [reporting an error without exception](#error-reporting)
 may modify the completion signatures.
@@ -508,7 +516,9 @@ may modify the completion signatures.
 Coroutines are created via a factory function which returns the
 coroutine type and whose body uses one of the `co_*` function, e.g.
 
-    task<> nothing(){ co_return; }
+```c++
+task<> nothing(){ co_return; }
+```
 
 The actual object is created via the promise type's `get_return_object`
 function and it is between the promise and coroutine types how
@@ -543,9 +553,11 @@ The lack of move assignment doesn't mean that `task` can't be held
 in a container: it is perfectly fine to `push_back` objects of this
 type into a container, e.g.:
 
-    std::vector<ex::task<>> cont;
-    cont.emplace_back([]->ex::task<> { co_return; }());
-    cont.push_back([]->ex::task<> { co_return; }());
+```c++
+std::vector<ex::task<>> cont;
+cont.emplace_back([]->ex::task<> { co_return; }());
+cont.push_back([]->ex::task<> { co_return; }());
+```
 
 The expectation is that most of the time coroutines don't end up
 in normal containers. Instead, they'd be managed by a
@@ -590,13 +602,15 @@ be never resumed or an exception being thrown.
 
 Here is an example which summarises the different supported result types:
 
-    task<> fun() {
-        co_await ex::just();                               // void
-        auto v = co_await ex::just(0);                     // int
-        auto[i, b, c] = co_await ex::just(0, true, 'c');   // tuple<int, bool, char>
-        try { co_await ex::just_error(0); } catch (int) {} // exception
-        co_await ex::just_stopped();                       // cancel: never resumed
-    }
+```c++
+task<> fun() {
+    co_await ex::just();                               // void
+    auto v = co_await ex::just(0);                     // int
+    auto[i, b, c] = co_await ex::just(0, true, 'c');   // tuple<int, bool, char>
+    try { co_await ex::just_error(0); } catch (int) {} // exception
+    co_await ex::just_stopped();                       // cancel: never resumed
+}
+```
 
 The sender `sndr` can have at most one `set_value_t` completion
 signature: if there are more than one `set_value_t` completion
@@ -625,11 +639,13 @@ fails because the function accepts only senders with at most
 one `set_value_t` completion. Thus, it is necessary to use something
 like the below:
 
-        task<> pop_demo(auto& queue) {
-            // auto value = co_await queue.async_pop(); // doesn't work
-            std::optional v0 = co_await (queue.async_pop() | into_optional);
-            std::optional v1 = co_await into_optional(queue.async_pop());
-        }
+```c++
+task<> pop_demo(auto& queue) {
+    // auto value = co_await queue.async_pop(); // doesn't work
+    std::optional v0 = co_await (queue.async_pop() | into_optional);
+    std::optional v1 = co_await into_optional(queue.async_pop());
+}
+```
 
 The algorithm `into_optional(sndr)` would determine that there is
 exactly one `set_value_t` completion with arguments and produce an
@@ -694,7 +710,9 @@ The basic idea for scheduler affinity consists of a few parts:
     The scheduler is determined based on the receiver `rcvr`'s
     environment.
 
-        auto scheduler = get_scheduler(get_env(rcvr));
+    ```c++
+    auto scheduler = get_scheduler(get_env(rcvr));
+    ```
 
 2. The type of `scheduler` is unknown when the coroutine is created.
     Thus, the coroutine implementation needs to operate in terms
@@ -722,13 +740,15 @@ The basic idea for scheduler affinity consists of a few parts:
      Injecting this operation into the graph can be done in the
      promise type's `await_transform`:
 
-        template <ex::sender Sender>
-        auto await_transform(Sender&& sndr) noexcept {
-            return ex::as_awaitable_sender(
-                ex::continues_on(std::forward<Sender>(sndr),
-                                 this->scheduler);
-            );
-        }
+    ```c++
+    template <ex::sender Sender>
+    auto await_transform(Sender&& sndr) noexcept {
+        return ex::as_awaitable_sender(
+            ex::continues_on(std::forward<Sender>(sndr),
+                             this->scheduler);
+        );
+    }
+    ```
 
 There are a few immediate issues with the basic idea:
 
@@ -753,7 +773,9 @@ The scope doesn't know about any schedulers and, thus, the receiver
 used by `counting_scope` when `connect`ing to a sender doesn't
 support the `get_scheduler` query, i.e., this example doesn't work:
 
-    ex::spawn([]->ex::task<void> { co_await ex::just(); }(), token);
+```c++
+ex::spawn([]->ex::task<void> { co_await ex::just(); }(), token);
+```
 
 Using `spawn()` with coroutines doing the actual work is expected
 to be quite common, i.e., it isn't just a theoretical possibility that
@@ -805,7 +827,9 @@ the use of `co_await schedule(scheduler);` for this purpose. That is,
 however, somewhat subtle. It may be reasonable to use a dedicated
 awaiter for this purpose and use, e.g.
 
-    auto previous = co_await co_continue_on(new_scheduler);
+```c++
+auto previous = co_await co_continue_on(new_scheduler);
+```
 
 Using this statement replaces the coroutine's scheduler with the
 `new_scheduler`. When the `co_await` completes it is on `new_scheduler`
@@ -833,23 +857,25 @@ allocator support. The idea is to pick up on a pair of arguments of
 type `std::allocator_arg_t` and an allocator type being passed and use
 the corresponding allocator if present. For example:
 
-    struct allocator_aware_context {
-        using allocator_type = std::pmr::polymorphic_allocator<std::byte>;
-    };
+```c++
+struct allocator_aware_context {
+    using allocator_type = std::pmr::polymorphic_allocator<std::byte>;
+};
 
-    template <class...A>
-    ex::task<int, allocator_aware_context> fun(int value, A&&...) {
-        co_return value;
-    }
+template <class...A>
+ex::task<int, allocator_aware_context> fun(int value, A&&...) {
+    co_return value;
+}
 
-    int main() {
-        // Use the coroutine without passing an allocator:
-        ex::sync_wait(fun(17));
+int main() {
+    // Use the coroutine without passing an allocator:
+    ex::sync_wait(fun(17));
 
-        // Use the coroutine with passing an allocator:
-        using allocator_type = std::pmr::polymorphic_alloctor<std::byte>;
-        ex::sync_wait(fun(17, std::allocator_arg, allocator_type()));
-    }
+    // Use the coroutine with passing an allocator:
+    using allocator_type = std::pmr::polymorphic_alloctor<std::byte>;
+    ex::sync_wait(fun(17, std::allocator_arg, allocator_type()));
+}
+```
 
 The arguments passed when creating the coroutine are made available
 to an `operator new` of the promise type, i.e., this operator can
@@ -865,7 +891,9 @@ To avoid any cost introduced by type erasing an allocator
 type as part of the `task` definition the expected allocator type
 is obtained from the context argument `C` of `task<T, C>`:
 
-    using allocator_type = ex::allocator_of_t<C>;
+```c++
+using allocator_type = ex::allocator_of_t<C>;
+```
 
 This `using` alias uses `typename C::allocator_type` if present or
 defaults to `std::allocator<std::byte>` otherwise.  This
@@ -882,16 +910,18 @@ query. The arguments passed to the coroutine are also available to
 the constructor of the promise type (if there is a matching on) and
 the allocator can be obtained from there:
 
-    struct allocator_aware_context {
-        using allocator_type = pmr::polymorphic_allocator<std::byte>;
-    };
-    fixed_resource<2048> resource;
+```c++
+struct allocator_aware_context {
+    using allocator_type = pmr::polymorphic_allocator<std::byte>;
+};
+fixed_resource<2048> resource;
 
-    ex::sync_wait([](auto&&, auto* resource)
-            -> ex::task<void, allocator_aware_context> {
-        auto alloc = co_await ex::read_env(ex::get_allocator);
-        use(alloc);
-    }(allocator_arg, &resource));
+ex::sync_wait([](auto&&, auto* resource)
+        -> ex::task<void, allocator_aware_context> {
+    auto alloc = co_await ex::read_env(ex::get_allocator);
+    use(alloc);
+}(allocator_arg, &resource));
+```
 
 ## Environment Support
 
@@ -951,25 +981,27 @@ part of the overload set.
 
 For example:
 
-    struct context {
-        int value{};
-        int query(get_value_t const&) const noexcept { return this->value; }
-        context(auto const& env): value(get_value(env)) {}
-    };
+```c++
+struct context {
+    int value{};
+    int query(get_value_t const&) const noexcept { return this->value; }
+    context(auto const& env): value(get_value(env)) {}
+};
 
-    int main() {
-        ex::sync_wait(
-            ex::write_env(
-                []->demo::task<void, context> {
-                    auto sched(co_await ex::read_env(get_scheduler));
-                    auto value(co_await ex::read_env(get_value));
-                    std::cout << "value=" << value << "\n";
-                    // ...
-                }(),
-                ex::make_env(get_value, 42)
-            )
-        );
-    }
+int main() {
+    ex::sync_wait(
+        ex::write_env(
+            []->demo::task<void, context> {
+                auto sched(co_await ex::read_env(get_scheduler));
+                auto value(co_await ex::read_env(get_value));
+                std::cout << "value=" << value << "\n";
+                // ...
+            }(),
+            ex::make_env(get_value, 42)
+        )
+    );
+}
+```
 
 ## Support For Requesting Cancellation/Stopped
 
@@ -979,7 +1011,9 @@ that its work should be stopped it should also complete with
 `set_stopped(rcvr)`. There is no special syntax needed as that is the
 result of using `just_stopped()`:
 
-    co_await ex::just_stopped();
+```c++
+co_await ex::just_stopped();
+```
 
 The sender `just_stopped()` completes with `set_stopped()` causing
 the coroutine to be canceled. Any other sender completing with
@@ -1057,7 +1091,9 @@ The discussion below assumes the use of the class template `with_error<E>`
 to indicate that the coroutine completed with an error. It can be as
 simple as
 
-    template <class E> struct with_error{ E error; };
+```c++
+template <class E> struct with_error{ E error; };
+```
 
 The name can be different although it shouldn't collide with already
 use names (like `error_code` or `upon_error`). Also, in some cases
@@ -1073,7 +1109,9 @@ can be exited:
     to explicitly using `co_return;` instead of flowing off. It
     would be possible to turn the use of
 
-        co_return with_error{err};
+    ```c++
+    co_return with_error{err};
+    ```
 
     into a `set_error(std::move(rcvr), err)` completion.
 
@@ -1092,7 +1130,9 @@ can be exited:
     call `set_error(std::move(rcvr), err)` for some receiver `rcvr`
     and error `err` obtained via the awaitable `a`. Thus, using
 
-        co_await with_error{err};
+    ```c++
+    co_await with_error{err};
+    ```
 
     could complete with `set_error(std::move(rcvr), err)`.
 
@@ -1107,7 +1147,9 @@ can be exited:
     When `a`'s `await_suspend()` is called, the coroutine is suspended
     and the operation can complete accordingly. Thus, using
 
-        co_yield with_error{err};
+    ```c++
+    co_yield with_error{err};
+    ```
 
     could complete with `set_error(std::move(rcvr), err)`. Using
     `co_yield` for the purpose of returning from a coroutine with
@@ -1130,7 +1172,9 @@ possible to complete with an error sometimes and to produce a value
 at other times. That could allow a pattern (using `co_yield` for the
 potential error return):
 
-    auto value = co_yield when_error(co_await into_expected(sender));
+```c++
+auto value = co_yield when_error(co_await into_expected(sender));
+```
 
 The subexpression `into_expected(sender)` could turn the `set_value_t`
 and `set_error_t` into a suitable `std::expected<V, std::variant<E...>>`
@@ -1149,13 +1193,15 @@ It is easy to use a coroutine to accidentally create a stack overflow
 because loops don't really execute like loops. For example, a
 coroutine like this can easily result in a stack overflow:
 
-    ex::sync_wait(ex::write_env(
-        []() -> ex::task<void> {
-            for (int i{}; i < 1000000; ++i)
-                co_await ex::just(i);
-        }(),
-        ex::make_env(ex::get_scheduler, ex::inline_scheduler{})
-    ));
+```c++
+ex::sync_wait(ex::write_env(
+    []() -> ex::task<void> {
+        for (int i{}; i < 1000000; ++i)
+            co_await ex::just(i);
+    }(),
+    ex::make_env(ex::get_scheduler, ex::inline_scheduler{})
+));
+```
 
 The reason this innocent looking code creates a stack overflow is
 that the use of `co_await` results in some function calls to suspend
