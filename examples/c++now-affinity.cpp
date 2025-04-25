@@ -41,9 +41,9 @@ class thread_context {
                 if (this->queue.empty()) {
                     return nullptr;
                 }
-                base* next = queue.front();
+                base* n = queue.front();
                 queue.pop_front();
-                return next;
+                return n;
             }));
             if (next) {
                 next->do_run();

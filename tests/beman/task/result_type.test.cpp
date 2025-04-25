@@ -14,8 +14,8 @@ namespace {
 struct stopped_receiver {
     using receiver_concept = ::beman::execution::receiver_t;
     bool& flag;
-    void  set_value(auto&&...) && noexcept { assert(nullptr == "set_value unexpectedly called"); }
-    void  set_error(auto&&) && noexcept { assert(nullptr == "set_error unexpectedly called"); }
+    void  set_value(auto&&...) && noexcept { assert(nullptr == +"set_value unexpectedly called"); }
+    void  set_error(auto&&) && noexcept { assert(nullptr == +"set_error unexpectedly called"); }
     void  set_stopped() && noexcept { flag = true; }
 };
 static_assert(::beman::execution::receiver<stopped_receiver>);
@@ -24,8 +24,8 @@ struct value_receiver {
     using receiver_concept = ::beman::execution::receiver_t;
     int& value;
     void set_value(int v) && noexcept { value = v; }
-    void set_value(auto&&...) && noexcept { assert(nullptr == "unexpected set_value called"); }
-    void set_error(auto&&) && noexcept { assert(nullptr == "set_error unexpectedly called"); }
+    void set_value(auto&&...) && noexcept { assert(nullptr == +"unexpected set_value called"); }
+    void set_error(auto&&) && noexcept { assert(nullptr == +"set_error unexpectedly called"); }
 };
 static_assert(::beman::execution::receiver<value_receiver>);
 
@@ -33,16 +33,16 @@ struct void_receiver {
     using receiver_concept = ::beman::execution::receiver_t;
     bool& flag;
     void  set_value() && noexcept { flag = true; }
-    void  set_value(auto&&...) && noexcept { assert(nullptr == "unexpected set_value called"); }
-    void  set_error(auto&&) && noexcept { assert(nullptr == "set_error unexpectedly called"); }
+    void  set_value(auto&&...) && noexcept { assert(nullptr == +"unexpected set_value called"); }
+    void  set_error(auto&&) && noexcept { assert(nullptr == +"set_error unexpectedly called"); }
 };
 static_assert(::beman::execution::receiver<value_receiver>);
 
 struct error_receiver {
     using receiver_concept = ::beman::execution::receiver_t;
     int& error;
-    void set_value(auto&&...) && noexcept { assert(nullptr == "unexpected set_value called"); }
-    void set_error(auto&&) && noexcept { assert(nullptr == "unexpected set_error called"); }
+    void set_value(auto&&...) && noexcept { assert(nullptr == +"unexpected set_value called"); }
+    void set_error(auto&&) && noexcept { assert(nullptr == +"unexpected set_error called"); }
     void set_error(int e) && noexcept { error = e; }
 };
 static_assert(::beman::execution::receiver<error_receiver>);

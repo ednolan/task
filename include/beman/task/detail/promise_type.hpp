@@ -134,7 +134,7 @@ struct promise_type : ::beman::task::detail::promise_base<::beman::task::detail:
     };
 
     void notify_complete() { this->state->complete(); }
-    void start(auto&& e, ::beman::task::detail::state_base<C>* s) {
+    void start([[maybe_unused]] auto&& e, ::beman::task::detail::state_base<C>* s) {
         this->state = s;
         if constexpr (std::same_as<::beman::task::detail::inline_scheduler, scheduler_type>) {
             this->scheduler.emplace();

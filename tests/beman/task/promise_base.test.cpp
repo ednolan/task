@@ -16,7 +16,7 @@ struct void_receiver {
 
     bool& flag;
     void  set_value() && noexcept { flag = true; }
-    void  set_error(auto&&) && noexcept { assert(nullptr == "unexpected call to set_error"); }
+    void  set_error(auto&&) && noexcept { assert(nullptr == +"unexpected call to set_error"); }
 };
 static_assert(::beman::execution::receiver<void_receiver>);
 
@@ -25,7 +25,7 @@ struct int_receiver {
 
     int& value;
     void set_value(int v) && noexcept { this->value = v; }
-    void set_error(auto&&) && noexcept { assert(nullptr == "unexpected call to set_error"); }
+    void set_error(auto&&) && noexcept { assert(nullptr == +"unexpected call to set_error"); }
 };
 static_assert(::beman::execution::receiver<int_receiver>);
 } // namespace

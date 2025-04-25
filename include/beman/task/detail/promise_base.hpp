@@ -22,6 +22,21 @@ namespace beman::task::detail {
 template <::beman::task::detail::stoppable Stop, typename Value, typename ErrorCompletions>
 class promise_base;
 
+template <::beman::task::detail::stoppable Stop, typename Value>
+    requires(not ::std::same_as<Value, void>)
+class promise_base<Stop, Value, ::beman::execution::completion_signatures<>>
+    : public ::beman::task::detail::result_type<Stop, Value> {
+  public:
+    /*
+     * \brief Set the value result.
+     * \internal
+     */
+    template <typename T>
+    void return_value(T&& value) {
+        this->set_value(::std::forward<T>(value));
+    }
+};
+
 template <::beman::task::detail::stoppable Stop, typename Value, typename... Error>
     requires(not ::std::same_as<Value, void>)
 class promise_base<Stop, Value, ::beman::execution::completion_signatures<::beman::execution::set_error_t(Error)...>>
@@ -35,6 +50,16 @@ class promise_base<Stop, Value, ::beman::execution::completion_signatures<::bema
     void return_value(T&& value) {
         this->set_value(::std::forward<T>(value));
     }
+};
+
+template <typename ::beman::task::detail::stoppable Stop>
+class promise_base<Stop, void, ::beman::execution::completion_signatures<>>
+    : public ::beman::task::detail::result_type<Stop, void_type> {
+  public:
+    /*
+     * \brief Set the value result although without any value.
+     */
+    void return_void() { this->set_value(void_type{}); }
 };
 
 template <typename ::beman::task::detail::stoppable Stop, typename... Error>

@@ -27,4 +27,4 @@ test: compile
 	cd $(BUILDDIR); ctest
 
 clean:
-	$(RM) -r $(BUILDDIR) mkerr olderr
+	cmake --build $(BUILDDIR)/$(PRESET) --target clean
