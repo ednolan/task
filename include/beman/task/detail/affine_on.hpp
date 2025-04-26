@@ -11,14 +11,6 @@
 
 namespace beman::task::detail {
 struct affine_on_t {
-    template <::beman::execution::receiver Receiver>
-    struct state {
-        using operation_state_concept = ::beman::execution::operation_state_t;
-
-        void start() & noexcept {
-            //-dk:TODO
-        }
-    };
     template <::beman::execution::sender Sender, ::beman::execution::scheduler Scheduler>
     struct sender;
 
@@ -34,8 +26,12 @@ template <::beman::execution::sender Sender, ::beman::execution::scheduler Sched
 struct affine_on_t::sender {
     using sender_concept = ::beman::execution::sender_t;
     template <typename Env>
-    auto get_completion_signatures(const Env& env) const {
+    auto get_completion_signatures(const Env& env) const& noexcept {
         return ::beman::execution::get_completion_signatures(this->upstream, env);
+    }
+    template <typename Env>
+    auto get_completion_signatures(const Env& env) && noexcept {
+        return ::beman::execution::get_completion_signatures(::std::move(this->upstream), env);
     }
 
     affine_on_t tag{};
@@ -43,10 +39,22 @@ struct affine_on_t::sender {
     Scheduler   scheduler;
 
     template <::beman::execution::receiver Receiver>
-    auto connect(Receiver&&) const {
-        using result_t = state<::std::remove_cvref_t<Receiver>>;
-        static_assert(::beman::execution::operation_state<result_t>);
-        return result_t{};
+    auto connect(Receiver&& receiver) const& {
+        if constexpr (true) {
+            return ::beman::execution::connect(
+                ::beman::execution::continues_on(this->upstream, this->scheduler),
+                ::std::forward<Receiver>(receiver)
+            );
+        }
+    }
+    template <::beman::execution::receiver Receiver>
+    auto connect(Receiver&& receiver) && {
+        if constexpr (true) {
+            return ::beman::execution::connect(
+                ::beman::execution::continues_on(::std::move(this->upstream), ::std::move(this->scheduler)),
+                ::std::forward<Receiver>(receiver)
+            );
+        }
     }
 };
 } // namespace beman::task::detail

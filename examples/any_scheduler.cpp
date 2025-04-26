@@ -7,13 +7,12 @@
 #include <cstdlib>
 
 namespace ex = beman::execution;
-namespace ts = beman::task;
 
 int main() {
-    ts::inline_scheduler       isched;
-    const ts::inline_scheduler cisched;
-    ts::any_scheduler          asched(isched);
-    const ts::any_scheduler    casched(cisched);
+    ex::inline_scheduler       isched;
+    const ex::inline_scheduler cisched;
+    ex::any_scheduler          asched(isched);
+    const ex::any_scheduler    casched(cisched);
 
     return isched == isched && asched == asched && asched == isched && isched == asched && asched == cisched &&
                    cisched == casched && !(cisched != casched) && !(asched != isched)
