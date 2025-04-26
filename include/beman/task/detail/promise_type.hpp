@@ -117,12 +117,6 @@ struct promise_type : ::beman::task::detail::promise_base<::beman::task::detail:
         using receiver_concept = ::beman::execution::receiver_t;
         promise_type* self{};
         void set_value() && noexcept { std::coroutine_handle<promise_type>::from_promise(*this->self).resume(); }
-        void set_error(auto&&) && noexcept {
-            //-dk:TODO
-        }
-        void set_stopped() && noexcept {
-            //-dk:TODO
-        }
     };
     struct connector {
         decltype(::beman::execution::connect(
