@@ -5,12 +5,19 @@ add_library(beman::task ALIAS beman.task)
 
 target_sources(beman.task PRIVATE task.cpp)
 
+file(
+    GLOB DETAIL_HEADERS
+    "${PROJECT_SOURCE_DIR}/include/beman/task/detail/*.hpp"
+)
+
 target_sources(
     beman.task
     PUBLIC
         FILE_SET HEADERS
         BASE_DIRS ${PROJECT_SOURCE_DIR}/include
-        FILES ${PROJECT_SOURCE_DIR}/include/beman/task/task.hpp
+        FILES
+            ${PROJECT_SOURCE_DIR}/include/beman/task/task.hpp
+            ${DETAIL_HEADERS}
 )
 
 set_target_properties(beman.task PROPERTIES VERIFY_INTERFACE_HEADER_SETS ON)

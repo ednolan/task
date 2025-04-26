@@ -62,15 +62,44 @@ Build-time dependencies:
 
 ### How to build beman.task
 
+<!-- TODO: Apply all install related practices from exemplar into this repo. -->
+
 This project strives to be as normal and simple a CMake project as
 possible.  This build workflow in particular will work, producing
 a static `libbeman.task.a` library, ready to package with its
 headers:
 
 ```shell
-cmake --workflow --preset gcc-debug
-cmake --workflow --preset gcc-release
-cmake --install build/gcc-release --prefix /opt/beman.task
+# Build beman.task.
+$ cmake --workflow --preset gcc-debug
+$ cmake --workflow --preset gcc-release
+
+# Install beman.task into your system.
+$ cmake --install build/gcc-release/ --prefix /opt/beman.task/
+-- Install configuration: "RelWithDebInfo"
+-- Installing: /opt/beman.task/lib/libbeman.task.a
+-- Installing: /opt/beman.task/include/beman/task/task.hpp
+[...]
+
+$ tree /opt/beman.task/
+/opt/beman.task/
+├── include
+│   └── beman
+│       └── task
+│           ├── detail
+│           │   ├── affine_on.hpp
+│           │   ├── ...
+│           │   ├── task.hpp
+│           │   └── with_error.hpp
+│           └── task.hpp
+└── lib
+    ├── cmake
+    │   └── beman
+    │       └── task
+    │           └── BemanTaskConfig.cmake
+    └── libbeman.task.a
+
+9 directories, 26 files
 ```
 
 ## Contributing

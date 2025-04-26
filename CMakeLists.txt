@@ -27,6 +27,9 @@ option(
 
 include(FetchContent)
 include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+set(TARGETS_EXPORT_NAME ${CMAKE_PROJECT_NAME}Targets)
 
 FetchContent_Declare(
     execution
@@ -45,3 +48,20 @@ endif()
 if(BEMAN_LAZY_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
+
+# This will be used to replace @PACKAGE_cmakeModulesDir@
+set(cmakeModulesDir cmake/beman)
+configure_package_config_file(
+    cmake/Config.cmake.in
+    BemanTaskConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/beman/task/
+    PATH_VARS cmakeModulesDir
+    NO_SET_AND_CHECK_MACRO
+    NO_CHECK_REQUIRED_COMPONENTS_MACRO
+)
+
+install(
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/BemanTaskConfig.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/beman/task/
+    COMPONENT beman_task_development
+)
