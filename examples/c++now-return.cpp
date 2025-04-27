@@ -33,7 +33,7 @@ ex::task<int> int_return() { co_return 17; }
 ex::task<int, context> error_return() { co_return 17; }
 
 ex::task<int, empty_errors_context> no_error_return() { co_return 17; }
-}
+} // namespace
 
 int main() {
     ex::sync_wait(default_return());

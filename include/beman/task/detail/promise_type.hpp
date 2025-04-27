@@ -192,8 +192,7 @@ struct promise_type : ::beman::task::detail::promise_base<::beman::task::detail:
             return ::beman::execution::as_awaitable(std::forward<Sender>(sender), *this);
         else
             return ::beman::execution::as_awaitable(
-                ::beman::task::affine_on(::std::forward<Sender>(sender), ::std::forward<Scheduler>(sched)),
-                *this);
+                ::beman::task::affine_on(::std::forward<Sender>(sender), ::std::forward<Scheduler>(sched)), *this);
     }
     template <::beman::execution::sender Sender>
     auto await_transform(Sender&& sender) noexcept {

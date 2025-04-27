@@ -12,9 +12,7 @@
 
 namespace {
 
-void unreachable(const char* message) {
-    assert(nullptr == message);
-}
+void unreachable(const char* message) { assert(nullptr == message); }
 
 struct void_receiver {
     using receiver_concept = ::beman::execution::receiver_t;

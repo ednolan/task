@@ -64,7 +64,7 @@ auto my_into_optional(S&& s) {
 #endif
         ;
 }
-}
+} // namespace
 
 int main() {
     queue<double> que;

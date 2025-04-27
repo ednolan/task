@@ -10,10 +10,8 @@ namespace ex = beman::execution;
 
 namespace {
 struct error_context {
-    using error_types = ex::completion_signatures<
-        ex::set_error_t(std::exception_ptr),
-        ex::set_error_t(std::error_code)
-    >;
+    using error_types =
+        ex::completion_signatures<ex::set_error_t(std::exception_ptr), ex::set_error_t(std::error_code)>;
 };
 
 ex::task<int, error_context> fun(int i) {
@@ -54,7 +52,7 @@ void print(const char* what, const E& e) {
     else
         std::cout << what << "(" << e << ")\n";
 }
-}
+} // namespace
 
 int main() {
     for (int i{}; i != 5; ++i) {

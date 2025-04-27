@@ -74,7 +74,7 @@ ex::task<> expected() {
     print_expected("expected without value=", u);
 }
 #endif
-}
+} // namespace
 
 int main() {
     ex::sync_wait(error_result());

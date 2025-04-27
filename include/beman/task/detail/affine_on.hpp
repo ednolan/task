@@ -58,10 +58,8 @@ struct affine_on_t::sender {
         if constexpr (elide_schedule<env_t>) {
             return ::beman::execution::connect(this->upstream, ::std::forward<Receiver>(receiver));
         } else {
-            return ::beman::execution::connect(
-                ::beman::execution::continues_on(this->upstream, this->scheduler),
-                ::std::forward<Receiver>(receiver)
-            );
+            return ::beman::execution::connect(::beman::execution::continues_on(this->upstream, this->scheduler),
+                                               ::std::forward<Receiver>(receiver));
         }
     }
     template <::beman::execution::receiver Receiver>
@@ -72,8 +70,7 @@ struct affine_on_t::sender {
         } else {
             return ::beman::execution::connect(
                 ::beman::execution::continues_on(::std::move(this->upstream), ::std::move(this->scheduler)),
-                ::std::forward<Receiver>(receiver)
-            );
+                ::std::forward<Receiver>(receiver));
         }
     }
 };

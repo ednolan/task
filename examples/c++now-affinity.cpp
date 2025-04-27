@@ -19,12 +19,12 @@ namespace ex = beman::execution;
 namespace {
 class thread_context {
     struct base {
-        virtual void do_run() = 0;
-        base()                = default;
-        base(const base&)          = delete;
-        base(base&&)          = delete;
-        base& operator=(const base&)          = delete;
-        base& operator=(base&&)          = delete;
+        virtual void do_run()        = 0;
+        base()                       = default;
+        base(const base&)            = delete;
+        base(base&&)                 = delete;
+        base& operator=(const base&) = delete;
+        base& operator=(base&&)      = delete;
 
       protected:
         virtual ~base() = default;
@@ -58,16 +58,16 @@ class thread_context {
     }
 
   public:
-    thread_context()                 = default;
-    thread_context(thread_context const&) = delete;
-    thread_context(thread_context&&) = delete;
+    thread_context()                      = default;
+    thread_context(const thread_context&) = delete;
+    thread_context(thread_context&&)      = delete;
     ~thread_context() {
         this->source.request_stop();
         this->condition.notify_one();
         this->thread.join();
     }
-    thread_context& operator=(thread_context const&) = delete;
-    thread_context& operator=(thread_context&&) = delete;
+    thread_context& operator=(const thread_context&) = delete;
+    thread_context& operator=(thread_context&&)      = delete;
 
     void enqueue(base* work) noexcept {
         {
@@ -152,16 +152,15 @@ ex::task<void, inline_context> work3(auto sched) {
     co_await (ex::schedule(sched) | ex::then([] { std::cout << "then id  =" << std::this_thread::get_id() << "\n"; }));
     std::cout << "after id =" << std::this_thread::get_id() << "\n\n";
 }
-}
+} // namespace
 
 int main() {
     try {
-    thread_context context;
-    ex::sync_wait(work1(context.get_scheduler()));
-    ex::sync_wait(work2(context.get_scheduler()));
-    ex::sync_wait(work3(context.get_scheduler()));
-    }
-    catch (...) {
+        thread_context context;
+        ex::sync_wait(work1(context.get_scheduler()));
+        ex::sync_wait(work2(context.get_scheduler()));
+        ex::sync_wait(work3(context.get_scheduler()));
+    } catch (...) {
         std::cout << "ERROR: unexpected exception\n";
     }
 }

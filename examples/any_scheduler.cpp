@@ -14,8 +14,8 @@ int main() {
     ex::any_scheduler          asched(isched);
     const ex::any_scheduler    casched(cisched);
 
-    return asched == isched && isched == asched && asched == cisched &&
-                   cisched == casched && !(cisched != casched) && !(asched != isched)
+    return asched == isched && isched == asched && asched == cisched && cisched == casched && !(cisched != casched) &&
+                   !(asched != isched)
                ? EXIT_SUCCESS
                : EXIT_FAILURE;
 }
