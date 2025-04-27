@@ -26,14 +26,14 @@ struct value {
     ~value()                                       = default;
     value& operator=(value&& other)                = delete;
     value& operator=(const value& other)           = delete;
-    bool operator==(const value&) const noexcept = default;
+    bool   operator==(const value&) const noexcept = default;
 };
 // ----------------------------------------------------------------------------
 struct immovable_base {
-    immovable_base()                 = default;
+    immovable_base()                                 = default;
     immovable_base(const immovable_base&)            = delete;
-    immovable_base(immovable_base&&) = delete;
-    virtual ~immovable_base()        = default;
+    immovable_base(immovable_base&&)                 = delete;
+    virtual ~immovable_base()                        = default;
     immovable_base& operator=(const immovable_base&) = delete;
     immovable_base& operator=(immovable_base&&)      = delete;
 
@@ -53,13 +53,13 @@ struct immovable_big : immovable_base {
 };
 // ----------------------------------------------------------------------------
 struct copyable_base {
-    copyable_base()                     = default;
-    copyable_base(copyable_base&&)      = default;
-    copyable_base(const copyable_base&) = delete;
-    virtual ~copyable_base()            = default;
+    copyable_base()                                = default;
+    copyable_base(copyable_base&&)                 = default;
+    copyable_base(const copyable_base&)            = delete;
+    virtual ~copyable_base()                       = default;
     copyable_base& operator=(const copyable_base&) = default;
     copyable_base& operator=(copyable_base&&)      = default;
-    virtual void clone(void*) const     = 0;
+    virtual void   clone(void*) const              = 0;
 
     virtual int   ivalue() const = 0;
     virtual bool  bvalue() const = 0;
@@ -79,13 +79,13 @@ struct copyable_concrete : copyable_base {
 };
 // ----------------------------------------------------------------------------
 struct movable_base {
-    movable_base()                    = default;
-    movable_base(movable_base&&)      = default;
-    movable_base(const movable_base&) = delete;
-    virtual ~movable_base()           = default;
+    movable_base()                               = default;
+    movable_base(movable_base&&)                 = default;
+    movable_base(const movable_base&)            = delete;
+    virtual ~movable_base()                      = default;
     movable_base& operator=(movable_base&&)      = default;
     movable_base& operator=(const movable_base&) = delete;
-    virtual void move(void*)          = 0;
+    virtual void  move(void*)                    = 0;
 
     virtual int   ivalue() const = 0;
     virtual bool  bvalue() const = 0;
@@ -105,14 +105,14 @@ struct movable_concrete : movable_base {
 };
 // ----------------------------------------------------------------------------
 struct both_base {
-    both_base()                     = default;
-    both_base(both_base&&)          = default;
-    both_base(const both_base&)     = delete;
-    virtual ~both_base()            = default;
+    both_base()                              = default;
+    both_base(both_base&&)                   = default;
+    both_base(const both_base&)              = delete;
+    virtual ~both_base()                     = default;
     both_base&   operator=(both_base&&)      = default;
     both_base&   operator=(const both_base&) = delete;
-    virtual void move(void*)        = 0;
-    virtual void clone(void*) const = 0;
+    virtual void move(void*)                 = 0;
+    virtual void clone(void*) const          = 0;
 
     virtual int   ivalue() const = 0;
     virtual bool  bvalue() const = 0;
@@ -133,10 +133,10 @@ struct both_concrete : both_base {
 };
 // ----------------------------------------------------------------------------
 struct equals_base {
-    equals_base()              = default;
+    equals_base()                              = default;
     equals_base(const equals_base&)            = delete;
-    equals_base(equals_base&&) = delete;
-    virtual ~equals_base()     = default;
+    equals_base(equals_base&&)                 = delete;
+    virtual ~equals_base()                     = default;
     equals_base& operator=(const equals_base&) = delete;
     equals_base& operator=(equals_base&&)      = delete;
 
@@ -150,9 +150,9 @@ struct equals_concrete : equals_base {
     int  ival{};
     bool bval{};
     explicit equals_concrete(int v = 0, bool b = false) : ival(v), bval(b) {}
-    int          ivalue() const override { return this->ival; }
-    bool         bvalue() const override { return this->bval; }
-    bool         equals(const equals_base* other) const override {
+    int  ivalue() const override { return this->ival; }
+    bool bvalue() const override { return this->bval; }
+    bool equals(const equals_base* other) const override {
         const auto* o{dynamic_cast<const equals_concrete*>(other)};
         return o && *this == *o;
     }

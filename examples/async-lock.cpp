@@ -19,10 +19,10 @@ struct queue {
         notify()                              = default;
         notify(const notify&)                 = delete;
         notify(notify&&)                      = delete;
-        virtual ~notify()          = default;
+        virtual ~notify()                     = default;
         notify&      operator=(const notify&) = delete;
         notify&      operator=(notify&&)      = delete;
-        virtual void complete(int) = 0;
+        virtual void complete(int)            = 0;
     };
 
     std::mutex                           mutex;

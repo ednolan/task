@@ -33,10 +33,10 @@ struct thread_context {
         base()                              = default;
         base(base&&)                        = delete;
         base(const base&)                   = delete;
-        virtual ~base()         = default;
+        virtual ~base()                     = default;
         base&        operator=(base&&)      = delete;
         base&        operator=(const base&) = delete;
-        virtual void complete() = 0;
+        virtual void complete()             = 0;
     };
 
     std::mutex              mutex;

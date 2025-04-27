@@ -32,10 +32,10 @@ struct context {
         env_base()                             = default;
         env_base(const env_base&)              = delete;
         env_base(env_base&&)                   = delete;
-        virtual ~env_base()              = default;
+        virtual ~env_base()                    = default;
         env_base&   operator=(const env_base&) = delete;
         env_base&   operator=(env_base&&)      = delete;
-        virtual int do_get_value() const = 0;
+        virtual int do_get_value() const       = 0;
     };
     template <typename Env>
     struct env_type : env_base {

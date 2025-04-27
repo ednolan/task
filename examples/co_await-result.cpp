@@ -9,7 +9,7 @@
 namespace ex = beman::execution;
 
 namespace {
-void unreachable(const char* msg) { assert(nullptr == msg); }
+void unreachable([[maybe_unused]] const char* msg) { assert(nullptr == msg); }
 } // namespace
 // ----------------------------------------------------------------------------
 
