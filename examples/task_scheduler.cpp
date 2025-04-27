@@ -1,4 +1,4 @@
-// examples/any_scheduler.cpp                                         -*-C++-*-
+// examples/task_scheduler.cpp                                         -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/task/task.hpp>
@@ -11,8 +11,8 @@ namespace ex = beman::execution;
 int main() {
     ex::inline_scheduler       isched;
     const ex::inline_scheduler cisched;
-    ex::any_scheduler          asched(isched);
-    const ex::any_scheduler    casched(cisched);
+    ex::task_scheduler         asched(isched);
+    const ex::task_scheduler   casched(cisched);
 
     return asched == isched && isched == asched && asched == cisched && cisched == casched && !(cisched != casched) &&
                    !(asched != isched)

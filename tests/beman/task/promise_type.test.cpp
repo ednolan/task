@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/task/detail/promise_type.hpp>
-#include <beman/task/detail/any_scheduler.hpp>
+#include <beman/task/detail/task_scheduler.hpp>
 #include <beman/execution/execution.hpp>
 #ifdef NDEBUG
 #undef NDEBUG
@@ -151,8 +151,8 @@ struct test_task : beman::task::detail::state_base<context> {
     stop_token_type do_get_stop_token() override { return this->source.get_token(); }
     context&        do_get_context() override { return this->ctxt; }
 
-    beman::task::detail::any_scheduler scheduler{beman::task::detail::inline_scheduler{}};
-    beman::task::detail::any_scheduler query(beman::execution::get_scheduler_t) const noexcept {
+    beman::task::detail::task_scheduler scheduler{beman::task::detail::inline_scheduler{}};
+    beman::task::detail::task_scheduler query(beman::execution::get_scheduler_t) const noexcept {
         return this->scheduler;
     }
 };
@@ -198,7 +198,7 @@ void test_initial_scheduler() {
         assert(expect == std::this_thread::get_id());
         co_return 0;
     }(id)};
-    coro.scheduler = beman::task::detail::any_scheduler(pool.get_scheduler());
+    coro.scheduler = beman::task::detail::task_scheduler(pool.get_scheduler());
     coro.run();
 }
 } // namespace

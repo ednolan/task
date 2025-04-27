@@ -1,6 +1,6 @@
 #-dk: note to self: PATH=/opt/llvm-19.1.6/bin:$PATH LDFLAGS=-fuse-ld=lld
 
-.PHONY: config test default compile clean doc format tidy
+.PHONY: config test default compile clean distclean doc format tidy
 
 BUILDDIR = build
 PRESET  = gcc-debug
@@ -39,3 +39,6 @@ test: compile
 
 clean:
 	cmake --build $(BUILD) --target clean
+
+distclean:
+	$(RM) -r $(BUILDDIR)

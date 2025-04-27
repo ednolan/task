@@ -4,7 +4,7 @@
 #ifndef INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_SCHEDULER_OF
 #define INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_SCHEDULER_OF
 
-#include <beman/task/detail/any_scheduler.hpp>
+#include <beman/task/detail/task_scheduler.hpp>
 #include <beman/execution/execution.hpp>
 
 // ----------------------------------------------------------------------------
@@ -17,7 +17,7 @@ namespace beman::task::detail {
  */
 template <typename>
 struct scheduler_of {
-    using type = ::beman::task::detail::any_scheduler;
+    using type = ::beman::task::detail::task_scheduler;
 };
 template <typename Context>
     requires requires { typename Context::scheduler_type; }

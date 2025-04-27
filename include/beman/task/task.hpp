@@ -5,7 +5,7 @@
 #define INCLUDED_INCLUDE_BEMAN_LAZY_TASK
 
 #include <beman/task/detail/allocator_of.hpp>
-#include <beman/task/detail/any_scheduler.hpp>
+#include <beman/task/detail/task_scheduler.hpp>
 #include <beman/task/detail/inline_scheduler.hpp>
 #include <beman/task/detail/into_optional.hpp>
 #include <beman/task/detail/task.hpp>
@@ -22,7 +22,7 @@ using scheduler_of_t = ::beman::task::detail::scheduler_of_t<Context>;
 template <typename Context>
 using stop_source_of_t = ::beman::task::detail::stop_source_of_t<Context>;
 
-using any_scheduler    = ::beman::task::detail::any_scheduler;
+using task_scheduler   = ::beman::task::detail::task_scheduler;
 using inline_scheduler = ::beman::task::detail::inline_scheduler;
 using into_optional_t  = ::beman::task::detail::into_optional_t;
 using ::beman::task::detail::into_optional;
@@ -39,7 +39,7 @@ using scheduler_of_t = ::beman::task::detail::scheduler_of_t<Context>;
 template <typename Context>
 using stop_source_of_t = ::beman::task::detail::stop_source_of_t<Context>;
 
-using any_scheduler    = ::beman::task::detail::any_scheduler;
+using task_scheduler   = ::beman::task::detail::task_scheduler;
 using inline_scheduler = ::beman::task::detail::inline_scheduler;
 using into_optional_t  = ::beman::task::detail::into_optional_t;
 using ::beman::task::detail::into_optional;

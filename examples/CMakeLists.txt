@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 set(ALL_EXAMPLES
-    any_scheduler
+    task_scheduler
     c++now-basic
     c++now-result-types
     c++now-errors

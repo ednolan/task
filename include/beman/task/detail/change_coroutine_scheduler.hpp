@@ -5,7 +5,7 @@
 #define INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_CHANGE_COROUTINE_SCHEDULER
 
 #include <beman/execution/execution.hpp>
-#include <beman/task/detail/any_scheduler.hpp>
+#include <beman/task/detail/task_scheduler.hpp>
 #include <coroutine>
 #include <type_traits>
 
@@ -29,7 +29,7 @@ struct change_coroutine_scheduler {
     type await_resume() { return this->scheduler; }
 };
 template <::beman::execution::scheduler S>
-change_coroutine_scheduler(S&&) -> change_coroutine_scheduler<::beman::task::detail::any_scheduler>;
+change_coroutine_scheduler(S&&) -> change_coroutine_scheduler<::beman::task::detail::task_scheduler>;
 } // namespace beman::task::detail
 
 // ----------------------------------------------------------------------------

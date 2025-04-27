@@ -1,7 +1,7 @@
-// tests/beman/task/any_scheduler.test.cpp                            -*-C++-*-
+// tests/beman/task/task_scheduler.test.cpp                            -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#include <beman/task/detail/any_scheduler.hpp>
+#include <beman/task/detail/task_scheduler.hpp>
 #include <beman/task/detail/inline_scheduler.hpp>
 #include <beman/execution/execution.hpp>
 #include <beman/execution/stop_token.hpp>
@@ -201,7 +201,7 @@ static_assert(ex::receiver<stop_receiver<ex::inplace_stop_token>>);
 
 int main() {
     try {
-        static_assert(ex::scheduler<ly::detail::any_scheduler>);
+        static_assert(ex::scheduler<ly::detail::task_scheduler>);
 
         thread_context ctxt1;
         thread_context ctxt2;
@@ -210,16 +210,16 @@ int main() {
         assert(ctxt2.get_scheduler() == ctxt2.get_scheduler());
         assert(ctxt1.get_scheduler() != ctxt2.get_scheduler());
 
-        ly::detail::any_scheduler sched1(ctxt1.get_scheduler());
-        ly::detail::any_scheduler sched2(ctxt2.get_scheduler());
+        ly::detail::task_scheduler sched1(ctxt1.get_scheduler());
+        ly::detail::task_scheduler sched2(ctxt2.get_scheduler());
         assert(sched1 == sched1);
         assert(sched2 == sched2);
         assert(sched1 != sched2);
 
-        ly::detail::any_scheduler copy(sched1);
+        ly::detail::task_scheduler copy(sched1);
         assert(copy == sched1);
         assert(copy != sched2);
-        ly::detail::any_scheduler move(std::move(copy));
+        ly::detail::task_scheduler move(std::move(copy));
         assert(move == sched1);
         assert(move != sched2);
 
@@ -236,9 +236,9 @@ int main() {
         ex::sync_wait(ex::schedule(sched1) | ex::then([&id1]() { id1 = std::this_thread::get_id(); }));
         ex::sync_wait(ex::schedule(sched2) | ex::then([&id2]() { id2 = std::this_thread::get_id(); }));
         assert(id1 != id2);
-        ex::sync_wait(ex::schedule(ly::detail::any_scheduler(sched1)) |
+        ex::sync_wait(ex::schedule(ly::detail::task_scheduler(sched1)) |
                       ex::then([&id1]() { assert(id1 == std::this_thread::get_id()); }));
-        ex::sync_wait(ex::schedule(ly::detail::any_scheduler(sched2)) |
+        ex::sync_wait(ex::schedule(ly::detail::task_scheduler(sched2)) |
                       ex::then([&id2]() { assert(id2 == std::this_thread::get_id()); }));
 
         {
@@ -288,7 +288,7 @@ int main() {
             ex::inplace_stop_source source;
             stop_result             result{stop_result::none};
             auto                    state{ex::connect(
-                ex::schedule(ly::detail::any_scheduler(ctxt1.get_scheduler(thread_context::complete::never))),
+                ex::schedule(ly::detail::task_scheduler(ctxt1.get_scheduler(thread_context::complete::never))),
                 stop_receiver{source.get_token(), result})};
             assert(result == stop_result::none);
             ex::start(state);
@@ -300,7 +300,7 @@ int main() {
             ex::stop_source source;
             stop_result     result{stop_result::none};
             auto            state{ex::connect(
-                ex::schedule(ly::detail::any_scheduler(ctxt1.get_scheduler(thread_context::complete::never))),
+                ex::schedule(ly::detail::task_scheduler(ctxt1.get_scheduler(thread_context::complete::never))),
                 stop_receiver{source.get_token(), result})};
             assert(result == stop_result::none);
             ex::start(state);
@@ -312,7 +312,7 @@ int main() {
             std::latch  completed{1};
             stop_result result{stop_result::none};
             auto        state{ex::connect(
-                ex::schedule(ly::detail::any_scheduler(ctxt1.get_scheduler(thread_context::complete::success))),
+                ex::schedule(ly::detail::task_scheduler(ctxt1.get_scheduler(thread_context::complete::success))),
                 stop_receiver{ex::never_stop_token(), result, &completed})};
             assert(result == stop_result::none);
             ex::start(state);

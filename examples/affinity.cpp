@@ -34,7 +34,7 @@ int main() {
     ex::sync_wait(ex::just() | ex::then([]() noexcept { std::cout << "main:" << fmt_id << "\n"; }));
     ex::sync_wait(ex::schedule(pool.get_scheduler()) |
                   ex::then([]() noexcept { std::cout << "pool:" << fmt_id << "\n"; }));
-    ex::sync_wait(ex::schedule(ex::any_scheduler(pool.get_scheduler())) |
+    ex::sync_wait(ex::schedule(ex::task_scheduler(pool.get_scheduler())) |
                   ex::then([]() noexcept { std::cout << "any: " << fmt_id << "\n"; }));
     ex::sync_wait([]() -> ex::task<void> {
         std::cout << "coro:" << fmt_id << "\n";

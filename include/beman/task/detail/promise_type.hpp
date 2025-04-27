@@ -98,9 +98,9 @@ struct optional_ref_scheduler {
     sender   schedule() const noexcept { return {this->sched}; }
     bool     operator==(const optional_ref_scheduler&) const = default;
 };
-static_assert(::beman::execution::scheduler<::beman::task::detail::any_scheduler>);
+static_assert(::beman::execution::scheduler<::beman::task::detail::task_scheduler>);
 static_assert(::beman::execution::scheduler<::beman::task::detail::inline_scheduler>);
-static_assert(::beman::execution::scheduler<optional_ref_scheduler<::beman::task::detail::any_scheduler>>);
+static_assert(::beman::execution::scheduler<optional_ref_scheduler<::beman::task::detail::task_scheduler>>);
 static_assert(::beman::execution::scheduler<optional_ref_scheduler<::beman::task::detail::inline_scheduler>>);
 
 template <typename Coroutine, typename T, typename C>
@@ -120,9 +120,9 @@ struct promise_type : ::beman::task::detail::promise_base<::beman::task::detail:
     };
     struct connector {
         decltype(::beman::execution::connect(
-            ::beman::execution::schedule(::std::declval<::beman::task::detail::any_scheduler>()),
+            ::beman::execution::schedule(::std::declval<::beman::task::detail::task_scheduler>()),
             ::std::declval<receiver>())) state;
-        connector(::beman::task::detail::any_scheduler scheduler, receiver rcvr)
+        connector(::beman::task::detail::task_scheduler scheduler, receiver rcvr)
             : state(::beman::execution::connect(::beman::execution::schedule(::std::move(scheduler)),
                                                 ::std::move(rcvr))) {}
     };
