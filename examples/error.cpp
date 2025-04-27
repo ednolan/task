@@ -8,6 +8,7 @@
 
 namespace ex = beman::execution;
 
+namespace {
 struct error_context {
     using error_types = ex::completion_signatures<
         ex::set_error_t(std::exception_ptr),
@@ -39,14 +40,6 @@ ex::task<int, error_context> fun(int i) {
         // successful return of a value
         co_return 17;
     case 4:
-        // The coroutine completes with set_error(std::error_code{...})
-        // not pursued: co_return ex::with_error(std::make_error_code(std::errc::io_error));
-        break;
-
-    case 5:
-        //not pursued co_await ex::with_error(std::make_error_code(std::errc::io_error));
-        break;
-    case 6:
         co_yield ex::with_error(std::make_error_code(std::errc::io_error));
         break;
     }
@@ -54,18 +47,20 @@ ex::task<int, error_context> fun(int i) {
     co_return 0;
 }
 
-void print(const char* what, auto e) {
-    if constexpr (std::same_as<std::exception_ptr, decltype(e)>)
+template <typename E>
+void print(const char* what, const E& e) {
+    if constexpr (std::same_as<std::exception_ptr, E>)
         std::cout << what << "(exception_ptr)\n";
     else
         std::cout << what << "(" << e << ")\n";
 }
+}
 
 int main() {
-    for (int i{}; i != 7; ++i) {
+    for (int i{}; i != 5; ++i) {
         std::cout << "i=" << i << " ";
         ex::sync_wait(fun(i) | ex::then([](auto e) { print("then", e); }) |
-                      ex::upon_error([](auto e) { print("upon_error", e); }) |
+                      ex::upon_error([](const auto& e) { print("upon_error", e); }) |
                       ex::upon_stopped([] { std::cout << "stopped\n"; }));
     }
 }

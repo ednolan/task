@@ -9,6 +9,8 @@ namespace ex = beman::execution;
 
 // ----------------------------------------------------------------------------
 
+namespace {
+
 struct E {};
 struct F {};
 
@@ -31,12 +33,13 @@ ex::task<int> int_return() { co_return 17; }
 ex::task<int, context> error_return() { co_return 17; }
 
 ex::task<int, empty_errors_context> no_error_return() { co_return 17; }
+}
 
 int main() {
     ex::sync_wait(default_return());
     ex::sync_wait(void_return());
-    [[maybe_unused]] auto [n] = *ex::sync_wait(int_return());
+    [[maybe_unused]] auto [n] = ex::sync_wait(int_return()).value_or(std::tuple(0));
     std::cout << "n=" << n << "\n";
-    [[maybe_unused]] auto [e] = *ex::sync_wait(error_return());
-    [[maybe_unused]] auto [x] = *ex::sync_wait(no_error_return());
+    [[maybe_unused]] auto [e] = ex::sync_wait(error_return()).value_or(std::tuple(0));
+    [[maybe_unused]] auto [x] = ex::sync_wait(no_error_return()).value_or(std::tuple(0));
 }

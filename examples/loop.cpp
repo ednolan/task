@@ -8,7 +8,7 @@
 
 namespace ex = beman::execution;
 
-ex::task<void> loop() {
+static ex::task<void> loop() {
     for (int i{}; i < 1000000; ++i)
         co_await ex::just(i);
 }

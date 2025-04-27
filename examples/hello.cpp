@@ -8,8 +8,8 @@
 namespace ex = beman::execution;
 
 int main() {
-    return std::get<0>(*ex::sync_wait([]() -> ex::task<int> {
+    return std::get<0>(ex::sync_wait([]() -> ex::task<int> {
         std::cout << "Hello, world!\n";
         co_return co_await ex::just(0);
-    }()));
+    }()).value_or(std::tuple(-1)));
 }

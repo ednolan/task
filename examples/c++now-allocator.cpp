@@ -14,7 +14,7 @@ struct with_allocator {
     using allocator_type = std::pmr::polymorphic_allocator<std::byte>;
 };
 
-ex::task<void, with_allocator> coro(int value, auto&&...) {
+static ex::task<void, with_allocator> coro(int value, auto&&...) {
     co_await ex::just(value);
     [[maybe_unused]] auto alloc = ex::read_env(ex::get_allocator);
 }

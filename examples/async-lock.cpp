@@ -69,6 +69,7 @@ struct request {
 void stop(queue& q) { ex::sync_wait(request{0, q}); }
 
 int main(int ac, char* av[]) {
+    try {
     queue q{};
 
     std::thread process([&q] {
@@ -95,4 +96,8 @@ int main(int ac, char* av[]) {
     }
     process.join();
     std::cout << "done\n";
+    }
+    catch(...) {
+        std::cout << "ERROR: unexpected exception\n";
+    }
 }

@@ -8,6 +8,11 @@
 
 namespace ex = beman::execution;
 
+namespace {
+    void unreachable(const char* msg) {
+        assert(nullptr == msg);
+    }
+}
 // ----------------------------------------------------------------------------
 
 int main() {
@@ -20,7 +25,7 @@ int main() {
         assert(i == 17 && b == true && c == 'c');
         try {
             co_await ex::just_error(-1); // exception
-            assert(nullptr == +"never reached");
+            unreachable("co_await just_error(...) result in an exception");
         } catch ([[maybe_unused]] int e) {
             assert(e == -1);
         }
@@ -28,8 +33,9 @@ int main() {
         try {
             co_await ex::just_stopped();
         } catch (...) {
+            unreachable("co_await just_stopped(...) doesn't result in an exception");
         } // cancel: never resumed
-        assert(nullptr == +"never reached");
+        unreachable("co_await just_stopped(...) result in the coroutine not to be resumed");
     }());
     assert(not o);
     std::cout << "done\n";

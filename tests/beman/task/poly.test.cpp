@@ -175,7 +175,7 @@ void test_poly_move(ex::detail::poly<Base> p, ex::detail::poly<Base> o, auto mov
     auto v = p->vvalue();
 
     ex::detail::poly<Base> q(std::move(p));
-    assert(moved_from == p->vvalue());
+    assert(moved_from == p->vvalue()); // NOLINT(clang-analyzer-cplusplus.Move)
     assert(i == q->ivalue());
     assert(b == q->bvalue());
     assert(v == q->vvalue());
@@ -184,7 +184,7 @@ void test_poly_move(ex::detail::poly<Base> p, ex::detail::poly<Base> o, auto mov
     assert(b != o->bvalue());
     assert(v != o->vvalue());
     o = std::move(q);
-    assert(moved_from == q->vvalue());
+    assert(moved_from == q->vvalue()); // NOLINT(clang-analyzer-cplusplus.Move)
     assert(i == o->ivalue());
     assert(b == o->bvalue());
     assert(v == o->vvalue());

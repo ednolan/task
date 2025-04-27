@@ -9,6 +9,7 @@ namespace ex = beman::execution;
 
 // ----------------------------------------------------------------------------
 
+namespace {
 struct E {
     int value;
 };
@@ -34,18 +35,19 @@ ex::task<int, ctxt> call(int v) {
         co_yield ex::with_error(-1);
     co_return 2 * v;
 }
+}
 
 int main(int ac, char*[]) {
     for (int i{}; i != 3; ++i) {
-        auto [r] = *ex::sync_wait(error_return(i) | ex::upon_error([](auto x) {
+        auto [r] = ex::sync_wait(error_return(i) | ex::upon_error([](auto x) {
                                       std::cout << "error: " << x.value << "\n";
                                       return -1;
-                                  }));
+                                  })).value_or(std::tuple(0));
         std::cout << i << ": r=" << r << "\n";
     }
 
-    [[maybe_unused]] auto [n] = *ex::sync_wait(call(ac) | ex::upon_error([](int e) {
+    [[maybe_unused]] auto [n] = ex::sync_wait(call(ac) | ex::upon_error([](int e) {
                                                    std::cout << "error(" << e << "\n";
                                                    return -1;
-                                               }));
+                                               })).value_or(std::tuple(0));
 }

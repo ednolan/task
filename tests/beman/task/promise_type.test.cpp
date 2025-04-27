@@ -21,6 +21,9 @@ namespace ex = beman::execution;
 // ----------------------------------------------------------------------------
 
 namespace {
+    void unreachable(const char* msg) {
+        assert(nullptr == msg);
+    }
 struct thread_pool {
 
     struct node {
@@ -108,8 +111,9 @@ static_assert(ex::scheduler<thread_pool::scheduler>);
 
 struct context {};
 
-struct test_error {
+struct test_error: std::exception {
     int value;
+    test_error(int v): value(v) {}
 };
 
 struct test_task : beman::task::detail::state_base<context> {
@@ -165,7 +169,7 @@ struct exception_receiver {
 
 void test_exception() {
     auto coro{[]() -> test_task {
-        throw test_error{17};
+        throw test_error(17);
         co_return 0;
     }()};
     coro.run();
@@ -192,6 +196,11 @@ void test_initial_scheduler() {
 } // namespace
 
 int main() {
+    try {
     test_exception();
     test_initial_scheduler();
+    }
+    catch (...) {
+        unreachable("no exception should escape to main");
+    }
 }
