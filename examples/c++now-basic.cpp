@@ -19,8 +19,8 @@ ex::task<> await_sender() {
     [[maybe_unused]] auto [m, b] = co_await ex::just(1, true);
     try {
         co_await ex::just_error(1);
-    } catch (int n) {
-        std::cout << "caught " << n << '\n';
+    } catch (int e) {
+        std::cout << "caught " << e << '\n';
     }
     co_await ex::just_stopped();
 }
