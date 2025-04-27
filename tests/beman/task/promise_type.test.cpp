@@ -53,7 +53,7 @@ struct thread_pool {
         }
     }};
 
-    thread_pool() = default;
+    thread_pool()                   = default;
     thread_pool(const thread_pool&) = delete;
     thread_pool(thread_pool&&)      = delete;
     ~thread_pool() {
@@ -62,7 +62,7 @@ struct thread_pool {
     }
     thread_pool& operator=(const thread_pool&) = delete;
     thread_pool& operator=(thread_pool&&)      = delete;
-    void stop() {
+    void         stop() {
         {
             std::lock_guard cerberus(this->mutex);
             stopped = true;
