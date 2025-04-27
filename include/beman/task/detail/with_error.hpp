@@ -20,7 +20,7 @@ struct with_error {
     type error;
 
     template <typename EE>
-    with_error(EE&& e) : error(::std::forward<EE>(e)) {}
+    with_error(EE&& e) noexcept(noexcept(type(::std::forward<EE>(e)))) : error(::std::forward<EE>(e)) {}
     // the members below are only need for co_await with_error{...}
     static constexpr bool await_ready() noexcept { return false; }
     template <typename Promise>

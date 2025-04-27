@@ -23,11 +23,19 @@ namespace ly = beman::task;
 // ----------------------------------------------------------------------------
 
 namespace {
+
+void unreachable(const char* msg) { assert(nullptr == msg); }
+
 struct thread_context {
-    enum class complete { success, failure, exception, never };
+    enum class complete : char { success, failure, exception, never };
     struct base {
         base* next{};
+        base()                              = default;
+        base(base&&)                        = delete;
+        base(const base&)                   = delete;
         virtual ~base()         = default;
+        base&        operator=(base&&)      = delete;
+        base&        operator=(const base&) = delete;
         virtual void complete() = 0;
     };
 
@@ -60,10 +68,14 @@ struct thread_context {
                   w->complete();
               }
           }) {}
+    thread_context(thread_context&&)      = delete;
+    thread_context(const thread_context&) = delete;
     ~thread_context() {
         this->stop();
         this->thread.join();
     }
+    thread_context& operator=(thread_context&&)      = delete;
+    thread_context& operator=(const thread_context&) = delete;
 
     struct scheduler {
         using scheduler_concept = ex::scheduler_t;
@@ -146,7 +158,7 @@ struct thread_context {
     }
 };
 
-enum class stop_result { none, success, failure, stopped };
+enum class stop_result : char { none, success, failure, stopped };
 template <typename Token>
 struct stop_env {
     Token token;
@@ -188,120 +200,125 @@ static_assert(ex::receiver<stop_receiver<ex::inplace_stop_token>>);
 // ----------------------------------------------------------------------------
 
 int main() {
-    static_assert(ex::scheduler<ly::detail::any_scheduler>);
+    try {
+        static_assert(ex::scheduler<ly::detail::any_scheduler>);
 
-    thread_context ctxt1;
-    thread_context ctxt2;
+        thread_context ctxt1;
+        thread_context ctxt2;
 
-    assert(ctxt1.get_scheduler() == ctxt1.get_scheduler());
-    assert(ctxt2.get_scheduler() == ctxt2.get_scheduler());
-    assert(ctxt1.get_scheduler() != ctxt2.get_scheduler());
+        assert(ctxt1.get_scheduler() == ctxt1.get_scheduler());
+        assert(ctxt2.get_scheduler() == ctxt2.get_scheduler());
+        assert(ctxt1.get_scheduler() != ctxt2.get_scheduler());
 
-    ly::detail::any_scheduler sched1(ctxt1.get_scheduler());
-    ly::detail::any_scheduler sched2(ctxt2.get_scheduler());
-    assert(sched1 == sched1);
-    assert(sched2 == sched2);
-    assert(sched1 != sched2);
+        ly::detail::any_scheduler sched1(ctxt1.get_scheduler());
+        ly::detail::any_scheduler sched2(ctxt2.get_scheduler());
+        assert(sched1 == sched1);
+        assert(sched2 == sched2);
+        assert(sched1 != sched2);
 
-    ly::detail::any_scheduler copy(sched1);
-    assert(copy == sched1);
-    assert(copy != sched2);
-    ly::detail::any_scheduler move(std::move(copy));
-    assert(move == sched1);
-    assert(move != sched2);
+        ly::detail::any_scheduler copy(sched1);
+        assert(copy == sched1);
+        assert(copy != sched2);
+        ly::detail::any_scheduler move(std::move(copy));
+        assert(move == sched1);
+        assert(move != sched2);
 
-    copy = sched2;
-    assert(copy == sched2);
-    assert(copy != sched1);
+        copy = sched2;
+        assert(copy == sched2);
+        assert(copy != sched1);
 
-    move = std::move(copy);
-    assert(move == sched2);
-    assert(move != sched1);
+        move = std::move(copy);
+        assert(move == sched2);
+        assert(move != sched1);
 
-    std::atomic<std::thread::id> id1{};
-    std::atomic<std::thread::id> id2{};
-    ex::sync_wait(ex::schedule(sched1) | ex::then([&id1]() { id1 = std::this_thread::get_id(); }));
-    ex::sync_wait(ex::schedule(sched2) | ex::then([&id2]() { id2 = std::this_thread::get_id(); }));
-    assert(id1 != id2);
-    ex::sync_wait(ex::schedule(ly::detail::any_scheduler(sched1)) |
-                  ex::then([&id1]() { assert(id1 == std::this_thread::get_id()); }));
-    ex::sync_wait(ex::schedule(ly::detail::any_scheduler(sched2)) |
-                  ex::then([&id2]() { assert(id2 == std::this_thread::get_id()); }));
+        std::atomic<std::thread::id> id1{};
+        std::atomic<std::thread::id> id2{};
+        ex::sync_wait(ex::schedule(sched1) | ex::then([&id1]() { id1 = std::this_thread::get_id(); }));
+        ex::sync_wait(ex::schedule(sched2) | ex::then([&id2]() { id2 = std::this_thread::get_id(); }));
+        assert(id1 != id2);
+        ex::sync_wait(ex::schedule(ly::detail::any_scheduler(sched1)) |
+                      ex::then([&id1]() { assert(id1 == std::this_thread::get_id()); }));
+        ex::sync_wait(ex::schedule(ly::detail::any_scheduler(sched2)) |
+                      ex::then([&id2]() { assert(id2 == std::this_thread::get_id()); }));
 
-    {
-        bool success{false};
-        bool failed{false};
-        bool exception{false};
-        ex::sync_wait(ex::schedule(ctxt1.get_scheduler(thread_context::complete::failure)) |
-                      ex::then([&success] { success = true; }) | ex::upon_error([&failed, &exception](auto err) {
-                          if constexpr (std::same_as<decltype(err), std::error_code>)
-                              failed = true;
-                          else if constexpr (std::same_as<decltype(err), std::exception_ptr>)
-                              exception = true;
-                      }));
-        assert(not success);
-        assert(failed);
-        assert(not exception);
-    }
-    {
-        bool success{false};
-        bool failed{false};
-        bool exception{false};
-        ex::sync_wait(ex::schedule(ctxt1.get_scheduler(thread_context::complete::exception)) |
-                      ex::then([&success] { success = true; }) | ex::upon_error([&failed, &exception](auto err) {
-                          if constexpr (std::same_as<decltype(err), std::error_code>)
-                              failed = true;
-                          else if constexpr (std::same_as<decltype(err), std::exception_ptr>)
-                              exception = true;
-                      }));
-        assert(not success);
-        assert(not failed);
-        assert(exception);
-    }
-    {
-        ex::inplace_stop_source source;
-        stop_result             result{stop_result::none};
-        auto                    state{ex::connect(ex::schedule(ctxt1.get_scheduler(thread_context::complete::never)),
-                               stop_receiver{source.get_token(), result})};
-        assert(result == stop_result::none);
-        ex::start(state);
-        assert(result == stop_result::none);
-        source.request_stop();
-        assert(result == stop_result::stopped);
-    }
-    {
-        ex::inplace_stop_source source;
-        stop_result             result{stop_result::none};
-        auto                    state{
-            ex::connect(ex::schedule(ly::detail::any_scheduler(ctxt1.get_scheduler(thread_context::complete::never))),
-                        stop_receiver{source.get_token(), result})};
-        assert(result == stop_result::none);
-        ex::start(state);
-        assert(result == stop_result::none);
-        source.request_stop();
-        assert(result == stop_result::stopped);
-    }
-    {
-        ex::stop_source source;
-        stop_result     result{stop_result::none};
-        auto            state{
-            ex::connect(ex::schedule(ly::detail::any_scheduler(ctxt1.get_scheduler(thread_context::complete::never))),
-                        stop_receiver{source.get_token(), result})};
-        assert(result == stop_result::none);
-        ex::start(state);
-        assert(result == stop_result::none);
-        source.request_stop();
-        assert(result == stop_result::stopped);
-    }
-    {
-        std::latch  completed{1};
-        stop_result result{stop_result::none};
-        auto        state{ex::connect(
-            ex::schedule(ly::detail::any_scheduler(ctxt1.get_scheduler(thread_context::complete::success))),
-            stop_receiver{ex::never_stop_token(), result, &completed})};
-        assert(result == stop_result::none);
-        ex::start(state);
-        completed.wait();
-        assert(result == stop_result::success);
+        {
+            bool success{false};
+            bool failed{false};
+            bool exception{false};
+            ex::sync_wait(ex::schedule(ctxt1.get_scheduler(thread_context::complete::failure)) |
+                          ex::then([&success] { success = true; }) | ex::upon_error([&failed, &exception](auto err) {
+                              if constexpr (std::same_as<decltype(err), std::error_code>)
+                                  failed = true;
+                              else if constexpr (std::same_as<decltype(err), std::exception_ptr>)
+                                  exception = true;
+                          }));
+            assert(not success);
+            assert(failed);
+            assert(not exception);
+        }
+        {
+            bool success{false};
+            bool failed{false};
+            bool exception{false};
+            ex::sync_wait(ex::schedule(ctxt1.get_scheduler(thread_context::complete::exception)) |
+                          ex::then([&success] { success = true; }) |
+                          ex::upon_error([&failed, &exception]<typename E>(const E&) {
+                              if constexpr (std::same_as<E, std::error_code>)
+                                  failed = true;
+                              else if constexpr (std::same_as<E, std::exception_ptr>)
+                                  exception = true;
+                          }));
+            assert(not success);
+            assert(not failed);
+            assert(exception);
+        }
+        {
+            ex::inplace_stop_source source;
+            stop_result             result{stop_result::none};
+            auto state{ex::connect(ex::schedule(ctxt1.get_scheduler(thread_context::complete::never)),
+                                   stop_receiver{source.get_token(), result})};
+            assert(result == stop_result::none);
+            ex::start(state);
+            assert(result == stop_result::none);
+            source.request_stop();
+            assert(result == stop_result::stopped);
+        }
+        {
+            ex::inplace_stop_source source;
+            stop_result             result{stop_result::none};
+            auto                    state{ex::connect(
+                ex::schedule(ly::detail::any_scheduler(ctxt1.get_scheduler(thread_context::complete::never))),
+                stop_receiver{source.get_token(), result})};
+            assert(result == stop_result::none);
+            ex::start(state);
+            assert(result == stop_result::none);
+            source.request_stop();
+            assert(result == stop_result::stopped);
+        }
+        {
+            ex::stop_source source;
+            stop_result     result{stop_result::none};
+            auto            state{ex::connect(
+                ex::schedule(ly::detail::any_scheduler(ctxt1.get_scheduler(thread_context::complete::never))),
+                stop_receiver{source.get_token(), result})};
+            assert(result == stop_result::none);
+            ex::start(state);
+            assert(result == stop_result::none);
+            source.request_stop();
+            assert(result == stop_result::stopped);
+        }
+        {
+            std::latch  completed{1};
+            stop_result result{stop_result::none};
+            auto        state{ex::connect(
+                ex::schedule(ly::detail::any_scheduler(ctxt1.get_scheduler(thread_context::complete::success))),
+                stop_receiver{ex::never_stop_token(), result, &completed})};
+            assert(result == stop_result::none);
+            ex::start(state);
+            completed.wait();
+            assert(result == stop_result::success);
+        }
+    } catch (...) {
+        unreachable("no exception should escape to main");
     }
 }

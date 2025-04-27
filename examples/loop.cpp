@@ -8,10 +8,12 @@
 
 namespace ex = beman::execution;
 
-static ex::task<void> loop() {
+namespace {
+[[maybe_unused]] ex::task<void> loop() {
     for (int i{}; i < 1000000; ++i)
         co_await ex::just(i);
 }
+} // namespace
 
 int main(int ac, char* av[]) {
     auto count = ac < 1 && av[1] == std::string_view("run-it") ? 1000000 : 1000;

@@ -21,15 +21,21 @@ namespace ex = beman::execution;
 // ----------------------------------------------------------------------------
 
 namespace {
+
 void unreachable(const char* msg) { assert(nullptr == msg); }
+
 struct thread_pool {
 
     struct node {
-        node*        next;
+        node*        next{};
         virtual void run() = 0;
 
-      protected:
-        ~node() = default;
+        node()                       = default;
+        node(const node&)            = delete;
+        node(node&&)                 = delete;
+        virtual ~node()              = default;
+        node& operator=(const node&) = delete;
+        node& operator=(node&&)      = delete;
     };
 
     std::mutex              mutex;
@@ -111,7 +117,7 @@ struct context {};
 
 struct test_error : std::exception {
     int value;
-    test_error(int v) : value(v) {}
+    explicit test_error(int v) : value(v) {}
 };
 
 struct test_task : beman::task::detail::state_base<context> {
@@ -151,16 +157,16 @@ struct exception_receiver {
     using receiver_concept = beman::execution::receiver_t;
     bool& flag;
 
-    auto set_value(int) && noexcept { assert(nullptr == +"unexcepted set_value"); }
-    auto set_stopped() && noexcept { assert(nullptr == +"unexcepted set_stopped"); }
-    auto set_error(std::exception_ptr ex) && noexcept {
+    auto set_value(int) && noexcept { unreachable("unexcepted set_value"); }
+    auto set_stopped() && noexcept { unreachable("unexcepted set_stopped"); }
+    auto set_error(const std::exception_ptr& ex) && noexcept {
         flag = true;
         try {
             std::rethrow_exception(ex);
         } catch (const test_error& error) {
             assert(error.value == 17);
         } catch (...) {
-            assert(nullptr == +"unexpected exception");
+            unreachable("unexpected exception");
         }
     }
 };

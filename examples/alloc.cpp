@@ -1,6 +1,7 @@
 // examples/alloc.cpp                                                  -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#include <array>
 #include <iostream>
 #include <memory_resource>
 #include <cassert>
@@ -34,11 +35,11 @@ void operator delete(void* pointer, std::size_t size) noexcept {
 
 template <std::size_t Size>
 class fixed_resource : public std::pmr::memory_resource {
-    std::byte  buffer[Size];
-    std::byte* free{this->buffer};
+    std::array<std::byte, Size> buffer;
+    std::byte*                  free{this->buffer.data()};
 
     void* do_allocate(std::size_t size, std::size_t) override {
-        if (size <= std::size_t(buffer + Size - free)) {
+        if (size <= std::size_t(buffer.data() + Size - free)) {
             auto ptr{this->free};
             this->free += size;
             std::cout << "resource alloc(" << size << ")->" << ptr << "\n";

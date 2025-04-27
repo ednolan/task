@@ -11,8 +11,16 @@ namespace ex = beman::execution;
 
 // ----------------------------------------------------------------------------
 
+namespace {
+void unreachable(const char* msg) { assert(nullptr != msg); }
+} // namespace
+
 int main() {
-    std::vector<ex::task<>> cont;
-    cont.emplace_back([]() -> ex::task<> { co_return; }());
-    cont.push_back([]() -> ex::task<> { co_return; }());
+    try {
+        std::vector<ex::task<>> cont;
+        cont.emplace_back([]() -> ex::task<> { co_return; }());
+        cont.push_back([]() -> ex::task<> { co_return; }());
+    } catch (...) {
+        unreachable("no exception should escape to main");
+    }
 }

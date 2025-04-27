@@ -16,7 +16,7 @@ struct tester {
 
     struct promise_type {
         bool& destroyed;
-        promise_type(bool& d, const auto&...) : destroyed(d) {}
+        explicit promise_type(bool& d, const auto&...) : destroyed(d) {}
         promise_type(auto&&, bool& d, const auto&...) : destroyed(d) {}
         promise_type(const promise_type&) = delete;
         promise_type(promise_type&&)      = delete;

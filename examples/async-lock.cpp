@@ -13,9 +13,15 @@
 
 namespace ex = beman::execution;
 
+namespace {
 struct queue {
     struct notify {
+        notify()                              = default;
+        notify(const notify&)                 = delete;
+        notify(notify&&)                      = delete;
         virtual ~notify()          = default;
+        notify&      operator=(const notify&) = delete;
+        notify&      operator=(notify&&)      = delete;
         virtual void complete(int) = 0;
     };
 
@@ -53,8 +59,14 @@ struct request {
         template <typename R>
         state(R&& r, int val, queue& q) : receiver(std::forward<R>(r)), value(val), que(q) {}
 
-        void start() & noexcept { this->que.push(this, value); }
-        void complete(int result) { ex::set_value(std::move(this->receiver), result); }
+        void start() & noexcept {
+            try {
+                this->que.push(this, value);
+            } catch (...) {
+                std::terminate();
+            }
+        }
+        void complete(int result) override { ex::set_value(std::move(this->receiver), result); }
     };
 
     int    value;
@@ -67,6 +79,7 @@ struct request {
 };
 
 void stop(queue& q) { ex::sync_wait(request{0, q}); }
+} // namespace
 
 int main(int ac, char* av[]) {
     try {

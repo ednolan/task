@@ -10,7 +10,7 @@ namespace ex = beman::execution;
 // ----------------------------------------------------------------------------
 
 int main() {
-#if 0
+#if 1
     auto rc = ex::sync_wait([]() -> ex::task<int> { co_return 17; }());
     assert(rc);
     auto [value] = rc.value_or(std::tuple{0});
