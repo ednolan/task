@@ -1,5 +1,5 @@
 Checks:
-'-*,
+    -*,
     boost-*,
     bugprone-*,
     cert-*,
@@ -25,7 +25,6 @@ Checks:
     -*-uppercase-literal-suffix,
     -*-use-equals-default,
     -*-braces-around-statements
-'
 HeaderFilterRegex: '.*/execution/(include|src|example|tests)/.*\.(hpp)$'
 WarningsAsErrors: 'clang*'
 FormatStyle: file

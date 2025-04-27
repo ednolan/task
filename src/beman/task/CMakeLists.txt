@@ -13,9 +13,12 @@ file(
 target_sources(
     beman.task
     PUBLIC
-        FILE_SET HEADERS
+        FILE_SET beman_task_headers
+        TYPE HEADERS
         BASE_DIRS ${PROJECT_SOURCE_DIR}/include
         FILES
+            ${PROJECT_SOURCE_DIR}/include/beman/execution/task.hpp
+            ${PROJECT_SOURCE_DIR}/include/beman/lazy/lazy.hpp
             ${PROJECT_SOURCE_DIR}/include/beman/task/task.hpp
             ${DETAIL_HEADERS}
 )
@@ -29,5 +32,6 @@ install(
     DESTINATION
     $<$<CONFIG:Debug>:debug/>${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION $<$<CONFIG:Debug>:debug/>${CMAKE_INSTALL_BINDIR}
-    FILE_SET HEADERS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILE_SET beman_task_headers
+    FILE_SET beman_task_detail
 )
