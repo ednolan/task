@@ -246,10 +246,11 @@ int main() {
             bool failed{false};
             bool exception{false};
             ex::sync_wait(ex::schedule(ctxt1.get_scheduler(thread_context::complete::failure)) |
-                          ex::then([&success] { success = true; }) | ex::upon_error([&failed, &exception](auto err) {
-                              if constexpr (std::same_as<decltype(err), std::error_code>)
+                          ex::then([&success] { success = true; }) |
+                          ex::upon_error([&failed, &exception]<typename E>(const E&) {
+                              if constexpr (std::same_as<E, std::error_code>)
                                   failed = true;
-                              else if constexpr (std::same_as<decltype(err), std::exception_ptr>)
+                              else if constexpr (std::same_as<E, std::exception_ptr>)
                                   exception = true;
                           }));
             assert(not success);

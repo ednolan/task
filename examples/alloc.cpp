@@ -18,24 +18,24 @@ namespace ex = beman::execution;
 #endif
 #endif
 #if !defined(TSAN_ENABLED)
-void* operator new(std::size_t size) {
-    void* pointer(std::malloc(size));
+void* operator new(std::size_t size) { // NOLINT(misc-no-recursion)
+    void* pointer(std::malloc(size));  // NOLINT(hicpp-no-malloc)
     std::cout << "global new(" << size << ")->" << pointer << "\n";
     return pointer;
 }
 void operator delete(void* pointer) noexcept {
     std::cout << "global delete(" << pointer << ")\n";
-    return std::free(pointer);
+    return std::free(pointer); // NOLINT(hicpp-no-malloc)
 }
 void operator delete(void* pointer, std::size_t size) noexcept {
     std::cout << "global delete(" << pointer << ", " << size << ")\n";
-    return std::free(pointer);
+    return std::free(pointer); // NOLINT(hicpp-no-malloc)
 }
 #endif
 
 template <std::size_t Size>
 class fixed_resource : public std::pmr::memory_resource {
-    std::array<std::byte, Size> buffer;
+    std::array<std::byte, Size> buffer{};
     std::byte*                  free{this->buffer.data()};
 
     void* do_allocate(std::size_t size, std::size_t) override {

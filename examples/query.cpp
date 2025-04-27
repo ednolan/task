@@ -45,7 +45,7 @@ struct context {
     };
     const env_base& env;
     int             query(const get_value_t&) const noexcept { return this->env.do_get_value(); }
-    context(const env_base& own) : env(own) {}
+    explicit context(const env_base& own) : env(own) {}
 };
 
 int main() {

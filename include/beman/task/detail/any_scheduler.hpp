@@ -228,6 +228,7 @@ class any_scheduler {
                 ::beman::execution::scheduler<::std::remove_cvref_t<S>>
     explicit any_scheduler(S&& s, Allocator = {})
         : scheduler(static_cast<concrete<std::decay_t<S>>*>(nullptr), std::forward<S>(s)) {}
+    any_scheduler(any_scheduler&&)      = default;
     any_scheduler(const any_scheduler&) = default;
     template <typename Allocator>
     any_scheduler(const any_scheduler& other, Allocator) : scheduler(other.scheduler) {}
