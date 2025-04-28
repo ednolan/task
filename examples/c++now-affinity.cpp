@@ -5,7 +5,6 @@
 #include <beman/execution/execution.hpp>
 #include <beman/execution/stop_token.hpp>
 #include <condition_variable>
-#include <deque>
 #include <iostream>
 #include <mutex>
 #include <thread>
@@ -19,14 +18,14 @@ namespace ex = beman::execution;
 namespace {
 class thread_context {
     struct base {
+        base* next{};
+
         virtual void do_run()        = 0;
         base()                       = default;
         base(const base&)            = delete;
         base(base&&)                 = delete;
         base& operator=(const base&) = delete;
         base& operator=(base&&)      = delete;
-
-      protected:
         virtual ~base() = default;
     };
 
@@ -34,19 +33,18 @@ class thread_context {
     std::mutex              mutex;
     std::condition_variable condition;
     std::thread             thread{[this] { this->run(this->source.get_token()); }};
-    std::deque<base*>       queue;
+    base*                   queue;
 
     void run(auto token) {
         while (true) {
             base* next(std::invoke([&]() -> base* {
                 std::unique_lock cerberus(this->mutex);
                 this->condition.wait(cerberus,
-                                     [this, &token] { return token.stop_requested() || not this->queue.empty(); });
-                if (this->queue.empty()) {
+                                     [this, &token] { return token.stop_requested() || nullptr != this->queue; });
+                if (nullptr == this->queue) {
                     return nullptr;
                 }
-                base* n = queue.front();
-                queue.pop_front();
+                base* n = std::exchange(queue, queue->next);
                 return n;
             }));
             if (next) {
@@ -72,7 +70,8 @@ class thread_context {
     void enqueue(base* work) noexcept {
         {
             std::lock_guard cerberus(this->mutex);
-            this->queue.push_back(work);
+            work->next = this->queue;
+            queue      = work;
         }
         this->condition.notify_one();
     }
