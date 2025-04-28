@@ -3,6 +3,7 @@
 
 #include <beman/execution/execution.hpp>
 #include <beman/task/task.hpp>
+#include <concepts>
 #include <iostream>
 #include <cassert>
 #include <cinttypes>
@@ -21,23 +22,30 @@ constexpr struct get_value_t {
 struct simple_context {
     int value{};
     int query(const get_value_t&) const noexcept { return this->value; }
-    simple_context(auto&& env) : value(get_value(env)) {}
+    explicit simple_context(auto&& env)
+        requires(not std::same_as<simple_context, std::remove_cvref_t<decltype(env)>>)
+        : value(get_value(env)) {}
 };
 
 struct context {
     struct env_base {
-        virtual ~env_base()              = default;
-        virtual int do_get_value() const = 0;
+        env_base()                             = default;
+        env_base(const env_base&)              = delete;
+        env_base(env_base&&)                   = delete;
+        virtual ~env_base()                    = default;
+        env_base&   operator=(const env_base&) = delete;
+        env_base&   operator=(env_base&&)      = delete;
+        virtual int do_get_value() const       = 0;
     };
     template <typename Env>
     struct env_type : env_base {
         Env env;
-        env_type(const Env& e) : env(e) {}
+        explicit env_type(const Env& e) : env(e) {}
         int do_get_value() const override { return get_value(env) + 3; }
     };
     const env_base& env;
     int             query(const get_value_t&) const noexcept { return this->env.do_get_value(); }
-    context(const env_base& own) : env(own) {}
+    explicit context(const env_base& own) : env(own) {}
 };
 
 int main() {

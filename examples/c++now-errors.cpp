@@ -12,6 +12,7 @@ namespace ex = beman::execution;
 
 // ----------------------------------------------------------------------------
 
+namespace {
 struct none_t {};
 std::ostream& operator<<(std::ostream& out, none_t) { return out << "<none>"; }
 
@@ -45,7 +46,7 @@ auto as_expected(Sender&& sndr) {
 }
 #endif
 
-void print_expected(const auto& msg, const auto& e) {
+void print_expected(const char* msg, const auto& e) {
     if (e) {
         if constexpr (std::same_as<none_t, std::remove_cvref_t<decltype(e.value())>>)
             std::cout << msg << " (value)<none>\n";
@@ -73,6 +74,7 @@ ex::task<> expected() {
     print_expected("expected without value=", u);
 }
 #endif
+} // namespace
 
 int main() {
     ex::sync_wait(error_result());

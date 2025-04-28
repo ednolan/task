@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/task/detail/promise_type.hpp>
-#include <beman/task/detail/any_scheduler.hpp>
+#include <beman/task/detail/task_scheduler.hpp>
 #include <beman/execution/execution.hpp>
 #ifdef NDEBUG
 #undef NDEBUG
@@ -21,14 +21,21 @@ namespace ex = beman::execution;
 // ----------------------------------------------------------------------------
 
 namespace {
+
+void unreachable(const char* msg) { assert(nullptr == msg); }
+
 struct thread_pool {
 
     struct node {
-        node*        next;
+        node*        next{};
         virtual void run() = 0;
 
-      protected:
-        ~node() = default;
+        node()                       = default;
+        node(const node&)            = delete;
+        node(node&&)                 = delete;
+        virtual ~node()              = default;
+        node& operator=(const node&) = delete;
+        node& operator=(node&&)      = delete;
     };
 
     std::mutex              mutex;
@@ -46,12 +53,16 @@ struct thread_pool {
         }
     }};
 
-    thread_pool() = default;
+    thread_pool()                   = default;
+    thread_pool(const thread_pool&) = delete;
+    thread_pool(thread_pool&&)      = delete;
     ~thread_pool() {
         this->stop();
         this->driver.join();
     }
-    void stop() {
+    thread_pool& operator=(const thread_pool&) = delete;
+    thread_pool& operator=(thread_pool&&)      = delete;
+    void         stop() {
         {
             std::lock_guard cerberus(this->mutex);
             stopped = true;
@@ -108,8 +119,9 @@ static_assert(ex::scheduler<thread_pool::scheduler>);
 
 struct context {};
 
-struct test_error {
+struct test_error : std::exception {
     int value;
+    explicit test_error(int v) : value(v) {}
 };
 
 struct test_task : beman::task::detail::state_base<context> {
@@ -139,8 +151,8 @@ struct test_task : beman::task::detail::state_base<context> {
     stop_token_type do_get_stop_token() override { return this->source.get_token(); }
     context&        do_get_context() override { return this->ctxt; }
 
-    beman::task::detail::any_scheduler scheduler{beman::task::detail::inline_scheduler{}};
-    beman::task::detail::any_scheduler query(beman::execution::get_scheduler_t) const noexcept {
+    beman::task::detail::task_scheduler scheduler{beman::task::detail::inline_scheduler{}};
+    beman::task::detail::task_scheduler query(beman::execution::get_scheduler_t) const noexcept {
         return this->scheduler;
     }
 };
@@ -149,23 +161,23 @@ struct exception_receiver {
     using receiver_concept = beman::execution::receiver_t;
     bool& flag;
 
-    auto set_value(int) && noexcept { assert(nullptr == +"unexcepted set_value"); }
-    auto set_stopped() && noexcept { assert(nullptr == +"unexcepted set_stopped"); }
-    auto set_error(std::exception_ptr ex) && noexcept {
+    auto set_value(int) && noexcept { unreachable("unexcepted set_value"); }
+    auto set_stopped() && noexcept { unreachable("unexcepted set_stopped"); }
+    auto set_error(const std::exception_ptr& ex) && noexcept {
         flag = true;
         try {
             std::rethrow_exception(ex);
         } catch (const test_error& error) {
             assert(error.value == 17);
         } catch (...) {
-            assert(nullptr == +"unexpected exception");
+            unreachable("unexpected exception");
         }
     }
 };
 
 void test_exception() {
     auto coro{[]() -> test_task {
-        throw test_error{17};
+        throw test_error(17);
         co_return 0;
     }()};
     coro.run();
@@ -186,12 +198,16 @@ void test_initial_scheduler() {
         assert(expect == std::this_thread::get_id());
         co_return 0;
     }(id)};
-    coro.scheduler = beman::task::detail::any_scheduler(pool.get_scheduler());
+    coro.scheduler = beman::task::detail::task_scheduler(pool.get_scheduler());
     coro.run();
 }
 } // namespace
 
 int main() {
-    test_exception();
-    test_initial_scheduler();
+    try {
+        test_exception();
+        test_initial_scheduler();
+    } catch (...) {
+        unreachable("no exception should escape to main");
+    }
 }

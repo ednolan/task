@@ -20,11 +20,11 @@ namespace {
 struct test_resource : std::pmr::memory_resource {
     std::size_t outstanding{};
 
-    virtual void* do_allocate(std::size_t size, std::size_t) override {
+    void* do_allocate(std::size_t size, std::size_t) override {
         this->outstanding += size;
         return ::operator new(size);
     }
-    virtual void do_deallocate(void* ptr, std::size_t size, std::size_t) override {
+    void do_deallocate(void* ptr, std::size_t size, std::size_t) override {
         ::operator delete(ptr);
 
         this->outstanding -= size;
@@ -47,7 +47,7 @@ struct allocator_aware : some_data, beman::task::detail::allocator_support<Alloc
 
 int main() {
     using type = allocator_aware<std::pmr::polymorphic_allocator<std::byte>>;
-    std::unique_ptr<type>(new type{});
+    [[maybe_unused]] std::unique_ptr<type> unused(new type{});
 
     test_resource resource{};
     assert(resource.outstanding == 0u);

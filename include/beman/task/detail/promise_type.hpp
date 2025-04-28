@@ -98,9 +98,9 @@ struct optional_ref_scheduler {
     sender   schedule() const noexcept { return {this->sched}; }
     bool     operator==(const optional_ref_scheduler&) const = default;
 };
-static_assert(::beman::execution::scheduler<::beman::task::detail::any_scheduler>);
+static_assert(::beman::execution::scheduler<::beman::task::detail::task_scheduler>);
 static_assert(::beman::execution::scheduler<::beman::task::detail::inline_scheduler>);
-static_assert(::beman::execution::scheduler<optional_ref_scheduler<::beman::task::detail::any_scheduler>>);
+static_assert(::beman::execution::scheduler<optional_ref_scheduler<::beman::task::detail::task_scheduler>>);
 static_assert(::beman::execution::scheduler<optional_ref_scheduler<::beman::task::detail::inline_scheduler>>);
 
 template <typename Coroutine, typename T, typename C>
@@ -117,18 +117,12 @@ struct promise_type : ::beman::task::detail::promise_base<::beman::task::detail:
         using receiver_concept = ::beman::execution::receiver_t;
         promise_type* self{};
         void set_value() && noexcept { std::coroutine_handle<promise_type>::from_promise(*this->self).resume(); }
-        void set_error(auto&&) && noexcept {
-            //-dk:TODO
-        }
-        void set_stopped() && noexcept {
-            //-dk:TODO
-        }
     };
     struct connector {
         decltype(::beman::execution::connect(
-            ::beman::execution::schedule(::std::declval<::beman::task::detail::any_scheduler>()),
+            ::beman::execution::schedule(::std::declval<::beman::task::detail::task_scheduler>()),
             ::std::declval<receiver>())) state;
-        connector(::beman::task::detail::any_scheduler scheduler, receiver rcvr)
+        connector(::beman::task::detail::task_scheduler scheduler, receiver rcvr)
             : state(::beman::execution::connect(::beman::execution::schedule(::std::move(scheduler)),
                                                 ::std::move(rcvr))) {}
     };
@@ -198,12 +192,7 @@ struct promise_type : ::beman::task::detail::promise_base<::beman::task::detail:
             return ::beman::execution::as_awaitable(std::forward<Sender>(sender), *this);
         else
             return ::beman::execution::as_awaitable(
-#if 0
-                ::beman::task::affine_on(::std::forward<Sender>(sender), ::std::forward<Scheduler>(sched)),
-#else
-                ::beman::execution::continues_on(::std::forward<Sender>(sender), ::std::forward<Scheduler>(sched)),
-#endif
-                *this);
+                ::beman::task::affine_on(::std::forward<Sender>(sender), ::std::forward<Scheduler>(sched)), *this);
     }
     template <::beman::execution::sender Sender>
     auto await_transform(Sender&& sender) noexcept {

@@ -10,6 +10,8 @@ namespace ex = beman::execution;
 
 // ----------------------------------------------------------------------------
 
+namespace {
+
 struct with_allocator {
     using allocator_type = std::pmr::polymorphic_allocator<std::byte>;
 };
@@ -18,6 +20,7 @@ ex::task<void, with_allocator> coro(int value, auto&&...) {
     co_await ex::just(value);
     [[maybe_unused]] auto alloc = ex::read_env(ex::get_allocator);
 }
+} // namespace
 
 int main() {
     ex::sync_wait(coro(0));

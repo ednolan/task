@@ -7,7 +7,7 @@ list(
     affine_on
     allocator_of
     allocator_support
-    any_scheduler
+    task_scheduler
     completion
     error_types_of
     final_awaiter

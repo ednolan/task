@@ -34,11 +34,9 @@ int main() {
 
     assert(main_id != thread_id);
 
-    auto s(beman::task::affine_on(ex::just(42), context.get_scheduler()));
-    (void)s;
+    [[maybe_unused]] auto s(beman::task::affine_on(ex::just(42), context.get_scheduler()));
     static_assert(ex::sender<decltype(s)>);
-    auto st(ex::connect(std::move(s), receiver{}));
-    (void)st;
+    [[maybe_unused]] auto st(ex::connect(std::move(s), receiver{}));
 #if 0
     ex::sync_wait(beman::task::affine_on(ex::just(42), context.get_scheduler())
 #else

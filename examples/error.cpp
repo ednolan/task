@@ -8,7 +8,13 @@
 
 namespace ex = beman::execution;
 
-ex::task<int> fun(int i) {
+namespace {
+struct error_context {
+    using error_types =
+        ex::completion_signatures<ex::set_error_t(std::exception_ptr), ex::set_error_t(std::error_code)>;
+};
+
+ex::task<int, error_context> fun(int i) {
     using on_exit = std::unique_ptr<const char, decltype([](auto msg) { std::cout << msg; })>;
     on_exit msg("> ");
     std::cout << "<";
@@ -22,7 +28,7 @@ ex::task<int> fun(int i) {
         break;
     case 1:
         // the co_awaited work fails and an exception is thrown
-        //-dk:TODO co_await ex::just_error(0);
+        co_await ex::just_error(0);
         break;
     case 2:
         // the co_awaited work is stopped and the coroutine is stopped itself
@@ -32,33 +38,27 @@ ex::task<int> fun(int i) {
         // successful return of a value
         co_return 17;
     case 4:
-        // The coroutine completes with set_error(std::error_code{...})
-        //-dk:TODO co_return ex::with_error(std::make_error_code(std::errc::io_error));
-        break;
-
-    case 5:
-        //-dk:TODO co_await ex::with_error(std::make_error_code(std::errc::io_error));
-        break;
-    case 6:
-        //-dk:TODO co_yield ex::with_error(std::make_error_code(std::errc::io_error));
+        co_yield ex::with_error(std::make_error_code(std::errc::io_error));
         break;
     }
 
     co_return 0;
 }
 
-void print(const char* what, auto e) {
-    if constexpr (std::same_as<std::exception_ptr, decltype(e)>)
+template <typename E>
+void print(const char* what, const E& e) {
+    if constexpr (std::same_as<std::exception_ptr, E>)
         std::cout << what << "(exception_ptr)\n";
     else
         std::cout << what << "(" << e << ")\n";
 }
+} // namespace
 
 int main() {
-    for (int i{}; i != 7; ++i) {
+    for (int i{}; i != 5; ++i) {
         std::cout << "i=" << i << " ";
         ex::sync_wait(fun(i) | ex::then([](auto e) { print("then", e); }) |
-                      ex::upon_error([](auto e) { print("upon_error", e); }) |
+                      ex::upon_error([](const auto& e) { print("upon_error", e); }) |
                       ex::upon_stopped([] { std::cout << "stopped\n"; }));
     }
 }

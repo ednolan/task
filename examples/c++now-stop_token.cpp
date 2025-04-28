@@ -12,6 +12,7 @@ namespace ex = beman::execution;
 
 // ----------------------------------------------------------------------------
 
+namespace {
 ex::task<> stopping() {
     auto        token = co_await ex::read_env(ex::get_stop_token);
     std::size_t count{};
@@ -20,6 +21,8 @@ ex::task<> stopping() {
     }
     std::cout << "count=" << count << "\n";
 }
+
+} // namespace
 
 int main() {
     using namespace std::chrono_literals;

@@ -20,13 +20,13 @@ struct test_receiver {
     auto set_stopped() && noexcept {}
 };
 static_assert(ex::receiver<test_receiver>);
-} // namespace
 
 std::ostream& fmt_id(std::ostream& out) { return out << std::this_thread::get_id(); }
 
 struct non_affine : ex::default_context {
     using scheduler_type = ex::inline_scheduler;
 };
+} // namespace
 
 int main() {
     std::cout << std::unitbuf;
@@ -34,7 +34,7 @@ int main() {
     ex::sync_wait(ex::just() | ex::then([]() noexcept { std::cout << "main:" << fmt_id << "\n"; }));
     ex::sync_wait(ex::schedule(pool.get_scheduler()) |
                   ex::then([]() noexcept { std::cout << "pool:" << fmt_id << "\n"; }));
-    ex::sync_wait(ex::schedule(ex::any_scheduler(pool.get_scheduler())) |
+    ex::sync_wait(ex::schedule(ex::task_scheduler(pool.get_scheduler())) |
                   ex::then([]() noexcept { std::cout << "any: " << fmt_id << "\n"; }));
     ex::sync_wait([]() -> ex::task<void> {
         std::cout << "coro:" << fmt_id << "\n";

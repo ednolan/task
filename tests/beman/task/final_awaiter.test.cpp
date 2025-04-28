@@ -18,8 +18,8 @@ struct tester {
 
     struct promise_type {
         bool& called;
-        promise_type(bool& c, const auto&...) : called(c) {}
-        promise_type(auto&&, bool& c, const auto&...) : called(c) {}
+        explicit promise_type(bool& c, const auto&...) : called(c) {}
+        explicit promise_type(auto&&, bool& c, const auto&...) : called(c) {}
         beman::task::detail::final_awaiter initial_suspend() { return {}; }
         std::suspend_always                final_suspend() noexcept { return {}; }
         void                               unhandled_exception() {}

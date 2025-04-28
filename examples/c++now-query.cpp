@@ -10,6 +10,8 @@ namespace exd = beman::execution::detail;
 
 // ----------------------------------------------------------------------------
 
+namespace {
+
 constexpr struct get_value_t {
     template <typename Env>
         requires requires(const get_value_t& self, const Env& e) { e.query(self); }
@@ -21,7 +23,7 @@ constexpr struct get_value_t {
 
 struct context {
     int value{};
-    context(const auto& e) : value(get_value(e)) {}
+    explicit context(const auto& e) : value(get_value(e)) {}
     int query(const get_value_t&) const { return this->value; }
 };
 
@@ -31,17 +33,21 @@ struct fancy {
     struct env_base {
         virtual int get() const = 0;
 
-      protected:
-        ~env_base() = default;
+        env_base()                           = default;
+        env_base(const env_base&)            = delete;
+        env_base(env_base&&)                 = delete;
+        virtual ~env_base()                  = default;
+        env_base& operator=(const env_base&) = delete;
+        env_base& operator=(env_base&&)      = delete;
     };
     template <typename Env>
     struct env_type final : env_base {
-        env_type(const Env& e) : env(e) {}
+        explicit env_type(const Env& e) : env(e) {}
         Env env;
         int get() const override { return get_value(env); }
     };
     int query(const get_value_t&) const { return this->env.get(); }
-    fancy(const env_base& own) : env(own) {}
+    explicit fancy(const env_base& own) : env(own) {}
     const env_base& env;
 };
 
@@ -49,6 +55,7 @@ ex::task<void, fancy> with_fancy_env() {
     [[maybe_unused]] decltype(auto) v = co_await ex::read_env(get_value);
     std::cout << "v=" << v << "\n";
 }
+} // namespace
 
 int main() {
     ex::sync_wait(exd::write_env(with_env(), exd::make_env(get_value, 17)));

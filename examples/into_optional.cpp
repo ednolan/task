@@ -10,6 +10,7 @@
 
 namespace ex = beman::execution;
 
+namespace {
 template <typename... S>
 struct multi_sender {
     using sender_concept        = ex::sender_t;
@@ -50,6 +51,7 @@ template <ex::sender S>
 auto my_into_optional(S&& s) {
     return ex::into_variant(s) | ex::then([](auto&&...) { return std::optional<int>(); })
 #if 0
+    //-dk:TODO see if this code is needed or can be removed
          | ex::then([]<typename...A, typename... B>(
             std::variant<std::tuple<A...>, std::tuple<B...>> r) {
                 if constexpr (sizeof...(A) != 0u) {
@@ -62,6 +64,7 @@ auto my_into_optional(S&& s) {
 #endif
         ;
 }
+} // namespace
 
 int main() {
     queue<double> que;

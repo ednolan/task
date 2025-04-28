@@ -34,7 +34,7 @@ int main() {
     assert(sched == ex::get_completion_scheduler<ex::set_value_t>(env));
 
     int  value{};
-    auto state{ex::connect(std::move(sched_sender) | ex::then([]() noexcept { return 17; }), receiver{value})};
+    auto state{ex::connect(sched_sender | ex::then([]() noexcept { return 17; }), receiver{value})};
     static_assert(ex::operation_state<decltype(state)>);
 
     assert(value == 0);

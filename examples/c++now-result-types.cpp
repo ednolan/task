@@ -9,10 +9,12 @@ namespace ex = beman::execution;
 
 // ----------------------------------------------------------------------------
 
+namespace {
 ex::task<> result_type() {
     co_await ex::just();
     [[maybe_unused]] int        n = co_await ex::just(1);
     [[maybe_unused]] std::tuple p = co_await ex::just(1, true);
 }
+} // namespace
 
 int main() { ex::sync_wait(result_type()); }

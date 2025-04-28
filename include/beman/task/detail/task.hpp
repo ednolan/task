@@ -7,7 +7,7 @@
 #include <beman/execution/execution.hpp>
 #include <beman/task/detail/allocator_of.hpp>
 #include <beman/task/detail/allocator_support.hpp>
-#include <beman/task/detail/any_scheduler.hpp>
+#include <beman/task/detail/task_scheduler.hpp>
 #include <beman/task/detail/completion.hpp>
 #include <beman/task/detail/scheduler_of.hpp>
 #include <beman/task/detail/stop_source.hpp>

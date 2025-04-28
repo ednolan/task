@@ -20,9 +20,9 @@ class state_base {
     Context&        get_context() { return this->do_get_context(); }
 
   protected:
-    virtual void            do_complete()       = 0;
-    virtual stop_token_type do_get_stop_token() = 0;
-    virtual Context&        do_get_context()    = 0;
+    virtual void            do_complete()       = 0; // NOLINT(portability-template-virtual-member-function)
+    virtual stop_token_type do_get_stop_token() = 0; // NOLINT(portability-template-virtual-member-function)
+    virtual Context&        do_get_context()    = 0; // NOLINT(portability-template-virtual-member-function)
 
     virtual ~state_base() = default;
 };

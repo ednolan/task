@@ -5,7 +5,6 @@
 #include <beman/execution/execution.hpp>
 #include <beman/execution/stop_token.hpp>
 #include <condition_variable>
-#include <deque>
 #include <iostream>
 #include <mutex>
 #include <thread>
@@ -16,33 +15,36 @@ namespace ex = beman::execution;
 
 // ----------------------------------------------------------------------------
 
+namespace {
 class thread_context {
     struct base {
-        virtual void do_run() = 0;
-        base()                = default;
-        base(base&&)          = delete;
+        base* next{};
 
-      protected:
-        ~base() = default;
+        virtual void do_run()        = 0;
+        base()                       = default;
+        base(const base&)            = delete;
+        base(base&&)                 = delete;
+        base& operator=(const base&) = delete;
+        base& operator=(base&&)      = delete;
+        virtual ~base()              = default;
     };
 
     ex::stop_source         source;
     std::mutex              mutex;
     std::condition_variable condition;
     std::thread             thread{[this] { this->run(this->source.get_token()); }};
-    std::deque<base*>       queue;
+    base*                   queue;
 
     void run(auto token) {
         while (true) {
             base* next(std::invoke([&]() -> base* {
                 std::unique_lock cerberus(this->mutex);
                 this->condition.wait(cerberus,
-                                     [this, &token] { return token.stop_requested() || not this->queue.empty(); });
-                if (this->queue.empty()) {
+                                     [this, &token] { return token.stop_requested() || nullptr != this->queue; });
+                if (nullptr == this->queue) {
                     return nullptr;
                 }
-                base* n = queue.front();
-                queue.pop_front();
+                base* n = std::exchange(queue, queue->next);
                 return n;
             }));
             if (next) {
@@ -54,18 +56,22 @@ class thread_context {
     }
 
   public:
-    thread_context()                 = default;
-    thread_context(thread_context&&) = delete;
+    thread_context()                      = default;
+    thread_context(const thread_context&) = delete;
+    thread_context(thread_context&&)      = delete;
     ~thread_context() {
         this->source.request_stop();
         this->condition.notify_one();
         this->thread.join();
     }
+    thread_context& operator=(const thread_context&) = delete;
+    thread_context& operator=(thread_context&&)      = delete;
 
-    void enqueue(base* work) {
+    void enqueue(base* work) noexcept {
         {
             std::lock_guard cerberus(this->mutex);
-            this->queue.push_back(work);
+            work->next = this->queue;
+            queue      = work;
         }
         this->condition.notify_one();
     }
@@ -145,11 +151,15 @@ ex::task<void, inline_context> work3(auto sched) {
     co_await (ex::schedule(sched) | ex::then([] { std::cout << "then id  =" << std::this_thread::get_id() << "\n"; }));
     std::cout << "after id =" << std::this_thread::get_id() << "\n\n";
 }
+} // namespace
 
 int main() {
-    std::cout << std::unitbuf;
-    thread_context context;
-    ex::sync_wait(work1(context.get_scheduler()));
-    ex::sync_wait(work2(context.get_scheduler()));
-    ex::sync_wait(work3(context.get_scheduler()));
+    try {
+        thread_context context;
+        ex::sync_wait(work1(context.get_scheduler()));
+        ex::sync_wait(work2(context.get_scheduler()));
+        ex::sync_wait(work3(context.get_scheduler()));
+    } catch (...) {
+        std::cout << "ERROR: unexpected exception\n";
+    }
 }

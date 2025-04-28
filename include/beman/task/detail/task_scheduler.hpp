@@ -1,8 +1,8 @@
-// include/beman/task/detail/any_scheduler.hpp                        -*-C++-*-
+// include/beman/task/detail/task_scheduler.hpp                        -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef INCLUDED_BEMAN_LAZY_DETAIL_ANY_SCHEDULER
-#define INCLUDED_BEMAN_LAZY_DETAIL_ANY_SCHEDULER
+#ifndef INCLUDED_BEMAN_LAZY_DETAIL_task_scheduler
+#define INCLUDED_BEMAN_LAZY_DETAIL_task_scheduler
 
 #include <beman/execution/execution.hpp>
 #include <beman/task/detail/poly.hpp>
@@ -18,9 +18,9 @@ namespace beman::task::detail {
  * \brief Type-erasing scheduler
  * \headerfile beman/task/task.hpp <beman/task/task.hpp>
  *
- * The class `any_scheduler` is used to type-erase any scheduler class.
+ * The class `task_scheduler` is used to type-erase any scheduler class.
  * Any error produced by the underlying scheduler except `std::error_code` is turned into
- * an `std::exception_ptr`. `std::error_code` is forwarded as is. The `any_scheduler`
+ * an `std::exception_ptr`. `std::error_code` is forwarded as is. The `task_scheduler`
  * forwards stop requests reported by the stop token obtained from the `connect`ed
  * receiver to the sender used by the underlying scheduler.
  *
@@ -33,10 +33,10 @@ namespace beman::task::detail {
  *
  * Usage:
  *
- *     any_scheduler sched(other_scheduler);
+ *     task_scheduler sched(other_scheduler);
  *     auto sender{ex::schedule(sched) | some_sender};
  */
-class any_scheduler {
+class task_scheduler {
     struct state_base {
         virtual ~state_base()                                                               = default;
         virtual void                                   complete_value()                     = 0;
@@ -139,7 +139,7 @@ class any_scheduler {
         env(const sender* s) : sndr(s) {}
 
       public:
-        any_scheduler
+        task_scheduler
         query(const ::beman::execution::get_completion_scheduler_t<::beman::execution::set_value_t>&) const noexcept {
             return this->sndr->inner_sender->get_completion_scheduler();
         }
@@ -151,11 +151,11 @@ class any_scheduler {
 
       private:
         struct base {
-            virtual ~base()                                        = default;
-            virtual base*         move(void*)                      = 0;
-            virtual base*         clone(void*) const               = 0;
-            virtual inner_state   connect(state_base*)             = 0;
-            virtual any_scheduler get_completion_scheduler() const = 0;
+            virtual ~base()                                         = default;
+            virtual base*          move(void*)                      = 0;
+            virtual base*          clone(void*) const               = 0;
+            virtual inner_state    connect(state_base*)             = 0;
+            virtual task_scheduler get_completion_scheduler() const = 0;
         };
         template <::beman::execution::scheduler Scheduler>
         struct concrete : base {
@@ -164,11 +164,11 @@ class any_scheduler {
 
             template <::beman::execution::scheduler S>
             concrete(S&& s) : sender(::beman::execution::schedule(std::forward<S>(s))) {}
-            base*         move(void* buffer) override { return new (buffer) concrete(std::move(*this)); }
-            base*         clone(void* buffer) const override { return new (buffer) concrete(*this); }
-            inner_state   connect(state_base* b) override { return inner_state(::std::move(sender), b); }
-            any_scheduler get_completion_scheduler() const override {
-                return any_scheduler(::beman::execution::get_completion_scheduler<::beman::execution::set_value_t>(
+            base*          move(void* buffer) override { return new (buffer) concrete(std::move(*this)); }
+            base*          clone(void* buffer) const override { return new (buffer) concrete(*this); }
+            inner_state    connect(state_base* b) override { return inner_state(::std::move(sender), b); }
+            task_scheduler get_completion_scheduler() const override {
+                return task_scheduler(::beman::execution::get_completion_scheduler<::beman::execution::set_value_t>(
                     ::beman::execution::get_env(this->sender)));
             }
         };
@@ -224,25 +224,26 @@ class any_scheduler {
     using scheduler_concept = ::beman::execution::scheduler_t;
 
     template <typename S, typename Allocator = ::std::allocator<void>>
-        requires(not std::same_as<any_scheduler, std::remove_cvref_t<S>>) &&
+        requires(not std::same_as<task_scheduler, std::remove_cvref_t<S>>) &&
                 ::beman::execution::scheduler<::std::remove_cvref_t<S>>
-    explicit any_scheduler(S&& s, Allocator = {})
+    explicit task_scheduler(S&& s, Allocator = {})
         : scheduler(static_cast<concrete<std::decay_t<S>>*>(nullptr), std::forward<S>(s)) {}
-    any_scheduler(const any_scheduler&) = default;
+    task_scheduler(task_scheduler&&)      = default;
+    task_scheduler(const task_scheduler&) = default;
     template <typename Allocator>
-    any_scheduler(const any_scheduler& other, Allocator) : scheduler(other.scheduler) {}
-    any_scheduler& operator=(const any_scheduler&) = default;
-    ~any_scheduler()                               = default;
+    task_scheduler(const task_scheduler& other, Allocator) : scheduler(other.scheduler) {}
+    task_scheduler& operator=(const task_scheduler&) = default;
+    ~task_scheduler()                                = default;
 
     sender schedule() { return this->scheduler->schedule(); }
-    bool   operator==(const any_scheduler&) const = default;
+    bool   operator==(const task_scheduler&) const = default;
     template <typename Sched>
-        requires(not ::std::same_as<any_scheduler, Sched>) && ::beman::execution::scheduler<Sched>
+        requires(not ::std::same_as<task_scheduler, Sched>) && ::beman::execution::scheduler<Sched>
     bool operator==(const Sched& other [[maybe_unused]]) const {
-        return *this == any_scheduler(other);
+        return *this == task_scheduler(other);
     }
 };
-static_assert(::beman::execution::scheduler<any_scheduler>);
+static_assert(::beman::execution::scheduler<task_scheduler>);
 
 } // namespace beman::task::detail
 
