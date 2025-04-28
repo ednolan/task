@@ -26,7 +26,7 @@ class thread_context {
         base(base&&)                 = delete;
         base& operator=(const base&) = delete;
         base& operator=(base&&)      = delete;
-        virtual ~base() = default;
+        virtual ~base()              = default;
     };
 
     ex::stop_source         source;
