@@ -18,7 +18,7 @@ struct with_allocator {
 
 ex::task<void, with_allocator> coro(int value, auto&&...) {
     co_await ex::just(value);
-    [[maybe_unused]] auto alloc = ex::read_env(ex::get_allocator);
+    [[maybe_unused]] auto alloc = co_await ex::read_env(ex::get_allocator);
 }
 } // namespace
 

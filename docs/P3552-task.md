@@ -58,6 +58,7 @@ int main() {
 - Changed the wording to avoid `exception_ptr` when unavailable.
 - Renamed `Context` to `Environment` to better reflect the argument's use.
 - Made exposition-only "macros" use italics.
+- Added a feature test macro.
 - Fixed some typos.
 
 # Prior Work
@@ -1410,7 +1411,7 @@ namespace std::execution {
 Add new subsections for the different classes at the end of [exec]{.sref}:
 
 ::: draftnote
-Evertyhing below is text meant to got at the end of the [exec]{.sref}
+Evertyhing below is text meant to go to the end of the [exec]{.sref}
 section without any color highlight of what it being added.
 :::
 
@@ -1778,7 +1779,7 @@ namespace std::execution {
     coroutine_handle<promise_type> @_handle_@;  // @_exposition only_@
     remove_cvref_t<R>              @_rcvr_@;    // @_exposition only_@
     @_see below_@                      @_own-env_@; // @_exposition only_@
-    Environment                        @_environment_@; // @_exposition only_@
+    Environment                    @_environment_@; // @_exposition only_@
 
     template <class RCVR>
     @_state_@(coroutine_handle<promise_type> h, RCVR&& rr);
@@ -1899,7 +1900,7 @@ namespace std::execution {
 
   private:
     using StopToken = decltype(decl_val<StopSource>().get_token());
-    using ErrorVariant = _see below_;
+    using ErrorVariant = @_see below_@;
 
     Alloc         @_alloc_@;  // @_exposition only_@
     StopSource    @_source_@; // @_exposition only_@
