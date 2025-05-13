@@ -1791,7 +1791,7 @@ namespace std::execution {
 ```
 
 [1]{.pnum} Let `Env` be the type of the receiver's environment
-    `decltype(get_env(declval<R>()))`. The type of `@_env_@` is 
+    `decltype(get_env(declval<R>()))`. The type of `@_env_@` is
     `Environment::template env_type<Env>` if this type is valid and
     `empty_env` otherwise.
 
