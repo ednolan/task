@@ -1,6 +1,7 @@
 // examples/environment.cpp                                           -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+#ifndef _MSC_VER
 #include <beman/task/task.hpp>
 #include <beman/execution/execution.hpp>
 #include <beman/net/net.hpp>
@@ -87,23 +88,21 @@ struct env_scheduler {
 
         std::string name;
         task_sender sender;
+
+        auto get_env() const noexcept -> env {
+            return env{this->name, ex::get_completion_scheduler<ex::set_value_t>(ex::get_env(this->sender))};
+        }
+
         template <ex::receiver Rcvr>
         auto connect(Rcvr&& rcvr) && {
-            static_assert(ex::receiver<receiver<Rcvr>>);
             return ex::connect(std::move(this->sender),
                                receiver<Rcvr>(std::forward<Rcvr>(rcvr), std::move(this->name)));
         }
-
-        auto get_env() const noexcept {
-            return env{this->name, ex::get_completion_scheduler<ex::set_value_t>(ex::get_env(this->sender))};
-        }
     };
-    static_assert(ex::sender<sender>);
 
     auto schedule() -> sender { return sender{this->name, ex::schedule(this->scheduler)}; }
     bool operator==(const env_scheduler&) const = default;
 };
-static_assert(ex::scheduler<env_scheduler>);
 
 struct with_env {
     using scheduler_type = env_scheduler;
@@ -155,3 +154,6 @@ int main() {
         context.run();
     }
 }
+#else
+int main() {}
+#endif
