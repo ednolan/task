@@ -37,7 +37,11 @@ foreach(example ${ALL_EXAMPLES})
     if(WIN32)
         target_link_libraries(beman.task.examples.${example} beman::task)
     else()
-        target_link_libraries(beman.task.examples.${example} beman::task beman::net)
+        target_link_libraries(
+            beman.task.examples.${example}
+            beman::task
+            beman::net
+        )
     endif()
     add_test(
         NAME beman.task.examples.${example}
