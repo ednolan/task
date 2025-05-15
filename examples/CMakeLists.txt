@@ -2,6 +2,7 @@
 
 set(ALL_EXAMPLES
     task_scheduler
+    environment
     c++now-basic
     c++now-result-types
     c++now-errors
@@ -33,7 +34,7 @@ message("Examples to be built: ${ALL_EXAMPLES}")
 foreach(example ${ALL_EXAMPLES})
     add_executable(beman.task.examples.${example})
     target_sources(beman.task.examples.${example} PRIVATE ${example}.cpp)
-    target_link_libraries(beman.task.examples.${example} beman::task)
+    target_link_libraries(beman.task.examples.${example} beman::task beman::net)
     add_test(
         NAME beman.task.examples.${example}
         COMMAND $<TARGET_FILE:beman.task.examples.${example}>
