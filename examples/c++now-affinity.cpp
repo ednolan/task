@@ -33,7 +33,7 @@ class thread_context {
     std::mutex              mutex;
     std::condition_variable condition;
     std::thread             thread{[this] { this->run(this->source.get_token()); }};
-    base*                   queue;
+    base*                   queue{};
 
     void run(auto token) {
         while (true) {
