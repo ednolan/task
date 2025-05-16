@@ -13,7 +13,6 @@
 #include <thread>
 
 namespace demo {
-namespace ex = beman::execution;
 struct thread_pool {
 
     struct node {
@@ -53,18 +52,18 @@ struct thread_pool {
     }
 
     struct scheduler {
-        using scheduler_concept = ex::scheduler_t;
+        using scheduler_concept = beman::execution::scheduler_t;
         struct env {
             thread_pool* pool;
 
             template <typename T>
-            scheduler query(const ex::get_completion_scheduler_t<T>&) const noexcept {
+            scheduler query(const beman::execution::get_completion_scheduler_t<T>&) const noexcept {
                 return {this->pool};
             }
         };
         template <typename Receiver>
         struct state final : thread_pool::node {
-            using operation_state_concept = ex::operation_state_t;
+            using operation_state_concept = beman::execution::operation_state_t;
             std::remove_cvref_t<Receiver> receiver;
             thread_pool*                  pool;
 
@@ -77,11 +76,11 @@ struct thread_pool {
                 }
                 this->pool->condition.notify_one();
             }
-            void run() override { ex::set_value(std::move(this->receiver)); }
+            void run() override { beman::execution::set_value(std::move(this->receiver)); }
         };
         struct sender {
-            using sender_concept        = ex::sender_t;
-            using completion_signatures = ex::completion_signatures<ex::set_value_t()>;
+            using sender_concept        = beman::execution::sender_t;
+            using completion_signatures = beman::execution::completion_signatures<beman::execution::set_value_t()>;
             thread_pool* pool;
             template <typename Receiver>
             state<Receiver> connect(Receiver&& receiver) {
@@ -97,7 +96,7 @@ struct thread_pool {
     scheduler get_scheduler() { return {this}; }
 };
 
-static_assert(ex::scheduler<thread_pool::scheduler>);
+static_assert(beman::execution::scheduler<thread_pool::scheduler>);
 
 } // namespace demo
 
