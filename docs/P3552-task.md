@@ -1,7 +1,7 @@
 ---
 title: Add a Coroutine Task Type
-document: P3552R1
-date: 2025-03-16
+document: D3552R2
+date: 2025-06-19
 audience:
     - Concurrency Working Group (SG1)
     - Library Evolution Working Group (LEWG)
@@ -60,6 +60,8 @@ int main() {
 - Made exposition-only "macros" use italics.
 - Added a feature test macro.
 - Fixed some typos.
+
+## R3 LWG Feedback
 
 # Prior Work
 
@@ -1394,7 +1396,7 @@ namespace std::execution {
 
   @[// [exec.affine.on]{.sref}]{.add}@
   @@[struct affine_on_t { @_unspecified_@  };]{.add}@@
-  @[constexpr affine_on_t affine_on;]{.add}@
+  inline @[constexpr affine_on_t affine_on;]{.add}@
 
   @[// [exec.inline.scheduler]{.sref}]{.add}@
   @[class inline_scheduler;]{.add}@
@@ -1419,8 +1421,8 @@ section without any color highlight of what it being added.
 
 [1]{.pnum} `affine_on` adapts a sender into one that completes on
    the specified scheduler. If the algorithm determines that the
-   adapted sender already completes on the correct scheduler it is
-   allowed to avoid any scheduling operation.
+   adapted sender already completes on the correct scheduler it
+   can avoid any scheduling operation.
 
 [2]{.pnum} The name `affine_on` denotes a pipeable sender adaptor
     object. For subexpressions `sch` and `sndr`, if `decltype((sch))`
@@ -1462,7 +1464,7 @@ except that `sndr` is evalutated only once.
     and execute completion operations on `out_rcvr` on an execution
     agent of the execution resource associated with `sch`. If the
     current execution resource is the same as the execution resource
-    associated with `sch` the completion operation on `out_rcvr`
+    associated with `sch`, the completion operation on `out_rcvr`
     may be called before `start(op)` completes. If scheduling onto
     `sch` fails, an error completion on `out_rcvr` shall be executed
     on an unspecified execution agent.
@@ -1472,9 +1474,9 @@ except that `sndr` is evalutated only once.
 ```cpp
 namespace std::execution {
   class inline_scheduler {
-    class @_inline-sender_@; // exposition-only
+    class @_inline-sender_@; // exposition only
     template <receiver R>
-    class @_inline-state_@;  // exposition-only
+    class @_inline-state_@;  // exposition only
 
   public:
     using scheduler_concept = scheduler_t;
@@ -1488,13 +1490,9 @@ namespace std::execution {
 [1]{.pnum} `inline_scheduler` is a class that models `scheduler`
 [exec.scheduler]{.sref}. All objects of type `inline_scheduler` are equal.
 
-```cpp
-class @_inline-sender_@`
-```
-
 [2]{.pnum} `@_inline-sender_@` is an exposition-only type that satisfies
-`sender`. For any type `Env`, the type<br/>
-`completion_signatures_of_t<@_inline-sender_@, Env>`
+`sender`. The type<br/>
+`completion_signatures_of_t<@_inline-sender_@>`
 is `completion_signatures<set_value_t()>`.
 
 [3]{.pnum} Let `@_sndr_@` be an expression of type `@_inline-sender_@`, let `@_rcvr_@`
@@ -1502,18 +1500,14 @@ be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` whe
 `CS` is `completion_signatures<set_value_t()>`.
 
 - [3.1]{.pnum} The expression `connect(@_sndr_@, @_rcvr_@)` has
-    type `@_inline-state_@<remove_cvref_t<@_rcvr_@>>` and is only throwing if
-    `((void)@_sndr_@, auto(@_rcvr_@))` is potentially throwing.
+    type `@_inline-state_@<remove_cvref_t<decltype((@_rcvr_@))>>` and is potentiall-throwing if and
+    only if
+    `((void)@_sndr_@, auto(@_rcvr_@))` is potentially-throwing.
 - [3.2]{.pnum} The expression `get_completion_scheduler<set_value_t>(get_env(@_sndr_@))`
-    has type `inline_scheduler`  and is potentially-throwing if and only if `@_sndr_@` is potentially-throwing.
-
-```cpp
-template <receiver R>
-class @_inline-state_@;
-```
+    has type `inline_scheduler`  and is potentially-throwing if and only if `get_env(@_sndr_@)` is potentially-throwing.
 
 [4]{.pnum} Let `@_o_@` be a non-`const` lvalue of type `@_inline-state_@<Rcvr>`, and
-    let `REC(@_o_@)` be a non-`const` lvalue reference to an instance of type `Rcvr`
+    let `REC(@_o_@)` be a non-`const` lvalue reference to an object of type `Rcvr`
     that was initialized with the expression `@_rcvr_@` passed to an invocation
     of `connect` that returned `@_o_@`. Then:
 
@@ -1526,16 +1520,16 @@ class @_inline-state_@;
 ```cpp
 namespace std::execution {
   class task_scheduler {
-    class @_sender_@; // exposition-only
+    class @_sender_@; // exposition only
     template <receiver R>
-    class @_state_@;  // exposition-only
+    class @_state_@;  // exposition only
 
   public:
     using scheduler_concept = scheduler_t;
 
-    template <scheduler Sched, class Allocator = allocator<void>>
-      requires(not std::same_as<task_scheduler, std::remove_cvref_t<S>>)
-        && scheduler<S>
+    template <class Sched, class Allocator = allocator<void>>
+      requires(!same_as<task_scheduler, remove_cvref_t<Sched>>)
+        && scheduler<Sched>
     explicit task_scheduler(Sched&& sched, Allocator alloc = {});
     template <class Allocator>
     task_scheduler(const task_scheduler& other, Allocator alloc);
@@ -1545,7 +1539,7 @@ namespace std::execution {
     @_sender_@ schedule();
     bool operator== (const task_scheduler&) const noexcept;
     template <class Sched>
-      requires (not same_as<task_scheduler, remove_cvref_t<Sched>>)
+      requires (!same_as<task_scheduler, remove_cvref_t<Sched>>)
       && scheduler<Sched>
     bool operator== (const Sched& sched) const noexcept;
   };
@@ -1554,19 +1548,26 @@ namespace std::execution {
 
 [1]{.pnum} `task_scheduler` is a class that models `scheduler`
     [exec.scheduler]{.sref}. Let `s` be an object of type `task_scheduler`
-    then `@_SCHED_@(s)` is an object of a type different than `task_scheduler`
-    modeling `scheduler` which is used by `s` to do the actual scheduling.
+    then `@_SCHED_@(s)` is the target scheduler object of a type
+    different than `task_scheduler` modeling `scheduler` which is
+    used by `s` to do the actual scheduling.
 
 ```cpp
-template <scheduler Sched, class Allocator = allocator<void>>
-  requires(not same_as<task_scheduler, remove_cvref_t<S>>) && scheduler<S>
+template <class Sched, class Allocator = allocator<void>>
+  requires(!same_as<task_scheduler, remove_cvref_t<Sched>>) && scheduler<Sched>
 explicit task_scheduler(Sched&& sched, Allocator alloc = {});
 ```
 
 [2]{.pnum} _Effects_: Initialises the object from `sched` and `alloc`.
-    Allocations, if any, use `alloc` to get memory.
 
-[3]{.pnum} _Post Condition_: `@_SCHED_@(*this) == sched` is true.
+[3]{.pnum} _Postconditions_: `*this` has a target scheduler of type
+    `remove_cvref_t<Sched>` direct-non-list-initialized with
+    `std::forward<Sched>(sched)`.
+
+[4]{.pnum} _Recommended practice_: Implementations should avoid the
+    use of dynamically allocated memory for small scheduler objects,
+    for example, where `sched` refers to an object holding only a
+    pointer or reference to an object.
 
 ```cpp
 template <class Allocator>
@@ -1577,7 +1578,7 @@ task_scheduler(const task_scheduler& other, Allocator alloc);
     Any allocation used by `this` use an allocator obtained by rebinding
     `alloc` or a copy thereof.
 
-[5]{.pnum} _Post Condition_: `*this == other` is true.
+[5]{.pnum} _Postconditions_: `*this == other` is true.
 
 ```cpp
 task_scheduler(const task_scheduler& other);
@@ -1589,7 +1590,7 @@ task_scheduler(const task_scheduler& other);
 task_scheduler& operator=(const task_scheduler& other);
 ```
 
-[7]{.pnum} _Post Condition_: `*this == other` is true.
+[7]{.pnum} _Postconditions_: `*this == other` is true.
 
 ```cpp
 @_sender_@ schedule();
@@ -1602,12 +1603,12 @@ task_scheduler& operator=(const task_scheduler& other);
 bool operator== (const task_scheduler& other) const noexcept;
 ```
 
-[9]{.pnum} _Returns_: `false` if the types of `@_SCHED_@(*this)` and `@_SCHED_@(other)` are
-    different, otherwise `@_SCHED_@(*this) == @_SCHED_@(other);`
+[9]{.pnum} _Returns_: `false` if `@_SCHED_@(*this)` and `@_SCHED_@(other)` are
+    of different types, otherwise `@_SCHED_@(*this) == @_SCHED_@(other);`
 
 ```cpp
 template <class Sched>
-  requires (not same_as<task_scheduler, remove_cvref_t<Sched>>)
+  requires (!same_as<task_scheduler, remove_cvref_t<Sched>>)
         && scheduler<Sched>
 bool operator== (const Sched& other) const noexcept;
 ```
