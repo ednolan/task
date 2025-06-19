@@ -1724,12 +1724,12 @@ namespace std::execution {
     `completion_signatures<set_error_t(exception_ptr)>` if the
     implementation supports exceptions, otherwise `error_types` is
     `completion_signatures<>`.  `error_types` must be a
-    specialization<br/>`completion_signatures<ErrorSig...>` where
+    specialization `completion_signatures` `<ErrorSig...>` where
     each element of `ErrorSig...` is of the form `set_error_t(E)`
     for some type `E`.
 
 [2]{.pnum} The type alias `task<T, Environment>::completion_signatures`
-    is a specialization of `excution::completion_signatures` with
+    is a specialization of `execution::` `completion_signatures` with
     the template arguments `set_value_t(T)`, `ErrorSig...`, and
     `set_stopped_t()` in an unspecified order.
 
@@ -1964,7 +1964,7 @@ auto final_suspend() noexcept;
     `set_error` with the appropriate arguments:
 
 - [5.1]{.pnum} If the coroutine exited with an error `e` this error is
-    is reported by calling `set_error(std::move(@_RCVR_@(*this), std::move(e))`.
+    is reported by calling `set_error(std::move(@_RCVR_@(*this),` `std::move(e))`.
 - [5.2]{.pnum} Otherwise, if `same_as<void, T>` is true
     `set_value(std::move(@_RCVR_@(*this)))` is called.
 - [5.3]{.pnum} Otherwise, `set_value(std::move(@_RCVR_@(*this)), *@_result_@)`
@@ -1989,7 +1989,7 @@ auto await_transform(Sender&& sndr) noexcept;
 ```
 
 [8]{.pnum} _Returns_: If `same_as<inline_scheduler, scheduler_type>` is
-    true returns `as_awaitable(std::forward<Sender>(sndr), *this)`;
+    true returns `as_awaitable(std::forward<Sender>(sndr),` `*this)`;
     otherwise returns
     `as_awaitable(affine_on(std::forward<Sender>(sndr), @_SCHED_@(*this)), *this)`.
 
@@ -2027,8 +2027,8 @@ void unhandled_stopped();
 - [13.3]{.pnum} `env.query(get_stop_token)` returns `@_token_@`.
 - [13.4]{.pnum} For any other query `q` and arguments `a...` a
     call to `env.query(q, a...)` returns
-    <br/>`@_STATE_@(*this).@_get-environment_@().query(q, a...)` if this expression
-    is well-formed and `forwarding_query(q)` is well-formed.  Otherwise
+    `@_STATE_@(*this).` `@_get-environment_@().query(q, a...)` if this expression
+    is well-formed and `forwarding_query(q)` is well-formed and is true.  Otherwise
     `env.query(q, a...)` is ill-formed.
 
 ```cpp
