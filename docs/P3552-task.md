@@ -1382,7 +1382,7 @@ Howes for comments on drafts of this proposal and general guidance.
 In [version.syn], add a row
 
 ```cpp
-#define __cpp_lib_task YYYMML // @_also in <execution>_@
+@@[#define __cpp_lib_task YYYMML // @_also in_@ &lt;execution&gt;]{.add}@@
 ```
 
 In [execution.syn]{.sref} add declarations for the new classes:
@@ -1405,7 +1405,7 @@ namespace std::execution {
   @[class task_scheduler;]{.add}@
 
   @[// [exec.task]{.sref}]{.add}@
-  @[template <class T, class  Environment>]{.add}@ // there is a space between class and Environment!
+  @[template <class T, class]{.add}@ @[Environment>]{.add}@
   @[class task;]{.add}@
 }
 ```
@@ -1444,10 +1444,10 @@ except that `sndr` is evalutated only once.
 ```cpp
   namespace std::execution {
     template <>
-    struct @_impls_for_@<affine_on_t>: @_default-impls_@ {
+    struct @_impls-for_@<affine_on_t>: @_default-impls_@ {
       static constexpr auto @_get-attrs_@ =
         [](const auto& data, const auto& child) noexcept -> decltype(auto) {
-          return @_JOIN-ENV_@(_SCHED-ATTRS_@(data), @_FWD-ENV_@(get_env(child)));
+          return @_JOIN-ENV_@(@_SCHED-ATTRS_@(data), @_FWD-ENV_@(get_env(child)));
         };
     };
   }
@@ -1531,12 +1531,11 @@ namespace std::execution {
       requires(!same_as<task_scheduler, remove_cvref_t<Sched>>)
         && scheduler<Sched>
     explicit task_scheduler(Sched&& sched, Allocator alloc = {});
-    template <class Allocator>
-    task_scheduler(const task_scheduler& other, Allocator alloc);
     task_scheduler(const task_scheduler& other);
     task_scheduler& operator=(const task_scheduler& other);
 
     @_sender_@ schedule();
+
     bool operator== (const task_scheduler&) const noexcept;
     template <class Sched>
       requires (!same_as<task_scheduler, remove_cvref_t<Sched>>)
@@ -1558,33 +1557,25 @@ template <class Sched, class Allocator = allocator<void>>
 explicit task_scheduler(Sched&& sched, Allocator alloc = {});
 ```
 
-[2]{.pnum} _Effects_: Initialises the object from `sched` and `alloc`.
+[2]{.pnum} _Effects_: Constructs an owned object of type
+    `remove_cvref_t<Sched>` with `std::forward<Sched>(sched)` using
+    the allocator `alloc`.
 
-[3]{.pnum} _Postconditions_: `*this` has a target scheduler of type
-    `remove_cvref_t<Sched>` direct-non-list-initialized with
-    `std::forward<Sched>(sched)`.
+[3]{.pnum} _Postconditions_: `SCHED(*this) == sched` is true.
 
 [4]{.pnum} _Recommended practice_: Implementations should avoid the
     use of dynamically allocated memory for small scheduler objects,
     for example, where `sched` refers to an object holding only a
-    pointer or reference to an object.
-
-```cpp
-template <class Allocator>
-task_scheduler(const task_scheduler& other, Allocator alloc);
-```
-
-[4]{.pnum} _Effects_: Initialises the object from `other` and `alloc`.
-    Any allocation used by `this` use an allocator obtained by rebinding
-    `alloc` or a copy thereof.
-
-[5]{.pnum} _Postconditions_: `*this == other` is true.
+    pointer or reference to an object. If memory needs to be allocated
+    the object is shared when the `task_scheduler` is copied.
 
 ```cpp
 task_scheduler(const task_scheduler& other);
 ```
 
-[6]{.pnum} _Effects_: equivalent to `task_scheduler(other, allocator<void>{});
+[5]{.pnum} _Effects_: Initialises the object from `other`.
+
+[6]{.pnum} _Postconditions_: `*this == other` is true.
 
 ```cpp
 task_scheduler& operator=(const task_scheduler& other);
