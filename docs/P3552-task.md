@@ -1,6 +1,6 @@
 ---
 title: Add a Coroutine Task Type
-document: D3552R2
+document: D3552R3
 date: 2025-06-19
 audience:
     - Concurrency Working Group (SG1)
@@ -1381,32 +1381,56 @@ Howes for comments on drafts of this proposal and general guidance.
 
 In [version.syn], add a row
 
-```cpp
-@@[#define __cpp_lib_task YYYMML // @_also in_@ &lt;execution&gt;]{.add}@@
+:::add
 ```
+#define __cpp_lib_task YYYMML // @_also in_@ <execution>
+```
+:::
+
+In [except.terminate] paragraph 1 add this bullet at the end of Note 1:
+
+:::note
+These situations are
+
+- ...
+
+- when unhandled_stopped is called on a with_awaitable_senders<T> object ([exec.with.awaitable.senders]) whose continuation is not a handle to a coroutine whose promise type has an unhandled_stopped member function[.]{.rm}[, or]{.add}
+
+:::add
+- when an exception is thrown from a coroutine `std::execution::task`
+  which doesn't support a `std::execution::set_error_t(std::execption_ptr)` completion.
+:::
+
+:::
 
 In [execution.syn]{.sref} add declarations for the new classes:
 
-```cpp
+```
 namespace std::execution {
-    ...
+  ...
   // [exec.with.awaitable.senders]
   template<class-type Promise>
     struct with_awaitable_senders;
 
-  @[// [exec.affine.on]{.sref}]{.add}@
-  @@[struct affine_on_t { @_unspecified_@  };]{.add}@@
-  inline @[constexpr affine_on_t affine_on;]{.add}@
+```
+:::add
+```
+  // @[exec.affine.on]{.sref}@
+  struct affine_on_t { @_unspecified_@  };
+  inline constexpr affine_on_t affine_on;
 
-  @[// [exec.inline.scheduler]{.sref}]{.add}@
-  @[class inline_scheduler;]{.add}@
+  // @[exec.inline.scheduler]{.sref}@
+  class inline_scheduler;
 
-  @[// [exec.task.scheduler]{.sref}]{.add}@
-  @[class task_scheduler;]{.add}@
+  // @[exec.task.scheduler]{.sref}@
+  class task_scheduler;
 
-  @[// [exec.task]{.sref}]{.add}@
-  @[template <class T, class]{.add}@ @[Environment>]{.add}@
-  @[class task;]{.add}@
+  // @[exec.task]{.sref}@
+  template <class T, class Environment>
+  class task;
+```
+:::
+```
 }
 ```
 
@@ -1527,68 +1551,50 @@ namespace std::execution {
   public:
     using scheduler_concept = scheduler_t;
 
-    template <class Sched, class Allocator = allocator<void>>
-      requires(!same_as<task_scheduler, remove_cvref_t<Sched>>)
-        && scheduler<Sched>
-    explicit task_scheduler(Sched&& sched, Allocator alloc = {});
-    task_scheduler(const task_scheduler& other);
-    task_scheduler& operator=(const task_scheduler& other);
+    template <class Sch, class Allocator = allocator<byte>>
+      requires(!same_as<task_scheduler, remove_cvref_t<Sch>>)
+        && scheduler<Sch>
+    explicit task_scheduler(Sch&& sch, Allocator alloc = {});
 
     @_sender_@ schedule();
 
-    bool operator== (const task_scheduler&) const noexcept;
-    template <class Sched>
-      requires (!same_as<task_scheduler, remove_cvref_t<Sched>>)
-      && scheduler<Sched>
-    bool operator== (const Sched& sched) const noexcept;
+    TODO make hidden friends
+    bool operator== (const task_scheduler& other) const noexcept;
+    template <class Sch>
+      requires (!same_as<task_scheduler, remove_cvref_t<Sch>>)
+      && scheduler<Sch>
+    bool operator== (const Sch& other) const noexcept;
+
+    private:
+      shared_ptr<void> sch_;
   };
 }
 ```
 
 [1]{.pnum} `task_scheduler` is a class that models `scheduler`
-    [exec.scheduler]{.sref}. Let `s` be an object of type `task_scheduler`
-    then `@_SCHED_@(s)` is the target scheduler object of a type
-    different than `task_scheduler` modeling `scheduler` which is
-    used by `s` to do the actual scheduling.
+    [exec.scheduler]{.sref}. Let `s` be an object of type
+    `task_scheduler` then `@_SCHED_@(s)` is the object whose
+    address is equal to `s.sch_.get()` of a type modeling `scheduler`
+    which is used by `s` to do the actual scheduling.
 
 ```cpp
-template <class Sched, class Allocator = allocator<void>>
-  requires(!same_as<task_scheduler, remove_cvref_t<Sched>>) && scheduler<Sched>
-explicit task_scheduler(Sched&& sched, Allocator alloc = {});
+template <class Sch, class Allocator = allocator<void>>
+  requires(!same_as<task_scheduler, remove_cvref_t<Sch>>) && scheduler<Sch>
+explicit task_scheduler(Sch&& sch, Allocator alloc = {});
 ```
 
-[2]{.pnum} _Effects_: Constructs an owned object of type
-    `remove_cvref_t<Sched>` with `std::forward<Sched>(sched)` using
-    the allocator `alloc`.
-
-[3]{.pnum} _Postconditions_: `SCHED(*this) == sched` is true.
+[2]{.pnum} _Effects_: Initialize `sch_` with
+    `allocate_shared<remove_cvref_t<Sch>>(alloc, std::forward<Sch>(sch))`.
 
 [4]{.pnum} _Recommended practice_: Implementations should avoid the
-    use of dynamically allocated memory for small scheduler objects,
-    for example, where `sched` refers to an object holding only a
-    pointer or reference to an object. If memory needs to be allocated
-    the object is shared when the `task_scheduler` is copied.
-
-```cpp
-task_scheduler(const task_scheduler& other);
-```
-
-[5]{.pnum} _Effects_: Initialises the object from `other`.
-
-[6]{.pnum} _Postconditions_: `*this == other` is true.
-
-```cpp
-task_scheduler& operator=(const task_scheduler& other);
-```
-
-[7]{.pnum} _Postconditions_: `*this == other` is true.
+    use of dynamically allocated memory for small scheduler objects.
 
 ```cpp
 @_sender_@ schedule();
 ```
 
-[8]{.pnum} _Effects_: Creates a `@_sender_@` initialized with
-    `schedule(@_SCHED_@(*this))`.
+[8]{.pnum} _Effects_: Returns an object of type `@_sender_@` containting
+    a sender initialized with `schedule(@_SCHED_@(*this))`.
 
 ```cpp
 bool operator== (const task_scheduler& other) const noexcept;
@@ -1598,17 +1604,17 @@ bool operator== (const task_scheduler& other) const noexcept;
     of different types, otherwise `@_SCHED_@(*this) == @_SCHED_@(other);`
 
 ```cpp
-template <class Sched>
-  requires (!same_as<task_scheduler, remove_cvref_t<Sched>>)
-        && scheduler<Sched>
-bool operator== (const Sched& other) const noexcept;
+template <class Sch>
+  requires (!same_as<task_scheduler, remove_cvref_t<Sch>>)
+        && scheduler<Sch>
+bool operator== (const Sch& other) const noexcept;
 ```
 
 [10]{.pnum} _Returns_: `false` if the types of `@_SCHED_@(*this)` and `other` are
     different, otherwise `@_SCHED_@(*this) == other;`
 
 ```cpp
-class task_scheduler::@_sender_@ {
+class task_scheduler::@_sender_@ { // @_exposition only_@
 public:
   using sender_concept = sender_t;
 
@@ -1617,8 +1623,9 @@ public:
 };
 ```
 
-[11]{.pnum} `@_sender_@` is an exposition-only class that models `sender` [exec.sender]{.sref}.
-    For any type `Env`, the type `completion_signatures_t<@_sender_@, Env>` is
+[11]{.pnum} `@_sender_@` is an exposition-only class that models
+    `sender` [exec.sender]{.sref} and for which
+    `completion_signatures_t<@_sender_@>` denotes:
 
 ```cpp
 completion_signatures<
@@ -1628,25 +1635,28 @@ completion_signatures<
   set_stopped_t()>
 ```
 
-[12]{.pnum} Let `sched` be an object of type `task_scheduler` and
+[12]{.pnum} Let `sch` be an object of type `task_scheduler` and
     let `sndr` be an object of type `@_sender_@` obtained from
-    `schedule(sched)`. Then
-    `get_completion_scheduler<set_value_t>(get_env(sndr)) == sched`
-    is true. The object `@_SENDER_@(sched)` is the object initialized
-    with `schedule(sched)` or an object move constructed from
-    that.
+    `schedule(sch)`. Then
+    `get_completion_scheduler<set_value_t>(get_env(sndr)) == sch`
+    is true. The object `@_SENDER_@(sch)` is the contained sender
+    object or an object move constructed from it.
 
 ```cpp
-template<receiver R>
-task_scheduler::@_state_@<R> task_scheduler::@_sender_@::connect(R&& rcvr);
+template<receiver Rcvr>
+@_state_@<Rcvr> connect(Rcvr&& rcvr);
 ```
 
-[13]{.pnum} _Effects_: Creates a `@_sender_@<R>` initialized with
-    `connect(@_SENDER_@(*this), std::forward<R>(rcvr))`.
+[13]{.pnum} _Effects_: Let `r` be an object of a type that models
+`receiver` and whose completion handlers result in invoking the
+corresponding completion handlers of `rcvr` or copy thereof.
+Returns an object of type `@_state_@<Rcvr>` containing an operation
+state object initialized with
+    `connect(@_SENDER_@(*this), std::move(r))`.
 
 ```cpp
 template <receiver R>
-class task_scheduler::@_state_@ {
+class task_scheduler::@_state_@ { // @_exposition only_@
 public:
   using operation_state_concept = operation_state_t;
 
@@ -1654,28 +1664,26 @@ public:
 };
 ```
 
-[14]{.pnum} `@_state_@` is an exposition-only class tmplate whose specializations
-    model `operation_state` [exec.opstate]{.sref}. Let `R` be a type that models
-    `receiver`, let `rcvr` be an object of type`R`, [exec.recv]{.sref},
-    and let `st` be an object of type `@_state_@<R>`. `@_STATE_@(st)` is the object
-    the object `st` got intialised with.
+[14]{.pnum} `@_state_@` is an exposition-only class template whose specializations
+    model `operation_state` [exec.opstate]{.sref}.
 
 ```cpp
-void task_scheduler::@_state_@<R>::start() & noexcept;
+void start() & noexcept;
 ```
 
-[15]{.pnum} _Effects_: Equivalent to `start(@_STATE_@(*this))`.
+[15]{.pnum} _Effects_: Equivalent to `start(st)` where `st` is
+    the operation state object contained by `*this`.
 
 ## `execution::task` [exec.task]
 
 ### `task` Overview [task.overview]
 
-[1]{.pnum} The `task` class template represents a sender used to `co_await` awaitables by
-evaluating a coroutine. The first template parameter `T` defines the type which
-can be used with `co_return` and which becomes the `set_value_t(T)` completion.
-The second template parameter `Environment` is used to specify various customisations
-supported by the `task` class template. The type `task<T, Environment>` models `sender`
-[exec.snd]{.sref}
+[1]{.pnum} The `task` class template represents a sender that can
+be used as the return type of coroutines. The first template parameter
+`T` defines the type value completion datum ([exec.async.ops]{.sref}) if `T` is not `void`. Otherwise there are no value completion datums.
+Inside coroutines returning `task<T, E>` the operand of
+`co_return` (if any) becomes the argument of `set_value`.  The second template
+parameter `Environment` is to used customize the behavior of `task`.
 
 ### Class template task [task.class]
 
@@ -1710,30 +1718,39 @@ namespace std::execution {
 }
 ```
 
-[1]{.pnum} The `task` template determines multiple types based on the `Environment` parameter:
+[1]{.pnum} A program that instantiates the definition of `task<T, E>` is ill-formed unless `T` is `void`, reference type, or an cv unqualified non-array object
+type and `E` is a class type. Otherwise the type `task<T, E>` models `sender` [exec.snd]{.sref}.
 
-- [1.1]{.pnum} If the type `Environment::allocator_type` exists `allocator_type`
-    is that type, otherwise `allocator_type` is `allocator<byte>`.
-- [1.2]{.pnum} If the type `Environment::scheduler_type` exists `scheduler_type`
-    is that type, otherwise `scheduler_type` is `task_scheduler`.
-- [1.3]{.pnum} If the type `Environment::stop_source_type` exists
-    `stop_source_type` is that type, otherwise `stop_source_type` is
-    `inplace_stop_source`.
-- [1.4]{.pnum} If the type `Environment::error_types` exists `error_types`
-    is that type, otherwise `error_types` is
-    `completion_signatures<set_error_t(exception_ptr)>` if the
-    implementation supports exceptions, otherwise `error_types` is
-    `completion_signatures<>`.  `error_types` must be a
-    specialization `completion_signatures` `<ErrorSig...>` where
-    each element of `ErrorSig...` is of the form `set_error_t(E)`
+[1]{.pnum} The nested types of `task` template specializations 
+are determined based on the `Environment` parameter:
+
+- [1.1]{.pnum} `allocator_type` is `Environment::allocator_type`
+if that qualified-id is valid and denotes a type, 
+`allocator<byte>` otherwise.
+- [1.2]{.pnum} `scheduler_type` is `Environment::scheduler_type` if that qualified-id is valid and denotes a type, `task_scheduler`
+otherwise.
+- [1.3]{.pnum} `stop_source_type` is `Environment::stop_source_type`
+if that qualified-id is valid and denotes a type, `inplace_stop_source`
+otherwise.
+- [1.4]{.pnum} `error_types` is `Environment::error_types`
+    is that qualified-id is valid and denotes a type, 
+    `completion_signatures<set_error_t(exception_ptr)>` otherwise.
+
+[2]{.pnum}  A program is ill-formed if 
+    `error_types` is not a
+    specialization of `completion_signatures<ErrorSigs...>` or
+    `ErrorSigs` contains an element which is not of the form `set_error_t(E)`
     for some type `E`.
 
-[2]{.pnum} The type alias `task<T, Environment>::completion_signatures`
-    is a specialization of `execution::` `completion_signatures` with
-    the template arguments `set_value_t(T)`, `ErrorSig...`, and
-    `set_stopped_t()` in an unspecified order.
+[2]{.pnum} The type alias `completion_signatures`
+    is a specialization of `execution::completion_signatures` with
+    the template arguments (in unspecified order):
+    
+    -  `set_value_t()` if `T` is `void`, and `set_value_t(T)` otherwise;
+    -  TODO elements of `ErrorSigs`; and
+    - `set_stopped_t()`.
 
-[3]{.pnum} _Mandates_: `allocator_type` shall meet the _Cpp17Allocator_ requirements.
+[3]{.pnum} `allocator_type` shall meet the _Cpp17Allocator_ requirements.
 
 ### Task Members [task.members]
 
@@ -1854,13 +1871,13 @@ namespace std::execution {
   template <class E>
   with_error(E&&) -> with_error<E>;
 
-  template <scheduler S>
+  template <scheduler Sch>
   struct change_coroutine_scheduler {
-    using type = remove_cvref_t<S>;
+    using type = remove_cvref_t<Sch>;
     type scheduler;
   };
-  template <scheduler S>
-  change_coroutine_scheduler(S&&) -> change_coroutine_scheduler<S>;
+  template <scheduler Sch>
+  change_coroutine_scheduler(Sch&&) -> change_coroutine_scheduler<Sch>;
 
   template <class T, class Environment>
   class task<T, Environment>::promise_type {
@@ -1885,8 +1902,8 @@ namespace std::execution {
 
     template <class A>
     auto await_transform(A&& a);
-    template <class S>
-    auto await_transform(change_coroutine_scheduler<S> sched);
+    template <class Sch>
+    auto await_transform(change_coroutine_scheduler<Sch> sch);
 
     @_unspecified_@ get_env() const noexcept;
 
@@ -1994,10 +2011,10 @@ auto await_transform(Sender&& sndr) noexcept;
     `as_awaitable(affine_on(std::forward<Sender>(sndr), @_SCHED_@(*this)), *this)`.
 
 ```cpp
-auto await_transform(change_coroutine_scheduler<scheduler_type> s) noexcept;
+auto await_transform(change_coroutine_scheduler<scheduler_type> sch) noexcept;
 ```
 
-[9]{.pnum} _Returns:_ `as_awaitable(just(exchange(@_SCHED_@(*this), s.scheduler)), *this);`
+[9]{.pnum} _Returns:_ `as_awaitable(just(exchange(@_SCHED_@(*this), sch.scheduler)), *this);`
 
 ```cpp
 void uncaught_exception();
