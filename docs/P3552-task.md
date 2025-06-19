@@ -1690,6 +1690,10 @@ namespace std::execution {
   public:
     using sender_concept = sender_t;
     using completion_signatures = @_see below_@;
+    using allocator_type = @_see below_@;
+    using scheduler_type = @_see below_@;
+    using stop_source_type = @_see below_@;
+    using error_types = @_see below_@;
 
     // [task.promise]
     class promise_type;
@@ -1708,17 +1712,18 @@ namespace std::execution {
 
 [1]{.pnum} The `task` template determines multiple types based on the `Environment` parameter:
 
-- [1.1]{.pnum} If the type `Environment::allocator_type` exists let `Alloc` be that type,
-    otherwise let `Alloc` be `allocator<byte>`.
-- [1.2]{.pnum} If the type `Environment::scheduler_type` exists let `Scheduler` be that
-    type, otherwise let `Scheduler` be `task_scheduler`.
-- [1.3]{.pnum} If the type `Environment::stop_source_type` exists let `StopSource` be that
-    type, otherwise let `StopSource` be `inplace_stop_source`.
-- [1.4]{.pnum} If the type `Environment::error_types` exists let `Errors`
-    be that type, otherwise let `Errors` be
+- [1.1]{.pnum} If the type `Environment::allocator_type` exists `allocator_type`
+    is that type, otherwise `allocator_type` is `allocator<byte>`.
+- [1.2]{.pnum} If the type `Environment::scheduler_type` exists `scheduler_type`
+    is that type, otherwise `scheduler_type` is `task_scheduler`.
+- [1.3]{.pnum} If the type `Environment::stop_source_type` exists
+    `stop_source_type` is that type, otherwise `stop_source_type` is
+    `inplace_stop_source`.
+- [1.4]{.pnum} If the type `Environment::error_types` exists `error_types`
+    is that type, otherwise `error_types` is
     `completion_signatures<set_error_t(exception_ptr)>` if the
-    implementation supports exceptions, otherwise let `Errors` be
-    `completion_signatures<>`.  `Errors` must be a
+    implementation supports exceptions, otherwise `error_types` is
+    `completion_signatures<>`.  `error_types` must be a
     specialization<br/>`completion_signatures<ErrorSig...>` where
     each element of `ErrorSig...` is of the form `set_error_t(E)`
     for some type `E`.
@@ -1728,7 +1733,7 @@ namespace std::execution {
     the template arguments `set_value_t(T)`, `ErrorSig...`, and
     `set_stopped_t()` in an unspecified order.
 
-[3]{.pnum} _Mandates_: `Alloc` shall meet the _Cpp17Allocator_ requirements.
+[3]{.pnum} _Mandates_: `allocator_type` shall meet the _Cpp17Allocator_ requirements.
 
 ### Task Members [task.members]
 
@@ -1822,8 +1827,8 @@ void start() & nexcept;
 - [4.1]{.pnum} `@_STATE_@(prom)` is `*this` (see [task.promise]).
 - [4.2]{.pnum} `@_RCVR_@(prom)` is `@_rcvr_@`.
 - [4.3]{.pnum} `@_SCHED_@(prom)` is initialised using
-    `Scheduler(get_scheduler(get_env(@_rcvr_@)))` if that expression is
-    valid and using `Scheduler()` otherwise. If neither of these
+    `scheduler_type(get_scheduler(get_env(@_rcvr_@)))` if that expression is
+    valid and using `scheduler_type()` otherwise. If neither of these
     expressions is valid, the program is ill-formed.
 - [4.4]{.pnum} `prom.@_source_@` and `prom.@_token_@` are set up
     such that `prom.@_token_@` reflects the state of
@@ -1891,14 +1896,14 @@ namespace std::execution {
     void operator delete(void* pointer, size_t size) noexcept;
 
   private:
-    using StopToken = decltype(decl_val<StopSource>().get_token());
+    using StopToken = decltype(decl_val<stop_source_type>().get_token());
     using ErrorVariant = @_see below_@;
 
-    Alloc         @_alloc_@;  // @_exposition only_@
-    StopSource    @_source_@; // @_exposition only_@
-    StopToken     @_token_@;  // @_exposition only_@
-    optional<T>   @_result_@; // if !same_as<void, T>; @_exposition only_@
-    ErrorVariant  @_errors_@; // @_exposition only_@
+    allocator_type    @_alloc_@;  // @_exposition only_@
+    stop_source_type  @_source_@; // @_exposition only_@
+    StopToken         @_token_@;  // @_exposition only_@
+    optional<T>       @_result_@; // if !same_as<void, T>; @_exposition only_@
+    ErrorVariant      @_errors_@; // @_exposition only_@
   };
 }
 ```
@@ -1916,11 +1921,11 @@ namespace std::execution {
 - [1.2]{.pnum} `@_RCVR_@(prom)` is an object initialised from `rcvr`
     where `rcvr` is the receiver used to get `@_STATE_@(prom)` by using
     `connect(tsk, rcvr)`.
-- [1.3]{.pnum} `@_SCHED_@(prom)` is an object of type `Scheduler` which
+- [1.3]{.pnum} `@_SCHED_@(prom)` is an object of type `scheduler_type` which
     is associated with `prom`.
 - [1.4] `ErrorVariant` is a `variant<remove_cvref_t<E>...>`, with duplicate
     types removed, where `E...` are the parameter types of the
-    elements in `Errors`.
+    elements in `error_types`.
 
 ```cpp
 template <class... Args>
@@ -1930,7 +1935,7 @@ promise_type(const Args&... args);
 [2]{.pnum} _Effects:_ If `Args` contains an element of type
     `allocator_arg_t` then `@_alloc_@` is initialised with the
     corresponding next element of `args`. Otherwse, `@_alloc_@`
-    is initialised with `Alloc()`.
+    is initialised with `allocator_type()`.
 
 ```cpp
 task get_return_object() noexcept;
@@ -1971,7 +1976,7 @@ auto yield_value(with_error<Err> err);
 ```
 
 [6]{.pnum} _Mandates_ The type `Err` is unambigiously convertible to
-    one of the `set_error_t` argument types of `Errors`.
+    one of the `set_error_t` argument types of `error_types`.
 
 [7]{.pnum} _Returns:_ An awaitable object of unspecified type
     ([expr.await]) whose member functions arrange for the calling
@@ -1983,13 +1988,13 @@ template <sender Sender>
 auto await_transform(Sender&& sndr) noexcept;
 ```
 
-[8]{.pnum} _Returns_: If `same_as<inline_scheduler, Scheduler>` is
+[8]{.pnum} _Returns_: If `same_as<inline_scheduler, scheduler_type>` is
     true returns `as_awaitable(std::forward<Sender>(sndr), *this)`;
     otherwise returns
     `as_awaitable(affine_on(std::forward<Sender>(sndr), @_SCHED_@(*this)), *this)`.
 
 ```cpp
-auto await_transform(change_coroutine_scheduler<Scheduler> s) noexcept;
+auto await_transform(change_coroutine_scheduler<scheduler_type> s) noexcept;
 ```
 
 [9]{.pnum} _Returns:_ `as_awaitable(just(exchange(@_SCHED_@(*this), s.scheduler)), *this);`
@@ -1999,7 +2004,7 @@ void uncaught_exception();
 ```
 
 [10]{.pnum} _Effects:_ If the signature `set_error_t(exception_ptr)` is
-    not an element of `Errors` calls `terminate()`. Otherwise stores
+    not an element of `error_types` calls `terminate()`. Otherwise stores
     `current_exception()` into `@_errors_@`.
 
 ```cpp
@@ -2017,7 +2022,7 @@ void unhandled_stopped();
 [13]{.pnum} _Returns:_ The member function returns an object `env`
     such that queries are forwarded as follows:
 
-- [13.1]{.pnum} `env.query(get_scheduler)` returns `Scheduler(@_SCHED_@(*this))`.
+- [13.1]{.pnum} `env.query(get_scheduler)` returns `scheduler_type(@_SCHED_@(*this))`.
 - [13.2]{.pnum} `env.query(get_allocator)` returns `@_alloc_@`.
 - [13.3]{.pnum} `env.query(get_stop_token)` returns `@_token_@`.
 - [13.4]{.pnum} For any other query `q` and arguments `a...` a
