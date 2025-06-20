@@ -1,7 +1,7 @@
 ---
 title: Add a Coroutine Task Type
-document: D3552R3
-date: 2025-06-19
+document: P3552R3
+date: 2025-06-20
 audience:
     - Concurrency Working Group (SG1)
     - Library Evolution Working Group (LEWG)
@@ -211,7 +211,7 @@ is in the promise type's `await_transform()`:
   senders result on the task's scheduler, similar to `continues_on(sender,
   scheduler)`. The rescheduling is avoided when the sender is tagged
   as not changing scheduler (using a `static constexpr` member named
-  `blocking` which is initialised to `blocking_kind::always_inline`).
+  `blocking` which is initialized to `blocking_kind::always_inline`).
 - If a sender is `co_await`ed it gets `connect`ed to a receiver
   provided by the task to form an awaiter holding an operation
   state. The operation state gets `start`ed by the awaiter's
@@ -954,7 +954,7 @@ to the coroutine, though:
 - The `get_allocator` query should provide the
     [coroutine's allocator](#allocator-support) whose type is
     determined based on the coroutine's context using `ex::allocator_of_t<C>`.
-    The allocator gets initialised when constructing the promise type.
+    The allocator gets initialized when constructing the promise type.
 - The `get_stop_token` query should provide a stop token
     from a stop source which is linked to the stop token obtained
     from the receiver's environment. The type of the stop source
@@ -1456,7 +1456,7 @@ section without any color highlight of what it being added.
 [3]{.pnum} Otherwise, the expression `affine_on(sndr, sch)` is
     expression-equivalent to:
 
-```cpp
+```
     transform_sender(@_get-domain-early_@(sndr), @_make-sender_@(affine_on, sch, sndr))
 ```
 
@@ -1465,7 +1465,7 @@ except that `sndr` is evalutated only once.
 [4]{.pnum} The exposition-only class template `@_impls-for_@` is specialized
    for `affine_on_t` as follows:
 
-```cpp
+```
   namespace std::execution {
     template <>
     struct @_impls-for_@<affine_on_t>: @_default-impls_@ {
@@ -1495,7 +1495,7 @@ except that `sndr` is evalutated only once.
 
 ## `execution::inline_scheduler` [exec.inline.scheduler]
 
-```cpp
+```
 namespace std::execution {
   class inline_scheduler {
     class @_inline-sender_@; // exposition only
@@ -1521,27 +1521,27 @@ is `completion_signatures<set_value_t()>`.
 
 [3]{.pnum} Let `@_sndr_@` be an expression of type `@_inline-sender_@`, let `@_rcvr_@`
 be an expression such that `receiver_of<decltype((@_rcvr_@)), CS>` is `true` where
-`CS` is `completion_signatures<set_value_t()>`.
+`CS` is `completion_signatures<set_value_t()>`, then:
 
-- [3.1]{.pnum} The expression `connect(@_sndr_@, @_rcvr_@)` has
-    type `@_inline-state_@<remove_cvref_t<decltype((@_rcvr_@))>>` and is potentiall-throwing if and
+- [3.1]{.pnum} the expression `connect(@_sndr_@, @_rcvr_@)` has
+    type `@_inline-state_@<remove_cvref_t<decltype((@_rcvr_@))>>` and is potentially-throwing if and
     only if
-    `((void)@_sndr_@, auto(@_rcvr_@))` is potentially-throwing.
-- [3.2]{.pnum} The expression `get_completion_scheduler<set_value_t>(get_env(@_sndr_@))`
+    `((void)@_sndr_@, auto(@_rcvr_@))` is potentially-throwing, and
+- [3.2]{.pnum} the expression `get_completion_scheduler<set_value_t>(get_env(@_sndr_@))`
     has type `inline_scheduler`  and is potentially-throwing if and only if `get_env(@_sndr_@)` is potentially-throwing.
 
 [4]{.pnum} Let `@_o_@` be a non-`const` lvalue of type `@_inline-state_@<Rcvr>`, and
     let `REC(@_o_@)` be a non-`const` lvalue reference to an object of type `Rcvr`
     that was initialized with the expression `@_rcvr_@` passed to an invocation
-    of `connect` that returned `@_o_@`. Then:
+    of `connect` that returned `@_o_@`, then:
 
-- [4.1]{.pnum} The object to which `REC(@_o_@)` refers remains valid for the lifetime
-    of the object to which `@_o_@` refers.
-- [4.2]{.pnum} The expression `start(@_o_@)` is equivalent to `set_value(std::move(REC(@_o_@)))`.
+- [4.1]{.pnum} the object to which `REC(@_o_@)` refers remains valid for the lifetime
+    of the object to which `@_o_@` refers, and
+- [4.2]{.pnum} the expression `start(@_o_@)` is equivalent to `set_value(std::move(REC(@_o_@)))`.
 
 ## `execution::task_scheduler` [exec.task.scheduler]
 
-```cpp
+```
 namespace std::execution {
   class task_scheduler {
     class @_sender_@; // exposition only
@@ -1552,68 +1552,71 @@ namespace std::execution {
     using scheduler_concept = scheduler_t;
 
     template <class Sch, class Allocator = allocator<byte>>
-      requires(!same_as<task_scheduler, remove_cvref_t<Sch>>)
+      requires (!same_as<task_scheduler, remove_cvref_t<Sch>>)
         && scheduler<Sch>
     explicit task_scheduler(Sch&& sch, Allocator alloc = {});
 
     @_sender_@ schedule();
 
-    TODO make hidden friends
-    bool operator== (const task_scheduler& other) const noexcept;
+    friend bool operator== (const task_scheduler& lhs, const task_scheduler& rhs)
+        noexcept;
     template <class Sch>
-      requires (!same_as<task_scheduler, remove_cvref_t<Sch>>)
+      requires (!same_as<task_scheduler, Sch>)
       && scheduler<Sch>
-    bool operator== (const Sch& other) const noexcept;
+    friend bool operator== (const task_scheduler& lhs, const Sch& rhs) noexcept;
 
     private:
-      shared_ptr<void> sch_;
+      shared_ptr<void> @_sch_@_; // @_exposition only_@
   };
 }
 ```
 
 [1]{.pnum} `task_scheduler` is a class that models `scheduler`
-    [exec.scheduler]{.sref}. Let `s` be an object of type
-    `task_scheduler` then `@_SCHED_@(s)` is the object whose
-    address is equal to `s.sch_.get()` of a type modeling `scheduler`
-    which is used by `s` to do the actual scheduling.
+    [exec.scheduler]{.sref}.
+    Given on object `s` of type `task_scheduler`, let `@_SCHED_@(s)` be the object owned
+    by `s.@_sch_@_`.
 
-```cpp
+```
 template <class Sch, class Allocator = allocator<void>>
   requires(!same_as<task_scheduler, remove_cvref_t<Sch>>) && scheduler<Sch>
 explicit task_scheduler(Sch&& sch, Allocator alloc = {});
 ```
 
-[2]{.pnum} _Effects_: Initialize `sch_` with
+[2]{.pnum} _Effects_: Initialize `@_sch_@_` with
     `allocate_shared<remove_cvref_t<Sch>>(alloc, std::forward<Sch>(sch))`.
 
-[4]{.pnum} _Recommended practice_: Implementations should avoid the
+[3]{.pnum} _Recommended practice_: Implementations should avoid the
     use of dynamically allocated memory for small scheduler objects.
 
-```cpp
+[4]{.pnum} _Remarks_:
+    Any allocations performed by construction of `@_sender_@` or `@_state_@`
+    objects resulting from calls on `*this` are performed using a copy
+    of `alloc`.
+
+```
 @_sender_@ schedule();
 ```
 
-[8]{.pnum} _Effects_: Returns an object of type `@_sender_@` containting
+[5]{.pnum} _Effects_: Returns an object of type `@_sender_@` containing
     a sender initialized with `schedule(@_SCHED_@(*this))`.
 
-```cpp
-bool operator== (const task_scheduler& other) const noexcept;
+```
+bool operator== (const task_scheduler& lhs, const task_scheduler& rhs) noexcept;
 ```
 
-[9]{.pnum} _Returns_: `false` if `@_SCHED_@(*this)` and `@_SCHED_@(other)` are
-    of different types, otherwise `@_SCHED_@(*this) == @_SCHED_@(other);`
+[6]{.pnum} _Effects_: Equivalent to: `return lhs == @_SCHED_@(rhs);`
 
-```cpp
+```
 template <class Sch>
-  requires (!same_as<task_scheduler, remove_cvref_t<Sch>>)
+  requires (!same_as<task_scheduler, Sch>)
         && scheduler<Sch>
-bool operator== (const Sch& other) const noexcept;
+bool operator== (const task_scheduler& lhs, const Sch& rhs) noexcept;
 ```
 
-[10]{.pnum} _Returns_: `false` if the types of `@_SCHED_@(*this)` and `other` are
-    different, otherwise `@_SCHED_@(*this) == other;`
+[7]{.pnum} _Returns_: `false` if type of `@_SCHED_@(lhs)` is not
+`Sch`, otherwise `@_SCHED_@(lhs) == rhs;`
 
-```cpp
+```
 class task_scheduler::@_sender_@ { // @_exposition only_@
 public:
   using sender_concept = sender_t;
@@ -1623,11 +1626,11 @@ public:
 };
 ```
 
-[11]{.pnum} `@_sender_@` is an exposition-only class that models
+[8]{.pnum} `@_sender_@` is an exposition-only class that models
     `sender` [exec.sender]{.sref} and for which
-    `completion_signatures_t<@_sender_@>` denotes:
+    `completion_signatures_of_t<@_sender_@>` denotes:
 
-```cpp
+```
 completion_signatures<
   set_value_t(),
   set_error_t(error_code),
@@ -1635,26 +1638,26 @@ completion_signatures<
   set_stopped_t()>
 ```
 
-[12]{.pnum} Let `sch` be an object of type `task_scheduler` and
+[9]{.pnum} Let `sch` be an object of type `task_scheduler` and
     let `sndr` be an object of type `@_sender_@` obtained from
     `schedule(sch)`. Then
     `get_completion_scheduler<set_value_t>(get_env(sndr)) == sch`
-    is true. The object `@_SENDER_@(sch)` is the contained sender
-    object or an object move constructed from it.
+    is `true`. The object `@_SENDER_@(sndr)` is the sender object
+    contained by `sndr` or an object move constructed from it.
 
-```cpp
+```
 template<receiver Rcvr>
 @_state_@<Rcvr> connect(Rcvr&& rcvr);
 ```
 
-[13]{.pnum} _Effects_: Let `r` be an object of a type that models
+[10]{.pnum} _Effects_: Let `r` be an object of a type that models
 `receiver` and whose completion handlers result in invoking the
 corresponding completion handlers of `rcvr` or copy thereof.
 Returns an object of type `@_state_@<Rcvr>` containing an operation
 state object initialized with
     `connect(@_SENDER_@(*this), std::move(r))`.
 
-```cpp
+```
 template <receiver R>
 class task_scheduler::@_state_@ { // @_exposition only_@
 public:
@@ -1664,14 +1667,14 @@ public:
 };
 ```
 
-[14]{.pnum} `@_state_@` is an exposition-only class template whose specializations
+[11]{.pnum} `@_state_@` is an exposition-only class template whose specializations
     model `operation_state` [exec.opstate]{.sref}.
 
-```cpp
+```
 void start() & noexcept;
 ```
 
-[15]{.pnum} _Effects_: Equivalent to `start(st)` where `st` is
+[12]{.pnum} _Effects_: Equivalent to `start(st)` where `st` is
     the operation state object contained by `*this`.
 
 ## `execution::task` [exec.task]
@@ -1680,14 +1683,16 @@ void start() & noexcept;
 
 [1]{.pnum} The `task` class template represents a sender that can
 be used as the return type of coroutines. The first template parameter
-`T` defines the type value completion datum ([exec.async.ops]{.sref}) if `T` is not `void`. Otherwise there are no value completion datums.
-Inside coroutines returning `task<T, E>` the operand of
-`co_return` (if any) becomes the argument of `set_value`.  The second template
-parameter `Environment` is to used customize the behavior of `task`.
+`T` defines the type value completion datum ([exec.async.ops]{.sref})
+if `T` is not `void`. Otherwise, there are no value completion
+datums.  Inside coroutines returning `task<T, E>` the operand of
+`co_return` (if any) becomes the argument of `set_value`.  The
+second template parameter `Environment` is used to customize the
+behavior of `task`.
 
 ### Class template task [task.class]
 
-```cpp
+```
 namespace std::execution {
   template <class T, class Environment>
   class task {
@@ -1701,6 +1706,7 @@ namespace std::execution {
     using allocator_type = @_see below_@;
     using scheduler_type = @_see below_@;
     using stop_source_type = @_see below_@;
+    using stop_token_type = decltype(declval<stop_source_type>().get_token());
     using error_types = @_see below_@;
 
     // [task.promise]
@@ -1718,71 +1724,70 @@ namespace std::execution {
 }
 ```
 
-[1]{.pnum} A program that instantiates the definition of `task<T, E>` is ill-formed unless `T` is `void`, reference type, or an cv unqualified non-array object
-type and `E` is a class type. Otherwise the type `task<T, E>` models `sender` [exec.snd]{.sref}.
+[1]{.pnum} `task<T, E>` models `sender` [exec.snd]{.sref} if `T` is `void`, a reference type, or an cv-unqualified non-array object type and `E` is class type. Otherwise a program that instantiates the definition of `task<T, E>` is ill-formed.
 
-[1]{.pnum} The nested types of `task` template specializations 
+[2]{.pnum} The nested types of `task` template specializations 
 are determined based on the `Environment` parameter:
 
-- [1.1]{.pnum} `allocator_type` is `Environment::allocator_type`
+- [2.1]{.pnum} `allocator_type` is `Environment::allocator_type`
 if that qualified-id is valid and denotes a type, 
 `allocator<byte>` otherwise.
-- [1.2]{.pnum} `scheduler_type` is `Environment::scheduler_type` if that qualified-id is valid and denotes a type, `task_scheduler`
+- [2.2]{.pnum} `scheduler_type` is `Environment::scheduler_type` if that qualified-id is valid and denotes a type, `task_scheduler`
 otherwise.
-- [1.3]{.pnum} `stop_source_type` is `Environment::stop_source_type`
+- [2.3]{.pnum} `stop_source_type` is `Environment::stop_source_type`
 if that qualified-id is valid and denotes a type, `inplace_stop_source`
 otherwise.
-- [1.4]{.pnum} `error_types` is `Environment::error_types`
-    is that qualified-id is valid and denotes a type, 
+- [2.4]{.pnum} `error_types` is `Environment::error_types`
+    if that qualified-id is valid and denotes a type, 
     `completion_signatures<set_error_t(exception_ptr)>` otherwise.
 
-[2]{.pnum}  A program is ill-formed if 
+[3]{.pnum}  A program is ill-formed if 
     `error_types` is not a
     specialization of `completion_signatures<ErrorSigs...>` or
     `ErrorSigs` contains an element which is not of the form `set_error_t(E)`
     for some type `E`.
 
-[2]{.pnum} The type alias `completion_signatures`
+[4]{.pnum} The type alias `completion_signatures`
     is a specialization of `execution::completion_signatures` with
     the template arguments (in unspecified order):
     
-    -  `set_value_t()` if `T` is `void`, and `set_value_t(T)` otherwise;
-    -  TODO elements of `ErrorSigs`; and
-    - `set_stopped_t()`.
+- [4.1]{.pnum} `set_value_t()` if `T` is `void`, and `set_value_t(T)` otherwise;
+- [4.2]{.pnum} template arguments of the specialization of `execution::completion_signatures` denoted by `error_types`; and
+- [4.3]{.pnum} `set_stopped_t()`.
 
-[3]{.pnum} `allocator_type` shall meet the _Cpp17Allocator_ requirements.
+[5]{.pnum} `allocator_type` shall meet the _Cpp17Allocator_ requirements.
 
 ### Task Members [task.members]
 
-```cpp
+```
 task(task&& other) noexcept;
 ```
 
 [1]{.pnum} _Effects:_ Initializes `@_handle_@` with `exchange(other.@_handle_@, {})`.
 
-```cpp
+```
 ~task();
 ```
 
 [2]{.pnum} _Effects:_ Equivalent to:
 
-```cpp
+```
     if (@_handle_@)
       @_handle_@.destroy();
 ```
 
-```cpp
+```
 template <receiver R>
 @_state_@<R> connect(R&& recv);
 ```
 
-[3]{.pnum} _Precondition_ `bool(@_handle_@)` is true.
+[3]{.pnum} _Preconditions:_ `bool(@_handle_@)` is `true`.
 
-[4]{.pnum} _Returns:_ `@_state_@<R>{ exchange(@_handle_@, {}), forward<R>(recv) };`
+[4]{.pnum} _Effects:_ Equivalent to: `return @_state_@<R>(exchange(@_handle_@, {}), std::forward<R>(recv));`
 
 ### Class template task::state [task.state]
 
-```cpp
+```
 namespace std::execution {
   template <class T, class Environment>
     template <receiver R>
@@ -1790,78 +1795,82 @@ namespace std::execution {
   public:
     using operation_state_concept = operation_state_t;
 
-    coroutine_handle<promise_type> @_handle_@;  // @_exposition only_@
-    remove_cvref_t<R>              @_rcvr_@;    // @_exposition only_@
-    @_see below_@                      @_own-env_@; // @_exposition only_@
-    Environment                    @_environment_@; // @_exposition only_@
-
-    template <class RCVR>
-    @_state_@(coroutine_handle<promise_type> h, RCVR&& rr);
+    template <class Rcvr>
+    @_state_@(coroutine_handle<promise_type> h, Rcvr&& rr);
     ~@_state_@();
     void start() & noexcept;
-    const Environment& @_get-environment_@() const noexcept; // @_exposition only_@
+
+private:
+    using @_own-env-t_@ = @_see below_@;     // @_exposition only_@
+    coroutine_handle<promise_type> @_handle_@;  // @_exposition only_@
+    remove_cvref_t<R>              @_rcvr_@;    // @_exposition only_@
+    @_own-env-t_@                      @_own-env_@; // @_exposition only_@
+    Environment                    @_environment_@; // @_exposition only_@
   };
 }
 ```
 
-[1]{.pnum} Let `Env` be the type of the receiver's environment
-    `decltype(get_env(declval<R>()))`. The type of `@_env_@` is
-    `Environment::template env_type<Env>` if this type is valid and
-    `empty_env` otherwise.
+[1]{.pnum} The type `@_own-env-t_@` is
+    `Environment::template env_type<decltype(get_env(declval<R>()))>`
+    if that qualified-id is valid and denotes a type, 
+    `env<>` otherwise.
 
-```cpp
-template <class RCVR>
-@_state_@(coroutine_handle<promise_type> h, RCVR&& rr);
+```
+template <class Rcvr>
+@_state_@(coroutine_handle<promise_type> h, Rcvr&& rr);
 ```
 
-[2]{.pnum} _Effects:_ Initializes `@_handle_@` with `std::move(h)`
-    and `@_rcvr_@` with `std::forward<RCVR>(rr)`. `@_own-env_@` is
-    initialised with `get_env(@_rcvr_@)` if that initialisation
-    is valid and default constructed otherwise. `@_environment_@` is
-    initialised with `@_own-env_@` if that initialisation is
-    valid, otherwise, it is initalised with `get_env(@_rcvr_@)`
-    if this initialisation is valid, otherwise it is default
-    constructed.
+[2]{.pnum} _Effects:_ Initializes
 
-```cpp
+- [2.1]{.pnum} `@_handle_@` with `std::move(h)`;
+- [2.2]{.pnum} `@_rcvr_@` with `std::forward<Rcvr>(rr)`;
+- [2.3]{.pnum} `@_own-env_@` 
+    with `@_own-env-t_@(get_env(@_rcvr_@))` if that expression
+    is valid and `@_own-env-t_@()` otherwise;
+    If neither of these expressions is valid, the program is ill-formed.
+- [2.4]{.pnum} `@_environment_@` with `Environment(@_own-env_@)` if that expression is
+    valid, otherwise `Environment(get_env(@_rcvr_@))`
+    if this expression is valid, otherwise `Environment()`.
+    If neither of these expressions is valid, the program is ill-formed.
+
+```
 ~@_state_@();
 ```
 
-[3]{.pnum} _Effects:_ Equivalent to
+[3]{.pnum} _Effects:_ Equivalent to:
 
-```cpp
+```
     if (@_handle_@)
       @_handle_@.destroy();
 ```
 
-```cpp
-void start() & nexcept;
+```
+void start() & noexcept;
 ```
 
 [4]{.pnum} _Effects:_ Let `prom` be the object `@_handle_@.promise()`.
-    The object `prom` is set up to refer to `*this`:
+Associates `@_STATE_@(prom)`, `@_RCVR_@(prom)`, and `@_SCHED_@(prom)` with `*this`
+as follows:
 
-- [4.1]{.pnum} `@_STATE_@(prom)` is `*this` (see [task.promise]).
+- [4.1]{.pnum} `@_STATE_@(prom)` is `*this`.
 - [4.2]{.pnum} `@_RCVR_@(prom)` is `@_rcvr_@`.
-- [4.3]{.pnum} `@_SCHED_@(prom)` is initialised using
+- [4.3]{.pnum} `@_SCHED_@(prom)` is the object initialized with
     `scheduler_type(get_scheduler(get_env(@_rcvr_@)))` if that expression is
-    valid and using `scheduler_type()` otherwise. If neither of these
+    valid and `scheduler_type()` otherwise. If neither of these
     expressions is valid, the program is ill-formed.
-- [4.4]{.pnum} `prom.@_source_@` and `prom.@_token_@` are set up
-    such that `prom.@_token_@` reflects the state of
-    `get_stop_token(get_env(@_rcvr_@))`.
+
+Let `st` be `get_stop_token(get_env(@_rcvr_@))`. Initializes `prom.@_token_@`
+   and `prom.@_source_@` such that
+
+- [4.4]{.pnum} `prom.@_token_@.stop_requested()` returns `st.stop_requested()`;
+- [4.5]{.pnum} `prom.@_token_@.stop_possible()` returns `st.stop_possible()`; and
+- [4.6]{.pnum} for types `Fn` and `Init` such that both `invocable<Fn>` and `constructible_from<Fn, Init>` are modeled, `stop_token_type::callback_type<Fn>` models `@_stoppable-callback-for_@<Fn, stop_token_type, Init>`.
 
 After that invokes `@_handle_@.resume()`.
 
-```cpp
-const Environment& @_get-environment_@() const noexcept;
-```
-
-[5]{.pnum} _Returns:_ `@_environment_@;`
-
 ### Class task::promise_type [task.promise]
 
-```cpp
+```
 namespace std::execution {
   template <class E>
   struct with_error {
@@ -1869,7 +1878,7 @@ namespace std::execution {
     type error;
   };
   template <class E>
-  with_error(E&&) -> with_error<E>;
+  with_error(E) -> with_error<E>;
 
   template <scheduler Sch>
   struct change_coroutine_scheduler {
@@ -1877,7 +1886,7 @@ namespace std::execution {
     type scheduler;
   };
   template <scheduler Sch>
-  change_coroutine_scheduler(Sch&&) -> change_coroutine_scheduler<Sch>;
+  change_coroutine_scheduler(Sch) -> change_coroutine_scheduler<Sch>;
 
   template <class T, class Environment>
   class task<T, Environment>::promise_type {
@@ -1891,11 +1900,11 @@ namespace std::execution {
     auto final_suspend() noexcept;
 
     void uncaught_exception();
-    void unhandled_stopped();
+    coroutine_handle<> unhandled_stopped();
 
-    void return_void(); // if same_as<void, T>
+    void return_void(); // present only if is_void_v<T> is true;
     template <class V>
-    void return_value(V&& value); // if !same_as<void, T>
+    void return_value(V&& value); // present only if is_void_v<T> is false;
 
     template <class E>
     @_unspecified_@ yield_value(with_error<E> error);
@@ -1913,176 +1922,179 @@ namespace std::execution {
     void operator delete(void* pointer, size_t size) noexcept;
 
   private:
-    using StopToken = decltype(decl_val<stop_source_type>().get_token());
-    using ErrorVariant = @_see below_@;
+    using @_error-variant_@ = @_see below_@; // @_exposition only_@
 
     allocator_type    @_alloc_@;  // @_exposition only_@
     stop_source_type  @_source_@; // @_exposition only_@
-    StopToken         @_token_@;  // @_exposition only_@
-    optional<T>       @_result_@; // if !same_as<void, T>; @_exposition only_@
-    ErrorVariant      @_errors_@; // @_exposition only_@
+    stop_token_type   @_token_@;  // @_exposition only_@
+    optional<T>       @_result_@; // @_exposition only_@; present only if is_void_v<T> is false;
+    @_error-variant_@      @_errors_@; // @_exposition only_@
   };
 }
 ```
 
 [1]{.pnum} Let `prom` be an object of `promise_type` and let `tsk`
     be the `task` object created by `prom.get_return_object()`. The
-    description below refers to objects associated with `prom` whose
-    dynamic type isn't known using a notation which still just
-    accesses them.  [An implementation could, e.g., use
-    dispatching through a base class to implement the neccessary
-    accesses.]{.note}
+    description below refers to objects `@_STATE_@(prom)`,
+    `@_RCVR_@(prom)`, and `@_SCHED_@(prom)` associated with `tsk`
+    during evalutation of `task::@_state_@<Rcvr>::start` for some
+    receiver `Rcvr` [task.state]{.sref}.
 
-- [1.1]{.pnum} `@_STATE_@(prom)` is the operation state object used to
-    resume the `task` coroutines.
-- [1.2]{.pnum} `@_RCVR_@(prom)` is an object initialised from `rcvr`
-    where `rcvr` is the receiver used to get `@_STATE_@(prom)` by using
-    `connect(tsk, rcvr)`.
-- [1.3]{.pnum} `@_SCHED_@(prom)` is an object of type `scheduler_type` which
-    is associated with `prom`.
-- [1.4] `ErrorVariant` is a `variant<remove_cvref_t<E>...>`, with duplicate
-    types removed, where `E...` are the parameter types of the
-    elements in `error_types`.
+[2]{.pnum} `@_error-variant_@` is a `variant<monostate,
+remove_cvref_t<E>...>`, with duplicate
+types removed, where `E...` are template arguments of the
+specialization of `execution::completion_signatures` denoted by
+`error_types`.
 
-```cpp
+```
 template <class... Args>
 promise_type(const Args&... args);
 ```
 
-[2]{.pnum} _Effects:_ If `Args` contains an element of type
-    `allocator_arg_t` then `@_alloc_@` is initialised with the
-    corresponding next element of `args`. Otherwse, `@_alloc_@`
-    is initialised with `allocator_type()`.
+[3]{.pnum} _Mandates:_ The first parameter of type `allocator_arg_t` (if any) is not the last parameter.
 
-```cpp
+[4]{.pnum} _Effects:_ If `Args` contains an element of type
+    `allocator_arg_t` then `@_alloc_@` is initialized with the
+    corresponding next element of `args`. Otherwise, `@_alloc_@`
+    is initialized with `allocator_type()`.
+
+```
 task get_return_object() noexcept;
 ```
 
-[3]{.pnum} _Returns:_ A `task` object whose member `@_handle_@` is
+[5]{.pnum} _Returns:_ A `task` object whose member `@_handle_@` is
     `coroutine_handle<promise_type>::from_promise(*this)`.
 
-```cpp
+```
 auto initial_suspend() noexcept;
 ```
 
-[4]{.pnum} _Returns:_ An awaitable object of unspecified type
-    ([expr.await]) whose member functions arrange for the calling
-    coroutine to be suspended. The awaitable also arranges for
-    the coroutine to be resumed on an execution resource matching
-    `@_SCHED_@(*this)`.
+[6]{.pnum} _Returns:_ An awaitable object of unspecified type
+    ([expr.await]) whose member functions arrange for
+    
+- [6.1]{.pnum} the calling coroutine to be suspended,
+- [6.2]{.pnum} the coroutine to be resumed on an execution agent of the execution resource associated with `@_SCHED_@(*this)`.
 
-```cpp
+```
 auto final_suspend() noexcept;
 ```
 
-[5]{.pnum} _Returns:_ An awaitable object of unspecified type
-    ([expr.await]) whose member functions arrange for the calling
-    coroutine to be suspended and then for calling `set_value` or
-    `set_error` with the appropriate arguments:
+[7]{.pnum} _Returns:_ An awaitable object of unspecified type
+    ([expr.await]) whose member functions arrange for the completion
+    of the asynchronous operation associated with `@_STATE_@(*this)` by invoking:
 
-- [5.1]{.pnum} If the coroutine exited with an error `e` this error is
-    is reported by calling `set_error(std::move(@_RCVR_@(*this),` `std::move(e))`.
-- [5.2]{.pnum} Otherwise, if `same_as<void, T>` is true
-    `set_value(std::move(@_RCVR_@(*this)))` is called.
-- [5.3]{.pnum} Otherwise, `set_value(std::move(@_RCVR_@(*this)), *@_result_@)`
-    is called.
+- [7.1]{.pnum}
+    `set_error(std::move(@_RCVR_@(*this)),` `std::move(e))`
+    if `@_errors_@.index()` is greater than zero and 
+    `e` is the value held by `@_errors_@`, otherwise
+- [7.2]{.pnum}
+    `set_value(std::move(@_RCVR_@(*this)))` if `is_void<T>` is `true`,
+    and otherwise
+- [7.3]{.pnum} 
+ `set_value(std::move(@_RCVR_@(*this)), *@_result_@)`.
 
-```cpp
+```
 template <class Err>
 auto yield_value(with_error<Err> err);
 ```
 
-[6]{.pnum} _Mandates_ The type `Err` is unambigiously convertible to
-    one of the `set_error_t` argument types of `error_types`.
+[8]{.pnum} _Mandates_ `std::move(err.error)` is convertible to
+    exactly one of the `set_error_t` argument types of `error_types`. Let `Cerr`
+    be that type.
 
-[7]{.pnum} _Returns:_ An awaitable object of unspecified type
+[9]{.pnum} _Returns:_ An awaitable object of unspecified type
     ([expr.await]) whose member functions arrange for the calling
-    coroutine to be suspended and then for calling
-    `set_error(std::move(@_RCVR_@(*this), std::move(err.error)))`.
+    coroutine to be suspended and then completes 
+    the asynchronous operation associated with `@_STATE_@(*this)` by invoking
+    `set_error(std::move(@_RCVR_@(*this)), Cerr(std::move(err.error)))`.
 
-```cpp
+```
 template <sender Sender>
 auto await_transform(Sender&& sndr) noexcept;
 ```
 
-[8]{.pnum} _Returns_: If `same_as<inline_scheduler, scheduler_type>` is
-    true returns `as_awaitable(std::forward<Sender>(sndr),` `*this)`;
+[10]{.pnum} _Returns_: If `same_as<inline_scheduler, scheduler_type>` is
+    `true` returns `as_awaitable(std::forward<Sender>(sndr),` `*this)`;
     otherwise returns
     `as_awaitable(affine_on(std::forward<Sender>(sndr), @_SCHED_@(*this)), *this)`.
 
-```cpp
-auto await_transform(change_coroutine_scheduler<scheduler_type> sch) noexcept;
+```
+template <class Sch>
+auto await_transform(change_coroutine_scheduler<Sch> sch) noexcept;
 ```
 
-[9]{.pnum} _Returns:_ `as_awaitable(just(exchange(@_SCHED_@(*this), sch.scheduler)), *this);`
+[11]{.pnum} _Effects:_ Equivalent to: `returns await_transform(just(exchange(@_SCHED_@(*this), scheduler_type(sch.scheduler))), *this);`
 
-```cpp
+```
 void uncaught_exception();
 ```
 
-[10]{.pnum} _Effects:_ If the signature `set_error_t(exception_ptr)` is
-    not an element of `error_types` calls `terminate()`. Otherwise stores
+[12]{.pnum} _Effects:_ If the signature `set_error_t(exception_ptr)` is
+    not an element of `error_types`, calls `terminate()` ([except.terminate]{.sref}). Otherwise, stores
     `current_exception()` into `@_errors_@`.
 
-```cpp
-void unhandled_stopped();
+```
+coroutine_handle<> unhandled_stopped();
 ```
 
-[11]{.pnum} _Effects:_ Calls `set_stopped(std::move(@_RCVR_@(*this)))`.
+[13]{.pnum} _Effects:_ Completes the asynchronous operation
+    associated with `@_STATE_@(*this)` by invoking
+    `set_stopped(std::move(@_RCVR_@(*this)))`.
 
-[12]{.pnum} _Returns:_ `noop_coroutine();`
+[14]{.pnum} _Returns:_ `noop_coroutine()`.
 
-```cpp
+```
 @_unspecified_@ get_env() const noexcept;
 ```
 
-[13]{.pnum} _Returns:_ The member function returns an object `env`
+[15]{.pnum} _Returns:_ An object `env`
     such that queries are forwarded as follows:
 
-- [13.1]{.pnum} `env.query(get_scheduler)` returns `scheduler_type(@_SCHED_@(*this))`.
-- [13.2]{.pnum} `env.query(get_allocator)` returns `@_alloc_@`.
-- [13.3]{.pnum} `env.query(get_stop_token)` returns `@_token_@`.
-- [13.4]{.pnum} For any other query `q` and arguments `a...` a
+- [15.1]{.pnum} `env.query(get_scheduler)` returns `scheduler_type(@_SCHED_@(*this))`.
+- [15.2]{.pnum} `env.query(get_allocator)` returns `@_alloc_@`.
+- [15.3]{.pnum} `env.query(get_stop_token)` returns `@_token_@`.
+- [15.4]{.pnum} For any other query `q` and arguments `a...` a
     call to `env.query(q, a...)` returns
-    `@_STATE_@(*this).` `@_get-environment_@().query(q, a...)` if this expression
-    is well-formed and `forwarding_query(q)` is well-formed and is true.  Otherwise
+    `@_STATE_@(*this).environment.query(q, a...)` if this expression
+    is well-formed and `forwarding_query(q)` is well-formed and is `true`.  Otherwise
     `env.query(q, a...)` is ill-formed.
 
-```cpp
+```
 template <class... Args>
 void* operator new(size_t size, const Args&... args);
 ```
 
-[13]{.pnum} If there is no parameter with type `allocator_arg_t`
-    then let `alloc` be `Allocator()`; otherwise, if there is no
-    parameter following the first `allocator_arg_t` parameter then
-    the program is ill-formed; otherise, let `arg_next` be the
-    parameter following the first `allocator_arg_t` parameter and
-    the program is ill-formed if `Allocator(arg_next)` isn't a valid
-    expression, otherwise let `alloc` be `Allocator(arg_next)`.
-    Let `PAlloc` be `allocator_traits<Allocator>::template rebind_alloc<U>`
-    where `U` is an unspecified type whose size and alignmnet are both
+[16]{.pnum} If there is no parameter with type `allocator_arg_t`
+    then let `alloc` be `Allocator()`.  Let `arg_next` be the
+    parameter following the first `allocator_arg_t` parameter (if
+    any) and let `alloc` be `Allocator(arg_next)`.  Then `PAlloc`
+    is `allocator_traits<Allocator>::template rebind_alloc<U>` where
+    `U` is an unspecified type whose size and alignment are both
     `__STDCPP_DEFAULT_NEW_ALIGNMENT__`.
 
-[14]{.pnum} _Mandates:_ `allocator_traits<PAlloc>::pointer` is a pointer
-    type.
+[17]{.pnum} _Mandates:_
 
-[15]{.pnum} _Effects:_ Initializes an allocator `palloc` of type `PAlloc`
+- [17.1]{.pnum} The first parameter of type `allocator_arg_t` (if any) is not the last parameter.
+- [17.2]{.pnum} `Allocator(arg_next)` is a valid expression if there is a parameter
+   of type `allocator_arg_t`.
+- [17.3]{.pnum} `allocator_traits<PAlloc>::pointer` is a pointer type.
+
+[18]{.pnum} _Effects:_ Initializes an allocator `palloc` of type `PAlloc`
     with `alloc`. Uses `palloc` to allocate storage for the smallest
-    array of `U` sufficient to provide stroage for coroutine state
-    of size `size`, and unspecified additional state neccessary to
+    array of `U` sufficient to provide storage for a coroutine state
+    of size `size`, and unspecified additional state necessary to
     ensure that `operator delete` can later deallocate this memory
     block with an allocator equal to `palloc`.
 
-[16]{.pnum} _Returns:_ A pointer to the allocated storage.
+[19]{.pnum} _Returns:_ A pointer to the allocated storage.
 
-```cpp
+```
 void operator delete(void* pointer, size_t size) noexcept;
 ```
 
-[17]{.pnum} _Preconditions:_ `pointer` was returned from an invocation
+[20]{.pnum} _Preconditions:_ `pointer` was returned from an invocation
     of the above overload of `operator new` with a size argument
     equal to `size`.
 
-[18]{.pnum} _Effects:_ Deallocates the storage pointed to by `pointer`
-    using an allocator equivalent to that used to allocate it.
+[21]{.pnum} _Effects:_ Deallocates the storage pointed to by `pointer`
+    using an allocator equal to that used to allocate it.
