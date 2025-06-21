@@ -51,7 +51,7 @@ contains some links for general information about coroutines.
 ### Dependencies
 
 This project depends on
-[`beman::execution`](https://bemanproject/execution) (which
+[`beman::execution`](https://github.com/bemanproject/execution) (which
 will be automatically obtained using `cmake`'s `FetchContent*`).
 
 Build-time dependencies:
