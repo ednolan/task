@@ -1726,11 +1726,11 @@ namespace std::execution {
 
 [1]{.pnum} `task<T, E>` models `sender` [exec.snd]{.sref} if `T` is `void`, a reference type, or an cv-unqualified non-array object type and `E` is class type. Otherwise a program that instantiates the definition of `task<T, E>` is ill-formed.
 
-[2]{.pnum} The nested types of `task` template specializations 
+[2]{.pnum} The nested types of `task` template specializations
 are determined based on the `Environment` parameter:
 
 - [2.1]{.pnum} `allocator_type` is `Environment::allocator_type`
-if that qualified-id is valid and denotes a type, 
+if that qualified-id is valid and denotes a type,
 `allocator<byte>` otherwise.
 - [2.2]{.pnum} `scheduler_type` is `Environment::scheduler_type` if that qualified-id is valid and denotes a type, `task_scheduler`
 otherwise.
@@ -1738,10 +1738,10 @@ otherwise.
 if that qualified-id is valid and denotes a type, `inplace_stop_source`
 otherwise.
 - [2.4]{.pnum} `error_types` is `Environment::error_types`
-    if that qualified-id is valid and denotes a type, 
+    if that qualified-id is valid and denotes a type,
     `completion_signatures<set_error_t(exception_ptr)>` otherwise.
 
-[3]{.pnum}  A program is ill-formed if 
+[3]{.pnum}  A program is ill-formed if
     `error_types` is not a
     specialization of `completion_signatures<ErrorSigs...>` or
     `ErrorSigs` contains an element which is not of the form `set_error_t(E)`
@@ -1750,7 +1750,7 @@ otherwise.
 [4]{.pnum} The type alias `completion_signatures`
     is a specialization of `execution::completion_signatures` with
     the template arguments (in unspecified order):
-    
+
 - [4.1]{.pnum} `set_value_t()` if `T` is `void`, and `set_value_t(T)` otherwise;
 - [4.2]{.pnum} template arguments of the specialization of `execution::completion_signatures` denoted by `error_types`; and
 - [4.3]{.pnum} `set_stopped_t()`.
@@ -1812,7 +1812,7 @@ private:
 
 [1]{.pnum} The type `@_own-env-t_@` is
     `Environment::template env_type<decltype(get_env(declval<R>()))>`
-    if that qualified-id is valid and denotes a type, 
+    if that qualified-id is valid and denotes a type,
     `env<>` otherwise.
 
 ```
@@ -1824,7 +1824,7 @@ template <class Rcvr>
 
 - [2.1]{.pnum} `@_handle_@` with `std::move(h)`;
 - [2.2]{.pnum} `@_rcvr_@` with `std::forward<Rcvr>(rr)`;
-- [2.3]{.pnum} `@_own-env_@` 
+- [2.3]{.pnum} `@_own-env_@`
     with `@_own-env-t_@(get_env(@_rcvr_@))` if that expression
     is valid and `@_own-env-t_@()` otherwise;
     If neither of these expressions is valid, the program is ill-formed.
@@ -1971,7 +1971,7 @@ auto initial_suspend() noexcept;
 
 [6]{.pnum} _Returns:_ An awaitable object of unspecified type
     ([expr.await]) whose member functions arrange for
-    
+
 - [6.1]{.pnum} the calling coroutine to be suspended,
 - [6.2]{.pnum} the coroutine to be resumed on an execution agent of the execution resource associated with `@_SCHED_@(*this)`.
 
@@ -1985,12 +1985,12 @@ auto final_suspend() noexcept;
 
 - [7.1]{.pnum}
     `set_error(std::move(@_RCVR_@(*this)),` `std::move(e))`
-    if `@_errors_@.index()` is greater than zero and 
+    if `@_errors_@.index()` is greater than zero and
     `e` is the value held by `@_errors_@`, otherwise
 - [7.2]{.pnum}
     `set_value(std::move(@_RCVR_@(*this)))` if `is_void<T>` is `true`,
     and otherwise
-- [7.3]{.pnum} 
+- [7.3]{.pnum}
  `set_value(std::move(@_RCVR_@(*this)), *@_result_@)`.
 
 ```
@@ -2004,7 +2004,7 @@ auto yield_value(with_error<Err> err);
 
 [9]{.pnum} _Returns:_ An awaitable object of unspecified type
     ([expr.await]) whose member functions arrange for the calling
-    coroutine to be suspended and then completes 
+    coroutine to be suspended and then completes
     the asynchronous operation associated with `@_STATE_@(*this)` by invoking
     `set_error(std::move(@_RCVR_@(*this)), Cerr(std::move(err.error)))`.
 
