@@ -1413,7 +1413,7 @@ In [execution.syn]{.sref} add declarations for the new classes:
 namespace std::execution {
   ...
   // [exec.with.awaitable.senders]
-  template<class-type Promise>
+  template<@_class-type_@ Promise>
     struct with_awaitable_senders;
 
 ```
@@ -1629,8 +1629,8 @@ class task_scheduler::@_sender_@ { // @_exposition only_@
 public:
   using sender_concept = sender_t;
 
-  template <receiver R>
-  @_state_@<R> connect(R&& rcvr);
+  template <receiver Rcvr>
+  @_state_@<Rcvr> connect(Rcvr&& rcvr);
 };
 ```
 
@@ -1705,7 +1705,7 @@ namespace std::execution {
   template <class T, class Environment>
   class task {
     // [task.state]
-    template <receiver R>
+    template <receiver Rcvr>
     class @_state_@; // @_exposition only_@
 
   public:
@@ -1723,8 +1723,8 @@ namespace std::execution {
     task(task&&) noexcept;
     ~task();
 
-    template <receiver R>
-    @_state_@<R> connect(R&& recv);
+    template <receiver Rcvr>
+    @_state_@<Rcvr> connect(Rcvr&& rcvr);
 
   private:
     coroutine_handle<promise_type> @_handle_@; // @_exposition only_@
@@ -1798,7 +1798,7 @@ template <receiver R>
 ```c++
 namespace std::execution {
   template <class T, class Environment>
-    template <receiver R>
+    template <receiver Rcvr>
   class task<T, Environment>::@_state_@ { // @_exposition only_@
   public:
     using operation_state_concept = operation_state_t;
