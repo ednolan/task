@@ -1417,7 +1417,9 @@ namespace std::execution {
     struct with_awaitable_senders;
 
 ```
+
 :::add
+
 ```c++
   // @[exec.affine.on]{.sref}@
   struct affine_on_t { @_unspecified_@  };
@@ -1433,7 +1435,9 @@ namespace std::execution {
   template <class T, class Environment>
   class task;
 ```
+
 :::
+
 ```c++
 }
 ```
