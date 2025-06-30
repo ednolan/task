@@ -1,8 +1,8 @@
 // include/beman/task/detail/with_error.hpp                           -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_WITH_ERROR
-#define INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_WITH_ERROR
+#ifndef INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_WITH_ERROR
+#define INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_WITH_ERROR
 
 #include <coroutine>
 #include <utility>

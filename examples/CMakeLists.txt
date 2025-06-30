@@ -2,6 +2,7 @@
 
 set(ALL_EXAMPLES
     task_scheduler
+    http-server
     environment
     c++now-basic
     c++now-result-types

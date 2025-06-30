@@ -1,8 +1,8 @@
 // include/beman/task/detail/final_awaiter.hpp                        -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_FINAL_AWAITER
-#define INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_FINAL_AWAITER
+#ifndef INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_FINAL_AWAITER
+#define INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_FINAL_AWAITER
 
 #include <coroutine>
 

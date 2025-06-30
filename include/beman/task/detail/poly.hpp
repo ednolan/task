@@ -1,8 +1,8 @@
 // include/beman/task/detail/poly.hpp                                 -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef INCLUDED_BEMAN_LAZY_DETAIL_POLY
-#define INCLUDED_BEMAN_LAZY_DETAIL_POLY
+#ifndef INCLUDED_BEMAN_TASK_DETAIL_POLY
+#define INCLUDED_BEMAN_TASK_DETAIL_POLY
 
 #include <array>
 #include <concepts>

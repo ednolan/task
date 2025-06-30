@@ -1,8 +1,8 @@
 // include/beman/task/detail/task_scheduler.hpp                        -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef INCLUDED_BEMAN_LAZY_DETAIL_task_scheduler
-#define INCLUDED_BEMAN_LAZY_DETAIL_task_scheduler
+#ifndef INCLUDED_BEMAN_TASK_DETAIL_task_scheduler
+#define INCLUDED_BEMAN_TASK_DETAIL_task_scheduler
 
 #include <beman/execution/execution.hpp>
 #include <beman/task/detail/poly.hpp>

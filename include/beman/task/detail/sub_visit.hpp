@@ -3,8 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // ----------------------------------------------------------------------------
 
-#ifndef INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_SUB_VISIT
-#define INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_SUB_VISIT
+#ifndef INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_SUB_VISIT
+#define INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_SUB_VISIT
 
 #include <utility>
 #include <variant>

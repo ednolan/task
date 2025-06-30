@@ -2106,3 +2106,4 @@ void operator delete(void* pointer, size_t size) noexcept;
 
 [21]{.pnum} _Effects:_ Deallocates the storage pointed to by `pointer`
     using an allocator equal to that used to allocate it.
+

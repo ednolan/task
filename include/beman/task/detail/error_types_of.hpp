@@ -1,8 +1,8 @@
 // include/beman/task/detail/error_types_of.hpp                       -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_ERROR_TYPES_OF
-#define INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_ERROR_TYPES_OF
+#ifndef INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_ERROR_TYPES_OF
+#define INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_ERROR_TYPES_OF
 
 #include <beman/execution/execution.hpp>
 #include <exception>

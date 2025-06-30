@@ -1,8 +1,8 @@
 // include/beman/task/detail/promise_type.hpp                         -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_PROMISE_TYPE
-#define INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_PROMISE_TYPE
+#ifndef INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_PROMISE_TYPE
+#define INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_PROMISE_TYPE
 
 #include <beman/task/detail/affine_on.hpp>
 #include <beman/task/detail/allocator_of.hpp>
