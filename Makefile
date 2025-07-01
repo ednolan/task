@@ -10,7 +10,7 @@ ifeq ($(UNAME),Darwin)
 endif
 BUILD = $(BUILDDIR)/$(PRESET)
 
-default: doc
+default: compile
 
 doc:
 	cd docs; $(MAKE)
@@ -18,7 +18,7 @@ doc:
 compile:
 	CMAKE_EXPORT_COMPILE_COMMANDS=1 \
 	cmake \
-	  --workflow --preset=$(PRESET)
+	  --workflow --preset=$(PRESET) \
 
 list:
 	cmake --workflow --list-presets

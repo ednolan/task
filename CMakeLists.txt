@@ -13,14 +13,15 @@ enable_testing()
 
 # [CMAKE.SKIP_TESTS]
 option(
-    BEMAN_LAZY_BUILD_TESTS
+    BEMAN_TASK_BUILD_TESTS
     "Enable building tests and test infrastructure. Default: ON. Values: { ON, OFF }."
     ${PROJECT_IS_TOP_LEVEL}
 )
+set(BEMAN_TASK_BUILD_TESTS FALSE)
 
 # [CMAKE.SKIP_EXAMPLES]
 option(
-    BEMAN_LAZY_BUILD_EXAMPLES
+    BEMAN_TASK_BUILD_EXAMPLES
     "Enable building examples. Default: ON. Values: { ON, OFF }."
     ${PROJECT_IS_TOP_LEVEL}
 )
@@ -33,16 +34,16 @@ set(TARGETS_EXPORT_NAME ${CMAKE_PROJECT_NAME}Targets)
 
 FetchContent_Declare(
     execution
-    # for local development, use SOURCE_DIR <path-to>/execution
+    # SOURCE_DIR <path-to>/execution
     GIT_REPOSITORY https://github.com/bemanproject/execution
-    GIT_TAG 9cd2e66
+    GIT_TAG 578c05
 )
 FetchContent_MakeAvailable(execution)
 FetchContent_Declare(
     net
-    # for local development, use SOURCE_DIR <path-to>/execution
+    # SOURCE_DIR <path-to>/net
     GIT_REPOSITORY https://github.com/bemanproject/net
-    GIT_TAG 193d043002143242731f9baf759efc6d624cace7
+    GIT_TAG 53a8738
 )
 if(NOT WIN32)
     FetchContent_MakeAvailable(net)
@@ -50,11 +51,11 @@ endif()
 
 add_subdirectory(src/beman/task)
 
-if(BEMAN_LAZY_BUILD_TESTS)
+if(BEMAN_TASK_BUILD_TESTS)
     add_subdirectory(tests/beman/task)
 endif()
 
-if(BEMAN_LAZY_BUILD_EXAMPLES)
+if(BEMAN_TASK_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
 

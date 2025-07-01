@@ -1,8 +1,8 @@
 // include/beman/task/detail/completion.hpp                           -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_COMPLETION
-#define INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_COMPLETION
+#ifndef INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_COMPLETION
+#define INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_COMPLETION
 
 #include <beman/execution/execution.hpp>
 

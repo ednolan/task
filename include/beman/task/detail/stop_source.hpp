@@ -1,8 +1,8 @@
 // include/beman/task/detail/stop_source.hpp                          -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef INCLUDED_BEMAN_LAZY_DETAIL_STOP_SOURCE
-#define INCLUDED_BEMAN_LAZY_DETAIL_STOP_SOURCE
+#ifndef INCLUDED_BEMAN_TASK_DETAIL_STOP_SOURCE
+#define INCLUDED_BEMAN_TASK_DETAIL_STOP_SOURCE
 
 #include <beman/execution/stop_token.hpp>
 

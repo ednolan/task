@@ -1,8 +1,8 @@
 // include/beman/task/detail/promise_base.hpp                         -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_PROMISE_BASE
-#define INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_PROMISE_BASE
+#ifndef INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_PROMISE_BASE
+#define INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_PROMISE_BASE
 
 #include <beman/task/detail/result_type.hpp>
 #include <beman/execution/execution.hpp>

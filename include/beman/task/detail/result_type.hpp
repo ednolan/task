@@ -1,8 +1,8 @@
 // include/beman/task/detail/result_type.hpp                          -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_RESULT_TYPE
-#define INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_RESULT_TYPE
+#ifndef INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_RESULT_TYPE
+#define INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_RESULT_TYPE
 
 #include <beman/task/detail/sub_visit.hpp>
 #include <beman/execution/execution.hpp>

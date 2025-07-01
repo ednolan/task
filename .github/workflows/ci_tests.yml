@@ -140,9 +140,9 @@ jobs:
       matrix:
         args:
           - name: "Disable build testing"
-            arg: "-DBEMAN_LAZY_BUILD_TESTS=OFF"
+            arg: "-DBEMAN_TASK_BUILD_TESTS=OFF"
           - name: "Disable example building"
-            arg: "-DBEMAN_LAZY_BUILD_EXAMPLES=OFF"
+            arg: "-DBEMAN_TASK_BUILD_EXAMPLES=OFF"
     name: "CMake: ${{ matrix.args.name }}"
     steps:
       - uses: actions/checkout@v4

@@ -1,8 +1,8 @@
 // include/beman/task/detail/allocator_support.hpp                    -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef INCLUDED_BEMAN_LAZY_DETAIL_ALLOCATOR_SUPPORT
-#define INCLUDED_BEMAN_LAZY_DETAIL_ALLOCATOR_SUPPORT
+#ifndef INCLUDED_BEMAN_TASK_DETAIL_ALLOCATOR_SUPPORT
+#define INCLUDED_BEMAN_TASK_DETAIL_ALLOCATOR_SUPPORT
 
 #include <beman/task/detail/find_allocator.hpp>
 #include <array>

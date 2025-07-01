@@ -1,8 +1,8 @@
 // include/beman/task/detail/into_optional.hpp                        -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef INCLUDED_BEMAN_LAZY_DETAIL_INTO_OPTIONAL
-#define INCLUDED_BEMAN_LAZY_DETAIL_INTO_OPTIONAL
+#ifndef INCLUDED_BEMAN_TASK_DETAIL_INTO_OPTIONAL
+#define INCLUDED_BEMAN_TASK_DETAIL_INTO_OPTIONAL
 
 #include <optional>
 #include <tuple>

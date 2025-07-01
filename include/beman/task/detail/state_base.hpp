@@ -1,8 +1,8 @@
 // include/beman/task/detail/state_base.hpp                           -*-C++-*-
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
-#ifndef INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_STATE_BASE
-#define INCLUDED_INCLUDE_BEMAN_LAZY_DETAIL_STATE_BASE
+#ifndef INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_STATE_BASE
+#define INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_STATE_BASE
 
 #include <beman/task/detail/stop_source.hpp>
 
