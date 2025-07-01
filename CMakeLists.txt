@@ -55,7 +55,6 @@ if(BEMAN_TASK_BUILD_TESTS)
     add_subdirectory(tests/beman/task)
 endif()
 
-
 if(BEMAN_TASK_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
