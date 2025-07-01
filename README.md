@@ -5,6 +5,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 # beman.task: Beman Library Implementation of `task` (P3552)
 
 ![Continuous Integration Tests](https://github.com/bemanproject/task/actions/workflows/ci_tests.yml/badge.svg)
+![Target Standard](https://github.com/bemanproject/beman/blob/main/images/badges/cpp26.svg)
 
 `beman::execution::task<T, Context>` is a class template which
 is used as the the type of coroutine tasks. The corresponding objects
@@ -13,7 +14,7 @@ type which becomes a `set_value_t(T)` completion signatures. The
 second template argument (`Context`) provides a way to configure
 the behavior of the coroutine. By default it can be left alone.
 
-Implements: `std::execution::task` proposed in [Add a Coroutine Lazy Type (P3552r0)](https://wg21.link/P3552r0).
+Implements: `std::execution::task` proposed in [Add a Coroutine Lazy Type (P3552)](https://wg21.link/P3552).
 
 ## Usage
 
