@@ -5,6 +5,7 @@
 #define INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_PROMISE_BASE
 
 #include <beman/task/detail/result_type.hpp>
+#include <beman/task/detail/logger.hpp>
 #include <beman/execution/execution.hpp>
 #include <cstddef>
 #include <concepts>
@@ -22,6 +23,7 @@ namespace beman::task::detail {
 template <::beman::task::detail::stoppable Stop, typename Value, typename ErrorCompletions>
 class promise_base;
 
+#if 0
 template <::beman::task::detail::stoppable Stop, typename Value>
     requires(not ::std::same_as<Value, void>)
 class promise_base<Stop, Value, ::beman::execution::completion_signatures<>>
@@ -33,9 +35,11 @@ class promise_base<Stop, Value, ::beman::execution::completion_signatures<>>
      */
     template <typename T>
     void return_value(T&& value) {
+        ::beman::task::detail::logger l("promise_base::return_value(T&&)");
         this->set_value(::std::forward<T>(value));
     }
 };
+#endif
 
 template <::beman::task::detail::stoppable Stop, typename Value, typename... Error>
     requires(not ::std::same_as<Value, void>)
@@ -46,12 +50,15 @@ class promise_base<Stop, Value, ::beman::execution::completion_signatures<::bema
      * \brief Set the value result.
      * \internal
      */
+    ::beman::task::detail::logger l{"promise_base<T>"};
     template <typename T>
     void return_value(T&& value) {
+        ::beman::task::detail::logger l("promise_base::return_value(T&&)");
         this->set_value(::std::forward<T>(value));
     }
 };
 
+#if 0
 template <typename ::beman::task::detail::stoppable Stop>
 class promise_base<Stop, void, ::beman::execution::completion_signatures<>>
     : public ::beman::task::detail::result_type<Stop, void_type> {
@@ -59,8 +66,13 @@ class promise_base<Stop, void, ::beman::execution::completion_signatures<>>
     /*
      * \brief Set the value result although without any value.
      */
-    void return_void() { this->set_value(void_type{}); }
+    ::beman::task::detail::logger l{"promise_base<void>"};
+    void return_void() {
+      ::beman::task::detail::logger l("promise_base::return_void()");
+      this->set_value(void_type{});
+    }
 };
+#endif
 
 template <typename ::beman::task::detail::stoppable Stop, typename... Error>
 class promise_base<Stop, void, ::beman::execution::completion_signatures<::beman::execution::set_error_t(Error)...>>
@@ -69,7 +81,11 @@ class promise_base<Stop, void, ::beman::execution::completion_signatures<::beman
     /*
      * \brief Set the value result although without any value.
      */
-    void return_void() { this->set_value(void_type{}); }
+    ::beman::task::detail::logger l{"promise_base<void>"};
+    void                          return_void() {
+        ::beman::task::detail::logger l("promise_base::return_void()");
+        this->set_value(void_type{});
+    }
 };
 } // namespace beman::task::detail
 

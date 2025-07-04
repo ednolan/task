@@ -5,6 +5,7 @@
 #define INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_HANDLE
 
 #include <beman/execution/execution.hpp>
+#include <beman/task/detail/logger.hpp>
 #include <coroutine>
 #include <memory>
 #include <utility>
@@ -24,13 +25,17 @@ class handle {
 
   public:
     explicit handle(P* p) : h(p) {}
-    void reset() { this->h.reset(); }
+    auto reset() -> void { this->h.reset(); }
     template <typename... A>
-    void start(A&&... a) noexcept {
-        this->h->start(::std::forward<A>(a)...);
+    auto start(A&&... a) noexcept -> auto {
+        ::beman::task::detail::logger l("handle::start");
+        return this->h->start(::std::forward<A>(a)...);
+    }
+    auto release() -> ::std::coroutine_handle<P> {
+        return ::std::coroutine_handle<P>::from_promise(*this->h.release());
     }
     template <::beman::execution::receiver Receiver>
-    void complete(Receiver&& receiver) {
+    auto complete(Receiver&& receiver) -> void {
         this->h->complete(::std::forward<Receiver>(receiver));
     }
 };

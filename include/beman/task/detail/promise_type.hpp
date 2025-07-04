@@ -4,6 +4,7 @@
 #ifndef INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_PROMISE_TYPE
 #define INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_PROMISE_TYPE
 
+#include <beman/task/detail/awaiter.hpp>
 #include <beman/task/detail/affine_on.hpp>
 #include <beman/task/detail/allocator_of.hpp>
 #include <beman/task/detail/allocator_support.hpp>
@@ -20,20 +21,23 @@
 #include <beman/task/detail/with_error.hpp>
 #include <beman/execution/execution.hpp>
 #include <beman/execution/detail/meta_contains.hpp>
+#include <cassert>
 #include <coroutine>
 #include <optional>
 #include <type_traits>
+#include <beman/task/detail/logger.hpp>
 
 // ----------------------------------------------------------------------------
 
+namespace beman::task::detail {
+
+#if 0
 struct opt_rcvr {
     using receiver_concept = ::beman::execution::receiver_t;
     void set_value(auto&&...) && noexcept {}
     void set_error(auto&&) && noexcept {}
     void set_stopped() && noexcept {}
 };
-
-namespace beman::task::detail {
 
 template <typename T>
 struct has_exception_ptr;
@@ -186,6 +190,10 @@ struct promise_type : ::beman::task::detail::promise_base<::beman::task::detail:
         // This overload is only used if error completions use `co_await with_error(e)`.
         return std::move(with);
     }
+    template <typename Env, typename P>
+    auto await_transform(::beman::task::detail::awaiter<Env, P>&& a) noexcept {
+        return ::std::move(a);
+    }
     template <::beman::execution::sender Sender, typename Scheduler>
     auto internal_await_transform(Sender&& sender, Scheduler&& sched) noexcept {
         if constexpr (std::same_as<::beman::task::detail::inline_scheduler, scheduler_type>)
@@ -223,7 +231,7 @@ struct promise_type : ::beman::task::detail::promise_base<::beman::task::detail:
         return std::noop_coroutine();
     }
 
-    struct env {
+    struct env_t {
         const promise_type* promise;
 
         scheduler_type  query(::beman::execution::get_scheduler_t) const noexcept { return *promise->scheduler; }
@@ -231,6 +239,7 @@ struct promise_type : ::beman::task::detail::promise_base<::beman::task::detail:
         stop_token_type query(::beman::execution::get_stop_token_t) const noexcept {
             return promise->state->get_stop_token();
         }
+        auto foo() const {} //-dk:TODO remove
         template <typename Q, typename... A>
             requires requires(const C& c, Q q, A&&... a) {
                 ::beman::execution::forwarding_query(q);
@@ -241,8 +250,53 @@ struct promise_type : ::beman::task::detail::promise_base<::beman::task::detail:
         }
     };
 
-    env get_env() const noexcept { return {this}; }
+    auto get_env() const noexcept -> env_t { return env_t{this}; }
 };
+#else
+template <typename Coroutine, typename T, typename Environment>
+class promise_type
+    : public ::beman::task::detail::promise_base<::beman::task::detail::stoppable::yes,
+                                                 ::std::remove_cvref_t<T>,
+                                                 ::beman::task::detail::error_types_of_t<Environment>>,
+      public ::beman::task::detail::allocator_support<::beman::task::detail::allocator_of_t<Environment>> {
+  public:
+    struct final_awaiter {
+        ::beman::task::detail::state_base<Environment>* state{};
+        constexpr auto                                  await_ready() const noexcept -> bool { return false; }
+        auto                                            await_suspend(auto&&) noexcept -> ::std::coroutine_handle<> {
+            ::beman::task::detail::logger l("promise_type::final_awaiter::await_suspend()");
+            return this->state->complete();
+        }
+        constexpr auto await_resume() noexcept -> void {}
+    };
+    constexpr auto initial_suspend() noexcept -> ::std::suspend_always {
+        ::beman::task::detail::logger l("promise_type::initial_suspend");
+        return {};
+    }
+    constexpr auto final_suspend() noexcept -> final_awaiter {
+        ::beman::task::detail::logger l("promise_type::final_suspend");
+        assert(this->state != nullptr);
+        return {this->state};
+    }
+
+    auto unhandled_exception() noexcept { /*-dk:TODO*/ }
+    auto get_return_object() noexcept { return Coroutine(::beman::task::detail::handle<promise_type>(this)); }
+
+    struct env {};
+    auto get_env() const noexcept { return env{}; }
+
+    auto start(::beman::task::detail::state_base<Environment>* state) -> ::std::coroutine_handle<> {
+        ::beman::task::detail::logger l("promise_type::start");
+        this->state = state;
+        assert(this->state != nullptr);
+        return ::std::coroutine_handle<promise_type>::from_promise(*this);
+    }
+
+  private:
+    ::beman::task::detail::logger                   l{"promise_type"};
+    ::beman::task::detail::state_base<Environment>* state{};
+};
+#endif
 } // namespace beman::task::detail
 
 // ----------------------------------------------------------------------------
