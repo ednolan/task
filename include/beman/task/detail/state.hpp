@@ -50,6 +50,7 @@ template <typename Task, typename T, typename C, typename Receiver>
 struct state : ::beman::task::detail::state_base<C>, ::beman::task::detail::state_rep<C, Receiver> {
     using operation_state_concept = ::beman::execution::operation_state_t;
     using promise_type            = ::beman::task::detail::promise_type<Task, T, C>;
+    using scheduler_type          = typename ::beman::task::detail::state_base<C>::scheduler_type;
     using stop_source_type        = ::beman::task::detail::stop_source_of_t<C>;
     using stop_token_type         = decltype(std::declval<stop_source_type>().get_token());
     using stop_token_t =
@@ -60,12 +61,15 @@ struct state : ::beman::task::detail::state_base<C>, ::beman::task::detail::stat
     };
     using stop_callback_t = ::beman::execution::stop_callback_for_t<stop_token_t, stop_link>;
     template <typename R, typename H>
-    state(R&& r, H h) : state_rep<C, Receiver>(std::forward<R>(r)), handle(std::move(h)) {}
+    state(R&& r, H h)
+        : state_rep<C, Receiver>(std::forward<R>(r)),
+          handle(std::move(h)),
+          scheduler(this->template from_env<scheduler_type>(::beman::execution::get_env(this->receiver))) {}
 
-    ::beman::task::detail::logger               l{"state"};
     ::beman::task::detail::handle<promise_type> handle;
     stop_source_type                            source;
     std::optional<stop_callback_t>              stop_callback;
+    scheduler_type                              scheduler;
 
     auto start() & noexcept -> void {
         ::beman::task::detail::logger l("state::start");
@@ -75,6 +79,10 @@ struct state : ::beman::task::detail::state_base<C>, ::beman::task::detail::stat
         ::beman::task::detail::logger l("state::do_complete()");
         this->handle.complete(::std::move(this->receiver));
         return std::noop_coroutine();
+    }
+    auto do_get_scheduler() -> scheduler_type override { return this->scheduler; }
+    auto do_set_scheduler(scheduler_type other) -> scheduler_type override {
+        return ::std::exchange(this->scheduler, other);
     }
     stop_token_type do_get_stop_token() override {
         if (this->source.stop_possible() && not this->stop_callback) {

@@ -1,9 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
+set(ALL_EXAMPLES co_await-task)
 set(ALL_EXAMPLES
-    co_await-task
-)
-set(xALL_EXAMPLES
     co_await-task
     task_scheduler
     environment

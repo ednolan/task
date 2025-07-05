@@ -17,7 +17,7 @@ auto inner() -> ex::task<> {
 auto outer() -> ex::task<> {
     beman::task::detail::logger log("outer");
     for (int i{}; i < 10; ++i) {
-        co_await inner().as_awaitable();
+        co_await inner();
         log.log("inner_awaited");
     }
     co_return;
