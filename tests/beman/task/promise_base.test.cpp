@@ -41,7 +41,7 @@ int main() {
             result{};
         result.return_void();
         bool flag{false};
-        result.complete(void_receiver{flag});
+        result.result_complete(void_receiver{flag});
         assert(flag == true);
     }
     {

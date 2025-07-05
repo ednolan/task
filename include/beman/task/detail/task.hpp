@@ -36,7 +36,7 @@ namespace beman::task::detail {
 
 struct default_environment {};
 
-template <typename T = void, typename Env = default_environment>
+template <typename Value = void, typename Env = default_environment>
 class task {
   private:
     using stop_source_type = ::beman::task::detail::stop_source_of_t<Env>;
@@ -45,15 +45,15 @@ class task {
   public:
     using sender_concept        = ::beman::execution::sender_t;
     using completion_signatures = ::beman::execution::detail::meta::combine<
-        ::beman::execution::completion_signatures<beman::task::detail::completion_t<T>,
+        ::beman::execution::completion_signatures<beman::task::detail::completion_t<Value>,
                                                   ::beman::execution::set_stopped_t()>,
         ::beman::task::detail::error_types_of_t<Env> >;
 
-    using promise_type = ::beman::task::detail::promise_type<task, T, Env>;
+    using promise_type = ::beman::task::detail::promise_type<task, Value, Env>;
 
   private:
     template <typename Receiver>
-    using state = ::beman::task::detail::state<task, T, Env, Receiver>;
+    using state = ::beman::task::detail::state<task, Value, Env, Receiver>;
 
     ::beman::task::detail::handle<promise_type> handle;
 
@@ -72,8 +72,8 @@ class task {
     state<Receiver> connect(Receiver receiver) {
         return state<Receiver>(std::forward<Receiver>(receiver), std::move(this->handle));
     }
-    auto as_awaitable() -> ::beman::task::detail::awaiter<Env, promise_type> {
-        return ::beman::task::detail::awaiter<Env, promise_type>(::std::move(this->handle));
+    auto as_awaitable() -> ::beman::task::detail::awaiter<Value, Env, promise_type> {
+        return ::beman::task::detail::awaiter<Value, Env, promise_type>(::std::move(this->handle));
     }
 };
 } // namespace beman::task::detail

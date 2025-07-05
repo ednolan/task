@@ -10,23 +10,26 @@
 // ----------------------------------------------------------------------------
 
 namespace {
-struct context {};
+struct environment {};
 
-struct state : beman::task::detail::state_base<context> {
+struct state : beman::task::detail::state_base<int, environment> {
     stop_source_type source;
-    context          ctxt;
+    environment      env;
     bool             completed{};
     bool             token{};
-    bool             got_context{};
+    bool             got_environment{};
 
-    void            do_complete() override { this->completed = true; }
+    ::std::coroutine_handle<> do_complete() override {
+        this->completed = true;
+        return std::noop_coroutine();
+    }
     stop_token_type do_get_stop_token() override {
         this->token = true;
         return this->source.get_token();
     }
-    context& do_get_context() override {
-        this->got_context = true;
-        return this->ctxt;
+    environment& do_get_environment() override {
+        this->got_environment = true;
+        return this->env;
     }
 };
 } // namespace
@@ -41,7 +44,7 @@ int main() {
     s.get_stop_token();
     assert(s.token == true);
 
-    assert(s.got_context == false);
-    s.get_context();
-    assert(s.got_context == true);
+    assert(s.got_environment == false);
+    s.get_environment();
+    assert(s.got_environment == true);
 }

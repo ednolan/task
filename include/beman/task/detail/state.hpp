@@ -47,10 +47,10 @@ struct state_rep<C, Receiver> {
 };
 
 template <typename Task, typename T, typename C, typename Receiver>
-struct state : ::beman::task::detail::state_base<C>, ::beman::task::detail::state_rep<C, Receiver> {
+struct state : ::beman::task::detail::state_base<T, C>, ::beman::task::detail::state_rep<C, Receiver> {
     using operation_state_concept = ::beman::execution::operation_state_t;
     using promise_type            = ::beman::task::detail::promise_type<Task, T, C>;
-    using scheduler_type          = typename ::beman::task::detail::state_base<C>::scheduler_type;
+    using scheduler_type          = typename ::beman::task::detail::state_base<T, C>::scheduler_type;
     using stop_source_type        = ::beman::task::detail::stop_source_of_t<C>;
     using stop_token_type         = decltype(std::declval<stop_source_type>().get_token());
     using stop_token_t =
@@ -77,7 +77,7 @@ struct state : ::beman::task::detail::state_base<C>, ::beman::task::detail::stat
     }
     std::coroutine_handle<> do_complete() override {
         ::beman::task::detail::logger l("state::do_complete()");
-        this->handle.complete(::std::move(this->receiver));
+        this->result_complete(::std::move(this->receiver));
         return std::noop_coroutine();
     }
     auto do_get_scheduler() -> scheduler_type override { return this->scheduler; }
@@ -92,7 +92,7 @@ struct state : ::beman::task::detail::state_base<C>, ::beman::task::detail::stat
         }
         return this->source.get_token();
     }
-    C& do_get_context() override { return this->context; }
+    C& do_get_environment() override { return this->context; }
 };
 } // namespace beman::task::detail
 

@@ -32,10 +32,15 @@ enum class stoppable { yes, no };
  * \brief Type to hold the result of a coroutine
  * \headerfile beman/task/task.hpp <beman/task/task.hpp>
  */
+template <::beman::task::detail::stoppable Stop, typename Value, typename Errors>
+class result_type;
+
 template <::beman::task::detail::stoppable Stop, typename Value, typename... Error>
-class result_type {
+class result_type<Stop, Value, ::beman::execution::completion_signatures<::beman::execution::set_error_t(Error)...>> {
   private:
-    ::std::variant<std::monostate, Value, Error...> result;
+    using value_type = ::std::conditional_t<::std::same_as<void, Value>, void_type, Value>;
+
+    ::std::variant<std::monostate, value_type, Error...> result;
 
     template <size_t I, typename E, typename Err, typename... Errs>
     static constexpr ::std::size_t find_index() {
@@ -52,7 +57,7 @@ class result_type {
      * \brief Set the result for a `set_value` completion.
      *
      * If `T` is `void_type` the completion is set to become `set_value()`.
-     * Otherwise, the `value` becomes the argument of `set_value(value)` when `complete()`
+     * Otherwise, the `value` becomes the argument of `set_value(value)` when `result_complete()`
      * is called.
      */
     template <typename T>
@@ -73,7 +78,7 @@ class result_type {
     /*
      * \brief Call the completion function according to the current result.
      *
-     * Depending on the current index of the result `complete()` calls the
+     * Depending on the current index of the result `result_complete()` calls the
      * a suitable completion function:
      * - If the index is `0` it calls `set_stopped(std::move(rcvr))`.
      * - If the index is `1` it calls `set_value(std::move(rcvr))` if
@@ -82,8 +87,8 @@ class result_type {
      * - Otherwise it calls `set_error(std::move(rcvr), std::move(std::get<I>(result)))`.
      */
     template <::beman::execution::receiver Receiver>
-    void complete(Receiver&& rcvr) {
-        ::beman::task::detail::logger l("result_type::complete(R&&)");
+    void result_complete(Receiver&& rcvr) {
+        ::beman::task::detail::logger l("result_type::result_complete(R&&)");
         switch (this->result.index()) {
         case 0:
             if constexpr (Stop == ::beman::task::detail::stoppable::yes)
@@ -92,7 +97,7 @@ class result_type {
                 ::std::terminate();
             break;
         case 1:
-            if constexpr (::std::same_as<::beman::task::detail::void_type, Value>)
+            if constexpr (::std::same_as<::beman::task::detail::void_type, value_type>)
                 ::beman::execution::set_value(::std::move(rcvr));
             else
                 ::beman::execution::set_value(::std::move(rcvr), ::std::move(::std::get<1u>(this->result)));
@@ -104,6 +109,25 @@ class result_type {
                     this->result);
             break;
         }
+    }
+    auto result_resume() {
+        ::beman::task::detail::logger l("result_type::result_resume()");
+        switch (this->result.index()) {
+        case 0:
+            std::terminate(); // should never come here!
+            break;
+        case 1:
+            break;
+        default:
+            if constexpr (0u < sizeof...(Error))
+                ::beman::task::detail::sub_visit<2u>([](auto& error) { throw ::std::move(error); }, this->result);
+            std::terminate(); // should never come here!
+            break;
+        }
+        if constexpr (::std::same_as<::beman::task::detail::void_type, value_type>)
+            return;
+        else
+            return ::std::move(::std::get<1u>(this->result));
     }
 };
 } // namespace beman::task::detail

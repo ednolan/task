@@ -34,10 +34,6 @@ class handle {
     auto release() -> ::std::coroutine_handle<P> {
         return ::std::coroutine_handle<P>::from_promise(*this->h.release());
     }
-    template <::beman::execution::receiver Receiver>
-    auto complete(Receiver&& receiver) -> void {
-        this->h->complete(::std::forward<Receiver>(receiver));
-    }
 };
 
 } // namespace beman::task::detail

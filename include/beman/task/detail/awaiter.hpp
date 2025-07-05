@@ -8,16 +8,15 @@
 #include <beman/task/detail/state_base.hpp>
 #include <coroutine>
 #include <utility>
-#include <iostream> //-dk:TODO
 
 // ----------------------------------------------------------------------------
 
 namespace beman::task::detail {
-template <typename Env, typename Promise>
-class awaiter : public ::beman::task::detail::state_base<Env> {
+template <typename Value, typename Env, typename Promise>
+class awaiter : public ::beman::task::detail::state_base<Value, Env> {
   public:
-    using stop_token_type = typename ::beman::task::detail::state_base<Env>::stop_token_type;
-    using scheduler_type  = typename ::beman::task::detail::state_base<Env>::scheduler_type;
+    using stop_token_type = typename ::beman::task::detail::state_base<Value, Env>::stop_token_type;
+    using scheduler_type  = typename ::beman::task::detail::state_base<Value, Env>::scheduler_type;
 
     explicit awaiter(::beman::task::detail::handle<Promise> h) : handle(::std::move(h)) {}
     constexpr auto await_ready() const noexcept -> bool { return false; }
@@ -30,7 +29,10 @@ class awaiter : public ::beman::task::detail::state_base<Env> {
         assert(this->parent);
         return this->handle.start(this);
     }
-    auto await_resume() { ::beman::task::detail::logger l("awaiter::await_resume()"); }
+    auto await_resume() {
+        ::beman::task::detail::logger l("awaiter::await_resume()");
+        return this->result_resume();
+    }
     auto parent_handle() -> ::std::coroutine_handle<> { return ::std::move(this->parent); }
 
   private:
@@ -44,7 +46,7 @@ class awaiter : public ::beman::task::detail::state_base<Env> {
         return ::std::exchange(*this->scheduler, other);
     }
     auto do_get_stop_token() -> stop_token_type override { return {}; }
-    auto do_get_context() -> Env& override { return this->env; }
+    auto do_get_environment() -> Env& override { return this->env; }
 
     Env                                    env;
     ::std::optional<scheduler_type>        scheduler;

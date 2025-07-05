@@ -32,118 +32,10 @@
 
 namespace beman::task::detail {
 
-#if 0
-template <typename T>
-struct has_exception_ptr;
-template <typename... T>
-struct has_exception_ptr<::beman::execution::completion_signatures<T...>> {
-    static constexpr bool value{
-        ::beman::execution::detail::meta::contains<::beman::execution::set_error_t(::std::exception_ptr), T...>};
-};
-
-template <typename T>
-inline constexpr bool has_exception_ptr_v{::beman::task::detail::has_exception_ptr<T>::value};
-
-template <typename Coroutine, typename T, typename C>
-struct promise_type : ::beman::task::detail::promise_base<::beman::task::detail::stoppable::yes,
-                                                          ::std::remove_cvref_t<T>,
-                                                          ::beman::task::detail::error_types_of_t<C>>,
-                      ::beman::task::detail::allocator_support<::beman::task::detail::allocator_of_t<C>> {
-
-    void start([[maybe_unused]] auto&& e, ::beman::task::detail::state_base<C>* s) {
-        this->state = s;
-        if constexpr (std::same_as<::beman::task::detail::inline_scheduler, scheduler_type>) {
-            this->scheduler.emplace();
-        } else {
-            this->scheduler.emplace(::beman::execution::get_scheduler(e));
-        }
-        this->initial->run();
-    }
-
-    struct initial_base {
-        virtual ~initial_base() = default;
-        virtual void run()      = 0;
-    };
-    struct initial_sender {
-        using sender_concept        = ::beman::execution::sender_t;
-        using completion_signatures = ::beman::execution::completion_signatures<::beman::execution::set_value_t()>;
-
-        template <::beman::execution::receiver Receiver>
-        struct state : initial_base {
-            using operation_state_concept = ::beman::execution::operation_state_t;
-            promise_type* promise;
-            Receiver      receiver;
-            template <typename R>
-            state(promise_type* p, R&& r) : promise(p), receiver(::std::forward<R>(r)) {}
-            void start() & noexcept { this->promise->initial = this; }
-            void run() override { ::beman::execution::set_value(::std::move(receiver)); }
-        };
-
-        promise_type* promise{};
-        template <::beman::execution::receiver Receiver>
-        auto connect(Receiver&& receiver) {
-            return state<::std::remove_cvref_t<Receiver>>(this->promise, ::std::forward<Receiver>(receiver));
-        }
-    };
-
-    auto initial_suspend() noexcept {
-        return this->internal_await_transform(initial_sender{this},
-                                              optional_ref_scheduler<scheduler_type>{&this->scheduler});
-    }
-    void          unhandled_exception() {
-        if constexpr (::beman::task::detail::has_exception_ptr_v<::beman::task::detail::error_types_of_t<C>>) {
-            this->set_error(std::current_exception());
-        } else {
-            std::terminate();
-        }
-    }
-    auto get_return_object() noexcept { return Coroutine(::beman::task::detail::handle<promise_type>(this)); }
-
-    template <typename E>
-    auto await_transform(::beman::task::detail::with_error<E> with) noexcept {
-        // This overload is only used if error completions use `co_await with_error(e)`.
-        return std::move(with);
-    }
-    template <typename Env, typename P>
-    auto await_transform(::beman::task::detail::awaiter<Env, P>&& a) noexcept {
-        return ::std::move(a);
-    }
-    template <::beman::execution::sender Sender, typename Scheduler>
-    auto internal_await_transform(Sender&& sender, Scheduler&& sched) noexcept {
-        if constexpr (std::same_as<::beman::task::detail::inline_scheduler, scheduler_type>)
-            return ::beman::execution::as_awaitable(std::forward<Sender>(sender), *this);
-        else
-            return ::beman::execution::as_awaitable(
-                ::beman::task::affine_on(::std::forward<Sender>(sender), ::std::forward<Scheduler>(sched)), *this);
-    }
-    template <::beman::execution::sender Sender>
-    auto await_transform(Sender&& sender) noexcept {
-        return this->internal_await_transform(::std::forward<Sender>(sender), *this->scheduler);
-    }
-    auto await_transform(::beman::task::detail::change_coroutine_scheduler<scheduler_type> c) {
-        return ::std::move(c);
-    }
-
-    [[no_unique_address]] allocator_type  allocator;
-    std::optional<scheduler_type>         scheduler{};
-    ::beman::task::detail::state_base<C>* state{};
-    initial_base*                         initial{};
-
-    std::coroutine_handle<> unhandled_stopped() {
-        this->state->complete();
-        return std::noop_coroutine();
-    }
-
-
-    auto get_env() const noexcept -> env_t { return env_t{this}; }
-};
-#else
-
-template <typename Coroutine, typename T, typename Environment>
+template <typename Coroutine, typename Value, typename Environment>
 class promise_type
-    : public ::beman::task::detail::promise_base<::beman::task::detail::stoppable::yes,
-                                                 ::std::remove_cvref_t<T>,
-                                                 ::beman::task::detail::error_types_of_t<Environment>>,
+    : public ::beman::task::detail::
+          promise_base<::beman::task::detail::stoppable::yes, ::std::remove_cvref_t<Value>, Environment>,
       public ::beman::task::detail::allocator_support<::beman::task::detail::allocator_of_t<Environment>> {
   public:
     using allocator_type   = ::beman::task::detail::allocator_of_t<Environment>;
@@ -165,7 +57,7 @@ class promise_type
 
     auto                    unhandled_exception() noexcept { /*-dk:TODO*/ }
     std::coroutine_handle<> unhandled_stopped() {
-        this->state->complete();
+        this->get_state()->complete();
         return std::noop_coroutine();
     }
 
@@ -192,31 +84,33 @@ class promise_type
 
     template <typename E>
     auto yield_value(with_error<E> with) noexcept -> ::beman::task::detail::final_awaiter {
-        this->set_error(::std::move(with.error));
+        this->get_state()->set_error(::std::move(with.error));
         return {};
     }
 
     auto get_env() const noexcept -> ::beman::task::detail::promise_env<promise_type> { return {this}; }
 
-    auto start(::beman::task::detail::state_base<Environment>* state) -> ::std::coroutine_handle<> {
+    auto start(::beman::task::detail::state_base<Value, Environment>* state) -> ::std::coroutine_handle<> {
         ::beman::task::detail::logger l("promise_type::start");
-        this->state = state;
+        this->set_state(state);
         return ::std::coroutine_handle<promise_type>::from_promise(*this);
     }
-    auto           notify_complete() -> ::std::coroutine_handle<> { return this->state->complete(); }
-    scheduler_type change_scheduler(scheduler_type other) { return this->state->set_scheduler(::std::move(other)); }
+    auto           notify_complete() -> ::std::coroutine_handle<> { return this->get_state()->complete(); }
+    scheduler_type change_scheduler(scheduler_type other) {
+        return this->get_state()->set_scheduler(::std::move(other));
+    }
 
-    auto get_scheduler() const noexcept -> scheduler_type { return this->state->get_scheduler(); }
+    auto get_scheduler() const noexcept -> scheduler_type { return this->get_state()->get_scheduler(); }
     auto get_allocator() const noexcept -> allocator_type { return this->allocator; }
-    auto get_stop_token() const noexcept -> stop_token_type { return this->state->get_stop_token(); }
-    auto get_context() const noexcept -> const Environment& { return this->state->get_context(); }
+    auto get_stop_token() const noexcept -> stop_token_type { return this->get_state()->get_stop_token(); }
+    auto get_environment() const noexcept -> const Environment& { return this->get_state()->get_environment(); }
 
   private:
-    allocator_type                                  allocator{};
-    ::std::optional<scheduler_type>                 scheduler{};
-    ::beman::task::detail::state_base<Environment>* state{};
+    using env_t = ::beman::task::detail::promise_env<promise_type>;
+
+    allocator_type                  allocator{};
+    ::std::optional<scheduler_type> scheduler{};
 };
-#endif
 } // namespace beman::task::detail
 
 // ----------------------------------------------------------------------------

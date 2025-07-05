@@ -27,10 +27,10 @@ struct promise_env {
     template <typename Q, typename... A>
         requires requires(const Promise* p, Q q, A&&... a) {
             ::beman::execution::forwarding_query(q);
-            q(p->get_context(), std::forward<A>(a)...);
+            q(p->get_environment(), std::forward<A>(a)...);
         }
     auto query(Q q, A&&... a) const noexcept {
-        return q(promise->get_context(), std::forward<A>(a)...);
+        return q(promise->get_environment(), std::forward<A>(a)...);
     }
 };
 } // namespace beman::task::detail

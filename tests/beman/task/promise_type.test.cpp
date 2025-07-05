@@ -149,7 +149,7 @@ struct test_task : beman::task::detail::state_base<context> {
 
     void            do_complete() override { this->latch.count_down(); }
     stop_token_type do_get_stop_token() override { return this->source.get_token(); }
-    context&        do_get_context() override { return this->ctxt; }
+    context&        do_get_environment() override { return this->ctxt; }
 
     beman::task::detail::task_scheduler scheduler{beman::task::detail::inline_scheduler{}};
     beman::task::detail::task_scheduler query(beman::execution::get_scheduler_t) const noexcept {
