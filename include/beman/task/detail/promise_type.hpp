@@ -67,9 +67,7 @@ class promise_type
             std::terminate();
         }
     }
-    std::coroutine_handle<> unhandled_stopped() {
-        return this->get_state()->complete();
-    }
+    std::coroutine_handle<> unhandled_stopped() { return this->get_state()->complete(); }
 
     auto get_return_object() noexcept { return Coroutine(::beman::task::detail::handle<promise_type>(this)); }
 

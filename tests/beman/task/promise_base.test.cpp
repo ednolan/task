@@ -39,7 +39,6 @@ struct int_receiver {
     void set_stopped() && noexcept { unreachable("unexpected call to set_stopped"); }
 };
 static_assert(::beman::execution::receiver<int_receiver>);
-} // namespace
 
 template <typename... E>
 struct env {
@@ -72,15 +71,18 @@ struct state : bt::state_base<T, env<E...>> {
         return this->ev;
     }
     auto do_get_scheduler() -> scheduler_type override { return scheduler_type(bt::inline_scheduler()); }
-    auto do_set_scheduler(scheduler_type other) -> scheduler_type override {
-        return scheduler_type(bt::inline_scheduler());
-    }
+    auto do_set_scheduler(scheduler_type) -> scheduler_type override { return scheduler_type(bt::inline_scheduler()); }
 };
+
+template <typename T>
+using result_type = beman::task::detail::promise_base<beman::task::detail::stoppable::no, T, env<int>>;
+
+} // namespace
 
 int main() {
     {
-        state<void, int>                                                                      s{};
-        beman::task::detail::promise_base<beman::task::detail::stoppable::no, void, env<int>> result{};
+        state<void, int>  s{};
+        result_type<void> result{};
         result.set_state(&s);
         result.return_void();
         bool flag{false};
@@ -88,8 +90,8 @@ int main() {
         assert(flag == true);
     }
     {
-        state<int, int>                                                                      s{};
-        beman::task::detail::promise_base<beman::task::detail::stoppable::no, int, env<int>> result{};
+        state<int, int>  s{};
+        result_type<int> result{};
         result.set_state(&s);
         result.return_value(17);
         int value{};

@@ -14,20 +14,20 @@
 // ----------------------------------------------------------------------------
 
 namespace beman::task::detail {
-/*
+/**
  * \brief Helper type used as a placeholder for a void result
  * \headerfile beman/task/task.hpp <beman/task/task.hpp>
  * \internal
  */
 enum void_type : unsigned char {};
-/*
+/**
  * \brief Helper type indicating whether a stopped result is possible
  * \headerfile beman/task/task.hpp <beman/task/task.hpp>
  * \internal
  */
 enum class stoppable { yes, no };
 
-/*
+/**
  * \brief Type to hold the result of a coroutine
  * \headerfile beman/task/task.hpp <beman/task/task.hpp>
  */
@@ -52,7 +52,7 @@ class result_type<Stop, Value, ::beman::execution::completion_signatures<::beman
     }
 
   public:
-    /*
+    /**
      * \brief Set the result for a `set_value` completion.
      *
      * If `T` is `void_type` the completion is set to become `set_value()`.
@@ -63,7 +63,7 @@ class result_type<Stop, Value, ::beman::execution::completion_signatures<::beman
     auto set_value(T&& value) -> void {
         this->result.template emplace<1u>(::std::forward<T>(value));
     }
-    /*
+    /**
      * \brief Set the result for a `set_error` completion.
      */
     template <typename E>
@@ -73,7 +73,7 @@ class result_type<Stop, Value, ::beman::execution::completion_signatures<::beman
     }
 
     auto no_completion_set() const noexcept -> bool { return this->result.index() == 0u; }
-    /*
+    /**
      * \brief Call the completion function according to the current result.
      *
      * Depending on the current index of the result `result_complete()` calls the
@@ -116,12 +116,14 @@ class result_type<Stop, Value, ::beman::execution::completion_signatures<::beman
             break;
         default:
             if constexpr (0u < sizeof...(Error))
-                ::beman::task::detail::sub_visit<2u>([]<typename E>(E& error) {
-                    if constexpr (::std::same_as<::std::remove_cvref_t<E>, ::std::exception_ptr>)
-                        std::rethrow_exception(::std::move(error));
-                    else
-                        throw ::std::move(error);
-                }, this->result);
+                ::beman::task::detail::sub_visit<2u>(
+                    []<typename E>(E& error) {
+                        if constexpr (::std::same_as<::std::remove_cvref_t<E>, ::std::exception_ptr>)
+                            std::rethrow_exception(::std::move(error));
+                        else
+                            throw ::std::move(error);
+                    },
+                    this->result);
             std::terminate(); // should never come here!
             break;
         }
@@ -149,7 +151,7 @@ class result_type<Stop, Value, ::beman::execution::completion_signatures<>> {
     }
 
   public:
-    /*
+    /**
      * \brief Set the result for a `set_value` completion.
      *
      * If `T` is `void_type` the completion is set to become `set_value()`.
@@ -161,7 +163,7 @@ class result_type<Stop, Value, ::beman::execution::completion_signatures<>> {
         this->result.template emplace<1u>(::std::forward<T>(value));
     }
 
-    /*
+    /**
      * \brief Call the completion function according to the current result.
      *
      * Depending on the current index of the result `result_complete()` calls the
