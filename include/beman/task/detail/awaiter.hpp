@@ -22,22 +22,17 @@ class awaiter : public ::beman::task::detail::state_base<Value, Env> {
     constexpr auto await_ready() const noexcept -> bool { return false; }
     template <typename PP>
     auto await_suspend(::std::coroutine_handle<PP> parent) noexcept {
-        ::beman::task::detail::logger log("awaiter::suspend");
         this->scheduler.emplace(
             this->template from_env<scheduler_type>(::beman::execution::get_env(parent.promise())));
         this->parent = ::std::move(parent);
         assert(this->parent);
         return this->handle.start(this);
     }
-    auto await_resume() {
-        ::beman::task::detail::logger l("awaiter::await_resume()");
-        return this->result_resume();
-    }
+    auto await_resume() { return this->result_resume(); }
     auto parent_handle() -> ::std::coroutine_handle<> { return ::std::move(this->parent); }
 
   private:
     auto do_complete() -> std::coroutine_handle<> override {
-        ::beman::task::detail::logger l("awaiter::complete()");
         assert(this->parent);
         return ::std::move(this->parent);
     }

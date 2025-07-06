@@ -2,10 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <beman/task/detail/state_base.hpp>
+#include <beman/task/detail/inline_scheduler.hpp>
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
 #include <cassert>
+
+namespace bt = beman::task::detail;
 
 // ----------------------------------------------------------------------------
 
@@ -30,6 +33,10 @@ struct state : beman::task::detail::state_base<int, environment> {
     environment& do_get_environment() override {
         this->got_environment = true;
         return this->env;
+    }
+    auto do_get_scheduler() -> scheduler_type override { return scheduler_type(bt::inline_scheduler()); }
+    auto do_set_scheduler(scheduler_type other) -> scheduler_type override {
+        return scheduler_type(bt::inline_scheduler());
     }
 };
 } // namespace

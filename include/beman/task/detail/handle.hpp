@@ -5,7 +5,6 @@
 #define INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_HANDLE
 
 #include <beman/execution/execution.hpp>
-#include <beman/task/detail/logger.hpp>
 #include <coroutine>
 #include <memory>
 #include <utility>
@@ -28,7 +27,6 @@ class handle {
     auto reset() -> void { this->h.reset(); }
     template <typename... A>
     auto start(A&&... a) noexcept -> auto {
-        ::beman::task::detail::logger l("handle::start");
         return this->h->start(::std::forward<A>(a)...);
     }
     auto release() -> ::std::coroutine_handle<P> {

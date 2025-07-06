@@ -26,7 +26,6 @@
 #include <coroutine>
 #include <optional>
 #include <type_traits>
-#include <beman/task/detail/logger.hpp>
 
 // ----------------------------------------------------------------------------
 
@@ -46,14 +45,8 @@ class promise_type
     template <typename... A>
     promise_type(const A&... a) : allocator(::beman::task::detail::find_allocator<allocator_type>(a...)) {}
 
-    constexpr auto initial_suspend() noexcept -> ::std::suspend_always {
-        ::beman::task::detail::logger l("promise_type::initial_suspend");
-        return {};
-    }
-    constexpr auto final_suspend() noexcept -> ::beman::task::detail::final_awaiter {
-        ::beman::task::detail::logger l("promise_type::final_suspend");
-        return {};
-    }
+    constexpr auto initial_suspend() noexcept -> ::std::suspend_always { return {}; }
+    constexpr auto final_suspend() noexcept -> ::beman::task::detail::final_awaiter { return {}; }
 
     auto                    unhandled_exception() noexcept { /*-dk:TODO*/ }
     std::coroutine_handle<> unhandled_stopped() {
@@ -65,15 +58,11 @@ class promise_type
 
     template <::beman::execution::sender Sender>
     auto await_transform(Sender&& sender) noexcept {
-        ::beman::task::detail::logger l("promise_type::await_transform(sender)");
         if constexpr (requires { ::std::forward<Sender>(sender).as_awaitable(); }) {
-            l.log("using sender.as_awaitable");
             return ::std::forward<Sender>(sender).as_awaitable();
         } else if constexpr (requires { ::beman::execution::as_awaitable(::std::forward<Sender>(sender), *this); }) {
-            l.log("using as_awaitable");
             return ::beman::execution::as_awaitable(::std::forward<Sender>(sender), *this);
         } else {
-            l.log("using as_awaitable(affine_one(...))");
             return ::beman::execution::as_awaitable(
                 ::beman::task::affine_on(::std::forward<Sender>(sender), this->get_scheduler()), *this);
         }
@@ -91,7 +80,6 @@ class promise_type
     auto get_env() const noexcept -> ::beman::task::detail::promise_env<promise_type> { return {this}; }
 
     auto start(::beman::task::detail::state_base<Value, Environment>* state) -> ::std::coroutine_handle<> {
-        ::beman::task::detail::logger l("promise_type::start");
         this->set_state(state);
         return ::std::coroutine_handle<promise_type>::from_promise(*this);
     }

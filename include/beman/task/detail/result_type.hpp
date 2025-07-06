@@ -5,7 +5,6 @@
 #define INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_RESULT_TYPE
 
 #include <beman/task/detail/sub_visit.hpp>
-#include <beman/task/detail/logger.hpp>
 #include <beman/execution/execution.hpp>
 #include <exception>
 #include <utility>
@@ -62,7 +61,6 @@ class result_type<Stop, Value, ::beman::execution::completion_signatures<::beman
      */
     template <typename T>
     void set_value(T&& value) {
-        ::beman::task::detail::logger l("result_type::set_value(T&&)");
         this->result.template emplace<1u>(::std::forward<T>(value));
     }
     /*
@@ -70,7 +68,6 @@ class result_type<Stop, Value, ::beman::execution::completion_signatures<::beman
      */
     template <typename E>
     void set_error(E&& error) {
-        ::beman::task::detail::logger l("result_type::set_error(E&&)");
         this->result.template emplace<2u + find_index<0u, ::std::remove_cvref_t<E>, Error...>()>(
             ::std::forward<E>(error));
     }
@@ -88,7 +85,6 @@ class result_type<Stop, Value, ::beman::execution::completion_signatures<::beman
      */
     template <::beman::execution::receiver Receiver>
     void result_complete(Receiver&& rcvr) {
-        ::beman::task::detail::logger l("result_type::result_complete(R&&)");
         switch (this->result.index()) {
         case 0:
             if constexpr (Stop == ::beman::task::detail::stoppable::yes)
@@ -111,7 +107,6 @@ class result_type<Stop, Value, ::beman::execution::completion_signatures<::beman
         }
     }
     auto result_resume() {
-        ::beman::task::detail::logger l("result_type::result_resume()");
         switch (this->result.index()) {
         case 0:
             std::terminate(); // should never come here!

@@ -5,7 +5,6 @@
 #define INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_STATE
 
 #include <beman/task/detail/state_base.hpp>
-#include <beman/task/detail/logger.hpp>
 #include <beman/task/detail/promise_type.hpp>
 #include <beman/task/detail/stop_source.hpp>
 #include <type_traits>
@@ -71,12 +70,8 @@ struct state : ::beman::task::detail::state_base<T, C>, ::beman::task::detail::s
     std::optional<stop_callback_t>              stop_callback;
     scheduler_type                              scheduler;
 
-    auto start() & noexcept -> void {
-        ::beman::task::detail::logger l("state::start");
-        this->handle.start(this).resume();
-    }
+    auto                    start() & noexcept -> void { this->handle.start(this).resume(); }
     std::coroutine_handle<> do_complete() override {
-        ::beman::task::detail::logger l("state::do_complete()");
         this->result_complete(::std::move(this->receiver));
         return std::noop_coroutine();
     }

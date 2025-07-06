@@ -5,7 +5,6 @@
 #define INCLUDED_INCLUDE_BEMAN_TASK_DETAIL_PROMISE_BASE
 
 #include <beman/task/detail/state_base.hpp>
-#include <beman/task/detail/logger.hpp>
 #include <beman/execution/execution.hpp>
 #include <cstddef>
 #include <concepts>
@@ -29,11 +28,10 @@ class promise_base {
      */
     template <typename T>
     void return_value(T&& value) {
-        ::beman::task::detail::logger l("promise_base::return_value(T&&)");
         this->get_state()->set_value(::std::forward<T>(value));
     }
 
-  protected:
+  public:
     auto set_state(::beman::task::detail::state_base<Value, Environment>* s) noexcept -> void { this->state_ = s; }
     auto get_state() const noexcept -> ::beman::task::detail::state_base<Value, Environment>* { return this->state_; }
 
@@ -47,12 +45,9 @@ class promise_base<Stop, void, Environment> {
     /*
      * \brief Set the value result although without any value.
      */
-    void return_void() {
-        ::beman::task::detail::logger l("promise_base::return_void()");
-        this->get_state()->set_value(void_type{});
-    }
+    void return_void() { this->get_state()->set_value(void_type{}); }
 
-  protected:
+  public:
     auto set_state(::beman::task::detail::state_base<void, Environment>* s) noexcept -> void { this->state_ = s; }
     auto get_state() const noexcept -> ::beman::task::detail::state_base<void, Environment>* { return this->state_; }
 
