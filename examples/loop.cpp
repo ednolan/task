@@ -16,7 +16,7 @@ namespace {
 } // namespace
 
 int main(int ac, char* av[]) {
-    auto count = ac < 1 && av[1] == std::string_view("run-it") ? 1000000 : 1000;
+    auto count = 1 < ac && av[1] == std::string_view("run-it") ? 1000000 : 100;
     ex::sync_wait(
         // ex::detail::write_env(
         [](auto cnt) -> ex::task<void> {
