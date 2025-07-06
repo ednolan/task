@@ -30,6 +30,16 @@
 // ----------------------------------------------------------------------------
 
 namespace beman::task::detail {
+namespace meta {
+template <typename, typename>
+struct list_contains;
+template <template <typename...> class L, typename... E, typename T>
+struct list_contains<L<E...>, T> {
+    static constexpr bool value = (std::same_as<E, T> || ...);
+};
+template <typename L, typename T>
+inline constexpr bool list_contains_v{list_contains<L, T>::value};
+} // namespace meta
 
 template <typename Coroutine, typename Value, typename Environment>
 class promise_type
@@ -48,10 +58,17 @@ class promise_type
     constexpr auto initial_suspend() noexcept -> ::std::suspend_always { return {}; }
     constexpr auto final_suspend() noexcept -> ::beman::task::detail::final_awaiter { return {}; }
 
-    auto                    unhandled_exception() noexcept { /*-dk:TODO*/ }
+    auto unhandled_exception() noexcept -> void {
+        using error_types = ::beman::task::detail::error_types_of_t<Environment>;
+        if constexpr (::beman::task::detail::meta::
+                          list_contains_v<error_types, ::beman::execution::set_error_t(::std::exception_ptr)>) {
+            this->get_state()->set_error(::std::current_exception());
+        } else {
+            std::terminate();
+        }
+    }
     std::coroutine_handle<> unhandled_stopped() {
-        this->get_state()->complete();
-        return std::noop_coroutine();
+        return this->get_state()->complete();
     }
 
     auto get_return_object() noexcept { return Coroutine(::beman::task::detail::handle<promise_type>(this)); }

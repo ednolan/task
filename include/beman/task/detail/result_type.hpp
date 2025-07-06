@@ -60,18 +60,19 @@ class result_type<Stop, Value, ::beman::execution::completion_signatures<::beman
      * is called.
      */
     template <typename T>
-    void set_value(T&& value) {
+    auto set_value(T&& value) -> void {
         this->result.template emplace<1u>(::std::forward<T>(value));
     }
     /*
      * \brief Set the result for a `set_error` completion.
      */
     template <typename E>
-    void set_error(E&& error) {
+    auto set_error(E&& error) -> void {
         this->result.template emplace<2u + find_index<0u, ::std::remove_cvref_t<E>, Error...>()>(
             ::std::forward<E>(error));
     }
 
+    auto no_completion_set() const noexcept -> bool { return this->result.index() == 0u; }
     /*
      * \brief Call the completion function according to the current result.
      *
@@ -84,7 +85,7 @@ class result_type<Stop, Value, ::beman::execution::completion_signatures<::beman
      * - Otherwise it calls `set_error(std::move(rcvr), std::move(std::get<I>(result)))`.
      */
     template <::beman::execution::receiver Receiver>
-    void result_complete(Receiver&& rcvr) {
+    auto result_complete(Receiver&& rcvr) -> void {
         switch (this->result.index()) {
         case 0:
             if constexpr (Stop == ::beman::task::detail::stoppable::yes)
@@ -115,7 +116,12 @@ class result_type<Stop, Value, ::beman::execution::completion_signatures<::beman
             break;
         default:
             if constexpr (0u < sizeof...(Error))
-                ::beman::task::detail::sub_visit<2u>([](auto& error) { throw ::std::move(error); }, this->result);
+                ::beman::task::detail::sub_visit<2u>([]<typename E>(E& error) {
+                    if constexpr (::std::same_as<::std::remove_cvref_t<E>, ::std::exception_ptr>)
+                        std::rethrow_exception(::std::move(error));
+                    else
+                        throw ::std::move(error);
+                }, this->result);
             std::terminate(); // should never come here!
             break;
         }
@@ -133,7 +139,7 @@ class result_type<Stop, Value, ::beman::execution::completion_signatures<>> {
     ::std::variant<std::monostate, value_type> result;
 
     template <size_t I, typename E, typename Err, typename... Errs>
-    static constexpr ::std::size_t find_index() {
+    static constexpr auto find_index() -> ::std::size_t {
         if constexpr (std::same_as<E, Err>)
             return I;
         else {
@@ -151,7 +157,7 @@ class result_type<Stop, Value, ::beman::execution::completion_signatures<>> {
      * is called.
      */
     template <typename T>
-    void set_value(T&& value) {
+    auto set_value(T&& value) -> void {
         this->result.template emplace<1u>(::std::forward<T>(value));
     }
 
@@ -167,7 +173,7 @@ class result_type<Stop, Value, ::beman::execution::completion_signatures<>> {
      * - Otherwise it calls `set_error(std::move(rcvr), std::move(std::get<I>(result)))`.
      */
     template <::beman::execution::receiver Receiver>
-    void result_complete(Receiver&& rcvr) {
+    auto result_complete(Receiver&& rcvr) -> void {
         switch (this->result.index()) {
         case 0:
             if constexpr (Stop == ::beman::task::detail::stoppable::yes)

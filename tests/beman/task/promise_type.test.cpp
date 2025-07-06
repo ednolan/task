@@ -134,12 +134,12 @@ struct test_task : beman::task::detail::state_base<int, environment> {
     explicit test_task(beman::task::detail::handle<promise_type> h) : handle(std::move(h)) {}
 
     void run() {
-        this->handle.start(this);
+        this->handle.start(this).resume();
         this->latch.wait();
     }
     template <beman::execution::receiver Receiver>
     void complete(Receiver&& receiver) {
-        this->complete(receiver);
+        this->result_complete(receiver);
     }
 
     using stop_source_type = beman::task::detail::stop_source_of_t<environment>;
@@ -150,15 +150,15 @@ struct test_task : beman::task::detail::state_base<int, environment> {
     stop_source_type source;
 
     std::coroutine_handle<> do_complete() override {
+        std::cout << "do_complete\n";
         this->latch.count_down();
+        std::cout << "counted down\n";
         return std::noop_coroutine();
     }
     stop_token_type do_get_stop_token() override { return this->source.get_token(); }
     environment&    do_get_environment() override { return this->env; }
     auto            do_get_scheduler() -> scheduler_type override { return scheduler_type(bt::inline_scheduler()); }
-    auto            do_set_scheduler(scheduler_type other) -> scheduler_type override {
-        return scheduler_type(bt::inline_scheduler());
-    }
+    auto do_set_scheduler(scheduler_type) -> scheduler_type override { return scheduler_type(bt::inline_scheduler()); }
 
     beman::task::detail::task_scheduler scheduler{beman::task::detail::inline_scheduler{}};
     beman::task::detail::task_scheduler query(beman::execution::get_scheduler_t) const noexcept {
@@ -185,37 +185,27 @@ struct exception_receiver {
 };
 
 void test_exception() {
+    std::cout << std::unitbuf;
     auto coro{[]() -> test_task {
+        std::cout << "throwing\n";
         throw test_error(17);
         co_return 0;
     }()};
+    std::cout << "running\n";
     coro.run();
+    std::cout << "ran\n";
     bool flag{};
+    std::cout << "test completing\n";
     coro.complete(exception_receiver{flag});
+    std::cout << "test completed\n";
     assert(flag == true);
 }
 
-void test_initial_scheduler() {
-    static_assert(ex::sender<std::suspend_always>);
-    thread_pool     pool;
-    std::thread::id id{};
-    ex::sync_wait(ex::schedule(pool.get_scheduler()) | ex::then([&id] { id = std::this_thread::get_id(); }));
-
-    auto coro{[](std::thread::id expect) -> test_task {
-        assert(expect == std::this_thread::get_id());
-        co_await ex::just();
-        assert(expect == std::this_thread::get_id());
-        co_return 0;
-    }(id)};
-    coro.scheduler = beman::task::detail::task_scheduler(pool.get_scheduler());
-    coro.run();
-}
 } // namespace
 
 int main() {
     try {
-        //-dk:TODO test_exception();
-        //-dk:TODO test_initial_scheduler();
+        test_exception();
     } catch (...) {
         unreachable("no exception should escape to main");
     }

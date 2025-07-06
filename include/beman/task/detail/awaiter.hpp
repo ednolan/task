@@ -25,6 +25,9 @@ class awaiter : public ::beman::task::detail::state_base<Value, Env> {
         this->scheduler.emplace(
             this->template from_env<scheduler_type>(::beman::execution::get_env(parent.promise())));
         this->parent = ::std::move(parent);
+        this->handle_stopped = [](void* p) noexcept {
+            return ::std::coroutine_handle<PP>::from_address(p).promise().unhandled_stopped();
+        };
         assert(this->parent);
         return this->handle.start(this);
     }
@@ -34,7 +37,10 @@ class awaiter : public ::beman::task::detail::state_base<Value, Env> {
   private:
     auto do_complete() -> std::coroutine_handle<> override {
         assert(this->parent);
-        return ::std::move(this->parent);
+        return this->no_completion_set()
+            ? this->handle_stopped(this->parent.address())
+            : ::std::move(this->parent)
+            ;
     }
     auto do_get_scheduler() -> scheduler_type override { return *this->scheduler; }
     auto do_set_scheduler(scheduler_type other) -> scheduler_type override {
@@ -47,6 +53,7 @@ class awaiter : public ::beman::task::detail::state_base<Value, Env> {
     ::std::optional<scheduler_type>        scheduler;
     ::beman::task::detail::handle<Promise> handle;
     ::std::coroutine_handle<>              parent{};
+    auto (*handle_stopped)(void*)noexcept -> ::std::coroutine_handle<> = nullptr;
 };
 } // namespace beman::task::detail
 

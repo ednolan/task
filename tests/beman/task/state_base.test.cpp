@@ -35,9 +35,7 @@ struct state : beman::task::detail::state_base<int, environment> {
         return this->env;
     }
     auto do_get_scheduler() -> scheduler_type override { return scheduler_type(bt::inline_scheduler()); }
-    auto do_set_scheduler(scheduler_type other) -> scheduler_type override {
-        return scheduler_type(bt::inline_scheduler());
-    }
+    auto do_set_scheduler(scheduler_type) -> scheduler_type override { return scheduler_type(bt::inline_scheduler()); }
 };
 } // namespace
 
