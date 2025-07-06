@@ -125,6 +125,84 @@ class result_type<Stop, Value, ::beman::execution::completion_signatures<::beman
             return ::std::move(::std::get<1u>(this->result));
     }
 };
+template <::beman::task::detail::stoppable Stop, typename Value>
+class result_type<Stop, Value, ::beman::execution::completion_signatures<>> {
+  private:
+    using value_type = ::std::conditional_t<::std::same_as<void, Value>, void_type, Value>;
+
+    ::std::variant<std::monostate, value_type> result;
+
+    template <size_t I, typename E, typename Err, typename... Errs>
+    static constexpr ::std::size_t find_index() {
+        if constexpr (std::same_as<E, Err>)
+            return I;
+        else {
+            static_assert(0u != sizeof...(Errs), "error type not found in result type");
+            return find_index<I + 1u, E, Errs...>();
+        }
+    }
+
+  public:
+    /*
+     * \brief Set the result for a `set_value` completion.
+     *
+     * If `T` is `void_type` the completion is set to become `set_value()`.
+     * Otherwise, the `value` becomes the argument of `set_value(value)` when `result_complete()`
+     * is called.
+     */
+    template <typename T>
+    void set_value(T&& value) {
+        this->result.template emplace<1u>(::std::forward<T>(value));
+    }
+
+    /*
+     * \brief Call the completion function according to the current result.
+     *
+     * Depending on the current index of the result `result_complete()` calls the
+     * a suitable completion function:
+     * - If the index is `0` it calls `set_stopped(std::move(rcvr))`.
+     * - If the index is `1` it calls `set_value(std::move(rcvr))` if
+     *     the `Value` type is `void_type` and `set_value(std::move(rcvr), std::move(std::get<1>(result)))`
+     *     otherwise.
+     * - Otherwise it calls `set_error(std::move(rcvr), std::move(std::get<I>(result)))`.
+     */
+    template <::beman::execution::receiver Receiver>
+    void result_complete(Receiver&& rcvr) {
+        switch (this->result.index()) {
+        case 0:
+            if constexpr (Stop == ::beman::task::detail::stoppable::yes)
+                ::beman::execution::set_stopped(::std::move(rcvr));
+            else
+                ::std::terminate();
+            break;
+        case 1:
+            if constexpr (::std::same_as<::beman::task::detail::void_type, value_type>)
+                ::beman::execution::set_value(::std::move(rcvr));
+            else
+                ::beman::execution::set_value(::std::move(rcvr), ::std::move(::std::get<1u>(this->result)));
+            break;
+        default:
+            std::terminate(); // should never come here!
+            break;
+        }
+    }
+    auto result_resume() {
+        switch (this->result.index()) {
+        case 0:
+            std::terminate(); // should never come here!
+            break;
+        case 1:
+            break;
+        default:
+            std::terminate(); // should never come here!
+            break;
+        }
+        if constexpr (::std::same_as<::beman::task::detail::void_type, value_type>)
+            return;
+        else
+            return ::std::move(::std::get<1u>(this->result));
+    }
+};
 } // namespace beman::task::detail
 
 // ----------------------------------------------------------------------------

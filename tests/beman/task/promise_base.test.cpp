@@ -54,7 +54,7 @@ struct state : bt::state_base<T, env<E...>> {
     using scheduler_type   = ::beman::task::detail::scheduler_of_t<Environment>;
 
     stop_source_type source;
-    Environment      env;
+    Environment      ev;
     bool             completed{};
     bool             token{};
     bool             got_environment{};
@@ -69,7 +69,7 @@ struct state : bt::state_base<T, env<E...>> {
     }
     Environment& do_get_environment() override {
         this->got_environment = true;
-        return this->env;
+        return this->ev;
     }
     auto do_get_scheduler() -> scheduler_type override { return scheduler_type(bt::inline_scheduler()); }
     auto do_set_scheduler(scheduler_type other) -> scheduler_type override {
