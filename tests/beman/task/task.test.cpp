@@ -35,10 +35,26 @@ auto test_indirect_cancel() {
         assert(stopped);
     }());
 }
+
+auto test_affinity() {
+    std::cout << "test_affinity\n";
+    ex::sync_wait([]() -> ex::task<> {
+        co_await []() -> ex::task<> {
+            ex::inline_scheduler sched{};
+            std::cout << "comparing schedulers=" << std::boolalpha
+                      << (sched == co_await ex::read_env(ex::get_scheduler)) << "\n";
+            std::cout << "changing scheduler\n";
+            co_await ex::change_coroutine_scheduler(sched);
+            std::cout << "changed scheduler\n";
+            co_return;
+        }();
+    }());
+}
 } // namespace
 
 auto main() -> int {
     test_co_return();
     test_cancel();
     test_indirect_cancel();
+    test_affinity();
 }

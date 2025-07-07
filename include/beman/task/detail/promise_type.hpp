@@ -22,7 +22,6 @@
 #include <beman/execution/execution.hpp>
 #include <beman/execution/detail/meta_contains.hpp>
 #include <beman/task/detail/promise_env.hpp>
-#include <cassert>
 #include <coroutine>
 #include <optional>
 #include <type_traits>
