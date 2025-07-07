@@ -24,7 +24,7 @@ namespace ly = beman::task;
 
 namespace {
 
-void unreachable(const char* msg) { assert(nullptr == msg); }
+void unexpected_call_assert(const char* msg) { assert(nullptr == msg); }
 
 struct thread_context {
     enum class complete : char { success, failure, exception, never };
@@ -320,6 +320,6 @@ int main() {
             assert(result == stop_result::success);
         }
     } catch (...) {
-        unreachable("no exception should escape to main");
+        unexpected_call_assert("no exception should escape to main");
     }
 }

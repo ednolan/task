@@ -22,7 +22,6 @@
 #include <beman/execution/execution.hpp>
 #include <beman/execution/detail/meta_contains.hpp>
 #include <beman/task/detail/promise_env.hpp>
-#include <cassert>
 #include <coroutine>
 #include <optional>
 #include <type_traits>
@@ -71,12 +70,13 @@ class promise_type
 
     auto get_return_object() noexcept { return Coroutine(::beman::task::detail::handle<promise_type>(this)); }
 
-    template <::beman::execution::sender Sender>
+    template <::beman::execution::sender Sender, typename... A>
     auto await_transform(Sender&& sender) noexcept {
-        if constexpr (requires { ::std::forward<Sender>(sender).as_awaitable(); }) {
-            return ::std::forward<Sender>(sender).as_awaitable();
-        } else if constexpr (requires { ::beman::execution::as_awaitable(::std::forward<Sender>(sender), *this); }) {
-            return ::beman::execution::as_awaitable(::std::forward<Sender>(sender), *this);
+        if constexpr (requires {
+                          ::std::forward<Sender>(sender).as_awaitable(*this);
+                          typename ::std::remove_cvref_t<Sender>::task_concept;
+                      }) {
+            return ::std::forward<Sender>(sender).as_awaitable(*this);
         } else {
             return ::beman::execution::as_awaitable(
                 ::beman::task::affine_on(::std::forward<Sender>(sender), this->get_scheduler()), *this);

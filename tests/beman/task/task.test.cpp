@@ -29,20 +29,25 @@ auto test_cancel() {
 auto test_indirect_cancel() {
     // This approach uses symmetric transfer
     ex::sync_wait([]() -> ex::task<> {
-        std::cout << "indirect cancel\n" << std::unitbuf;
         bool stopped{};
-        std::cout << "outer co_await\n";
-        co_await ([]() -> ex::task<void> {
-            std::cout << "middle co_await\n";
-            co_await []() -> ex::task<void> {
-                std::cout << "inner stopping\n";
-                co_await ex::just_stopped();
-                std::cout << "inner after stopped\n";
-            }();
-            std::cout << "middle after co_await\n";
-        }() | ex::upon_stopped([&stopped]() { stopped = true; }));
-        std::cout << "outer after co_await\n";
+        co_await ([]() -> ex::task<void> { co_await []() -> ex::task<void> { co_await ex::just_stopped(); }(); }() |
+                              ex::upon_stopped([&stopped]() { stopped = true; }));
         assert(stopped);
+    }());
+}
+
+auto test_affinity() {
+    std::cout << "test_affinity\n";
+    ex::sync_wait([]() -> ex::task<> {
+        co_await []() -> ex::task<> {
+            ex::inline_scheduler sched{};
+            std::cout << "comparing schedulers=" << std::boolalpha
+                      << (sched == co_await ex::read_env(ex::get_scheduler)) << "\n";
+            std::cout << "changing scheduler\n";
+            co_await ex::change_coroutine_scheduler(sched);
+            std::cout << "changed scheduler\n";
+            co_return;
+        }();
     }());
 }
 } // namespace
@@ -51,4 +56,5 @@ auto main() -> int {
     test_co_return();
     test_cancel();
     test_indirect_cancel();
+    test_affinity();
 }
