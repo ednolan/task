@@ -62,6 +62,7 @@ class task {
     explicit task(::beman::task::detail::handle<promise_type> h) : handle(std::move(h)) {}
 
   public:
+    using task_concept               = void;
     task(const task&)                = delete;
     task(task&&) noexcept            = default;
     task& operator=(const task&)     = delete;
@@ -72,8 +73,9 @@ class task {
     state<Receiver> connect(Receiver receiver) {
         return state<Receiver>(std::forward<Receiver>(receiver), std::move(this->handle));
     }
-    auto as_awaitable() -> ::beman::task::detail::awaiter<Value, Env, promise_type> {
-        return ::beman::task::detail::awaiter<Value, Env, promise_type>(::std::move(this->handle));
+    template <typename ParentPromise>
+    auto as_awaitable(ParentPromise&) -> ::beman::task::detail::awaiter<Value, Env, promise_type, ParentPromise> {
+        return ::beman::task::detail::awaiter<Value, Env, promise_type, ParentPromise>(::std::move(this->handle));
     }
 };
 } // namespace beman::task::detail

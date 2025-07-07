@@ -29,19 +29,9 @@ auto test_cancel() {
 auto test_indirect_cancel() {
     // This approach uses symmetric transfer
     ex::sync_wait([]() -> ex::task<> {
-        std::cout << "indirect cancel\n" << std::unitbuf;
         bool stopped{};
-        std::cout << "outer co_await\n";
-        co_await ([]() -> ex::task<void> {
-            std::cout << "middle co_await\n";
-            co_await []() -> ex::task<void> {
-                std::cout << "inner stopping\n";
-                co_await ex::just_stopped();
-                std::cout << "inner after stopped\n";
-            }();
-            std::cout << "middle after co_await\n";
-        }() | ex::upon_stopped([&stopped]() { stopped = true; }));
-        std::cout << "outer after co_await\n";
+        co_await ([]() -> ex::task<void> { co_await []() -> ex::task<void> { co_await ex::just_stopped(); }(); }() |
+                              ex::upon_stopped([&stopped]() { stopped = true; }));
         assert(stopped);
     }());
 }

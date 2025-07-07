@@ -24,7 +24,7 @@ namespace bt = beman::task::detail;
 
 namespace {
 
-void unreachable(const char* msg) { assert(nullptr == msg); }
+void unexpected_call_assert(const char* msg) { assert(nullptr == msg); }
 
 struct thread_pool {
 
@@ -150,9 +150,7 @@ struct test_task : beman::task::detail::state_base<int, environment> {
     stop_source_type source;
 
     std::coroutine_handle<> do_complete() override {
-        std::cout << "do_complete\n";
         this->latch.count_down();
-        std::cout << "counted down\n";
         return std::noop_coroutine();
     }
     stop_token_type do_get_stop_token() override { return this->source.get_token(); }
@@ -170,8 +168,8 @@ struct exception_receiver {
     using receiver_concept = beman::execution::receiver_t;
     bool& flag;
 
-    auto set_value(int) && noexcept { unreachable("unexcepted set_value"); }
-    auto set_stopped() && noexcept { unreachable("unexcepted set_stopped"); }
+    auto set_value(int) && noexcept { unexpected_call_assert("unexcepted set_value"); }
+    auto set_stopped() && noexcept { unexpected_call_assert("unexcepted set_stopped"); }
     auto set_error(const std::exception_ptr& ex) && noexcept {
         flag = true;
         try {
@@ -179,25 +177,19 @@ struct exception_receiver {
         } catch (const test_error& error) {
             assert(error.value == 17);
         } catch (...) {
-            unreachable("unexpected exception");
+            unexpected_call_assert("unexpected exception");
         }
     }
 };
 
 void test_exception() {
-    std::cout << std::unitbuf;
     auto coro{[]() -> test_task {
-        std::cout << "throwing\n";
         throw test_error(17);
         co_return 0;
     }()};
-    std::cout << "running\n";
     coro.run();
-    std::cout << "ran\n";
     bool flag{};
-    std::cout << "test completing\n";
     coro.complete(exception_receiver{flag});
-    std::cout << "test completed\n";
     assert(flag == true);
 }
 
@@ -207,6 +199,6 @@ int main() {
     try {
         test_exception();
     } catch (...) {
-        unreachable("no exception should escape to main");
+        unexpected_call_assert("no exception should escape to main");
     }
 }

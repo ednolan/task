@@ -12,32 +12,34 @@
 // ----------------------------------------------------------------------------
 
 namespace beman::task::detail {
-template <typename Value, typename Env, typename Promise>
+template <typename Value, typename Env, typename OwnPromise, typename ParentPromise>
 class awaiter : public ::beman::task::detail::state_base<Value, Env> {
   public:
     using stop_token_type = typename ::beman::task::detail::state_base<Value, Env>::stop_token_type;
     using scheduler_type  = typename ::beman::task::detail::state_base<Value, Env>::scheduler_type;
 
-    explicit awaiter(::beman::task::detail::handle<Promise> h) : handle(::std::move(h)) {}
+    explicit awaiter(::beman::task::detail::handle<OwnPromise> h) : handle(::std::move(h)) {}
     constexpr auto await_ready() const noexcept -> bool { return false; }
-    template <typename PP>
-    auto await_suspend(::std::coroutine_handle<PP> parent) noexcept {
+    auto           await_suspend(::std::coroutine_handle<ParentPromise> parent) noexcept {
         this->scheduler.emplace(
             this->template from_env<scheduler_type>(::beman::execution::get_env(parent.promise())));
-        this->parent         = ::std::move(parent);
-        this->handle_stopped = [](void* p) noexcept {
-            return ::std::coroutine_handle<PP>::from_address(p).promise().unhandled_stopped();
-        };
+        this->parent = ::std::move(parent);
         assert(this->parent);
         return this->handle.start(this);
     }
     auto await_resume() { return this->result_resume(); }
-    auto parent_handle() -> ::std::coroutine_handle<> { return ::std::move(this->parent); }
 
   private:
     auto do_complete() -> std::coroutine_handle<> override {
         assert(this->parent);
-        return this->no_completion_set() ? this->handle_stopped(this->parent.address()) : ::std::move(this->parent);
+#if 0
+        //-dk:TODO
+        assert(this->scheduler);
+        if (*this->scheduler != ::beman::execution::get_scheduler(::beman::execution::get_env(this->parent))) {
+            assert(nullptr == "shouldn't come here, yet");
+        }
+#endif
+        return this->no_completion_set() ? this->parent.promise().unhandled_stopped() : ::std::move(this->parent);
     }
     auto do_get_scheduler() -> scheduler_type override { return *this->scheduler; }
     auto do_set_scheduler(scheduler_type other) -> scheduler_type override {
@@ -48,9 +50,8 @@ class awaiter : public ::beman::task::detail::state_base<Value, Env> {
 
     Env                                    env;
     ::std::optional<scheduler_type>        scheduler;
-    ::beman::task::detail::handle<Promise> handle;
-    ::std::coroutine_handle<>              parent{};
-    auto (*handle_stopped)(void*) noexcept -> ::std::coroutine_handle<> = nullptr;
+    ::beman::task::detail::handle<OwnPromise> handle;
+    ::std::coroutine_handle<ParentPromise>    parent{};
 };
 } // namespace beman::task::detail
 

@@ -18,15 +18,15 @@ namespace bt = beman::task::detail;
 
 namespace {
 
-void unreachable(const char* message) { assert(nullptr == message); }
+void unexpected_call_assert(const char* message) { assert(nullptr == message); }
 
 struct void_receiver {
     using receiver_concept = ::beman::execution::receiver_t;
 
     bool& flag;
     void  set_value() && noexcept { flag = true; }
-    void  set_error(auto&&) && noexcept { unreachable("unexpected call to set_error"); }
-    void  set_stopped() && noexcept { unreachable("unexpected call to set_stopped"); }
+    void  set_error(auto&&) && noexcept { unexpected_call_assert("unexpected call to set_error"); }
+    void  set_stopped() && noexcept { unexpected_call_assert("unexpected call to set_stopped"); }
 };
 static_assert(::beman::execution::receiver<void_receiver>);
 
@@ -35,8 +35,8 @@ struct int_receiver {
 
     int& value;
     void set_value(int v) && noexcept { this->value = v; }
-    void set_error(auto&&) && noexcept { unreachable("unexpected call to set_error"); }
-    void set_stopped() && noexcept { unreachable("unexpected call to set_stopped"); }
+    void set_error(auto&&) && noexcept { unexpected_call_assert("unexpected call to set_error"); }
+    void set_stopped() && noexcept { unexpected_call_assert("unexpected call to set_stopped"); }
 };
 static_assert(::beman::execution::receiver<int_receiver>);
 
