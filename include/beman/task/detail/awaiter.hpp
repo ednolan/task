@@ -34,7 +34,7 @@ struct awaiter_op_t {
     awaiter_op_t(const ParentPromise& p, Awaiter* aw)
         : state(::beman::execution::connect(
               ::beman::execution::schedule(beman::execution::get_scheduler(::beman::execution::get_env(p))),
-              awaiter_scheduler_receiver<Awaiter>(aw))) {}
+              awaiter_scheduler_receiver<Awaiter>{aw})) {}
     state_type state;
     auto       start() noexcept -> void { ::beman::execution::start(this->state); }
 };
